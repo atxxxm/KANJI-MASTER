@@ -1,3 +1,8 @@
+
+mod interface;
+
+use interface::run;
+
 fn main() {
-    println!("Hello, world!");
+    run().expect("Error run app");
 }
