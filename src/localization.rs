@@ -1,0 +1,83 @@
+use std::fs::File;
+
+use serde::{Serialize, Deserialize, de::DeserializeOwned};
+use anyhow;
+// Main Localization Struct
+#[derive(Serialize, Deserialize, Default)]
+pub struct Localization {
+    pub lang: String,
+    pub local: Local,
+    
+}
+
+// Local Struct
+#[derive(Serialize, Deserialize, Default)]
+pub struct Local {
+    pub top_bar: TopBar,
+}
+
+// Top Bar Struct
+#[derive(Serialize, Deserialize, Default)]
+pub struct TopBar {
+    pub kanji: KanjiTopBar,
+    pub tranning: TranningTopBar,
+    pub card: CardTopBar,
+    pub kana: KanaTopBar,
+    pub settings: SettingsTopBar,
+}
+
+// Kanji Top Bar Struct
+#[derive(Serialize, Deserialize, Default)]
+pub struct KanjiTopBar {
+    pub title: String,
+    pub jlpt: String,
+    pub kanaken: String,
+    pub radicals: String,
+    pub all: String,
+}
+
+// Tranning Top Bar Struct
+#[derive(Serialize, Deserialize, Default)]
+pub struct TranningTopBar {
+    pub title: String,
+    pub jlpt: String,
+    pub kanaken: String,
+    pub custom: String,
+}
+
+// Card Top Bar Struct
+#[derive(Serialize, Deserialize, Default)]
+pub struct CardTopBar {
+    pub title: String,
+    pub new: String,
+    pub open: String,
+}
+
+// Kana Top Bar Struct
+#[derive(Serialize, Deserialize, Default)]
+pub struct KanaTopBar {
+    pub title: String,
+    pub hiragana: String,
+    pub katakana: String,
+}
+
+// Settings Top Bar Struct
+#[derive(Serialize, Deserialize, Default)]
+pub struct SettingsTopBar {
+    pub title: String,
+    pub general: String,
+}
+
+
+// Save file (Serialize)
+pub fn save<T: Serialize>(path: &str, data: &T) -> anyhow::Result<()> {
+    let file = File::create(path)?;
+    serde_json::to_writer_pretty(file, data)?;
+    Ok(())
+}
+
+pub fn load<T: DeserializeOwned>(path: &str) -> anyhow::Result<T> {
+    let file = File::open(path)?;
+    let data: T = serde_json::from_reader(file)?;
+    Ok(data)
+}
