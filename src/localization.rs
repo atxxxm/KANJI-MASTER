@@ -14,6 +14,7 @@ pub struct Localization {
 #[derive(Serialize, Deserialize, Default)]
 pub struct Local {
     pub top_bar: TopBar,
+    pub settings: Settings,
 }
 
 // Top Bar Struct
@@ -23,7 +24,6 @@ pub struct TopBar {
     pub tranning: TranningTopBar,
     pub card: CardTopBar,
     pub kana: KanaTopBar,
-    pub settings: SettingsTopBar,
 }
 
 // Kanji Top Bar Struct
@@ -61,13 +61,22 @@ pub struct KanaTopBar {
     pub katakana: String,
 }
 
-// Settings Top Bar Struct
-#[derive(Serialize, Deserialize, Default)]
-pub struct SettingsTopBar {
-    pub title: String,
-    pub general: String,
-}
 
+// Settings Struct
+#[derive(Serialize, Deserialize, Default)]
+pub struct Settings {
+    pub title: String,
+    pub lang: String,
+    pub lang_button: String,
+    pub interface_font_size: String,
+    pub kanji_font_size: String,
+    pub auto_save_progress: String,
+    pub auto_save_frequency: String,
+    pub open_last_session_at_startup: String,
+    pub startup_screen: String,
+    pub confrim_card_delete: String,
+    pub confrim_progress_reset: String,
+}
 
 // Save file (Serialize)
 pub fn save<T: Serialize>(path: &str, data: &T) -> anyhow::Result<()> {
