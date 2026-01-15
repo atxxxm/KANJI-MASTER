@@ -1,7 +1,23 @@
 use eframe::egui;
 use crate::localization::*;
+use crate::core::{Database, Kanji};
+
+#[derive(PartialEq)]
+enum Screen {
+    Home,
+    Jlpt,
+    Kanaken,
+    Radicals,
+    All,
+    Kana,
+}
 
 struct App {
+    // Screen
+    current_screen: Screen,
+    // Kanji
+    kanji: Vec<Kanji>,
+    
     // Localization
     localization: Localization,
     // Settings Window
@@ -22,14 +38,21 @@ struct App {
 }
 
 impl App {
-    fn new() -> Self {
+    fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        // Set Font
+        set_font(&cc.egui_ctx);
         // Load Base Localization
         let localization: Localization = load("en.json").expect("Erorr Load");
+        // Load Kanji
+        let kanji = Database::new("core.db").get_kanji().expect("Error Read");
+
         Self {
+            current_screen: Screen::Home,
+            kanji,
             localization,
             general_settings_window: false,
             interface_font_size: 16.0,
-            kanji_font_size: 16.0,
+            kanji_font_size: 20.0,
             auto_save_progress: true,
             open_last_session_at_startup: false,
             confrim_card_delete: false,
@@ -37,10 +60,12 @@ impl App {
         }
     }
 
+    // Name
     fn name() -> &'static str {
         "Kanji Master"
     }
 
+    // Top Bar
     fn top_bar(&mut self, ctx: &egui::Context) {
         egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
             egui::MenuBar::new().ui(ui, |ui| {
@@ -60,7 +85,7 @@ impl App {
                     }
 
                     if ui.button(&local.kanji.all).clicked() {
-                        println!("All");
+                        self.current_screen = Screen::All;
                     }
                 });
 
@@ -111,6 +136,7 @@ impl App {
         });
     }
 
+    // Settings Window
     fn setting(&mut self, ctx: &egui::Context) {
         if !self.general_settings_window {
             return;
@@ -186,20 +212,87 @@ impl App {
             });
 
     }
+
+    // Ui Screen All
+    fn ui_all(&mut self, ui: &mut egui::Ui) {
+        let columns = 4;
+        let spacing = 10.0;
+        let card_height = 150.0;
+        
+        let row_height = card_height + spacing;
+
+        let total_rows = (self.kanji.len() + columns - 1) / columns;
+
+        // Scroll Area
+        egui::ScrollArea::vertical().show_rows(
+            ui,
+            row_height,
+            total_rows,
+            |ui, row_range| {
+                let available_width = ui.available_width();
+                let card_width = (available_width - (spacing * (columns as f32 - 1.0))) / columns as f32;
+
+                // Rows
+                for row_index in row_range {
+                    ui.horizontal(|ui| {
+                        ui.spacing_mut().item_spacing.x = spacing;
+                        
+                        let start_index = row_index * columns;
+                        let end_index = (start_index + columns).min(self.kanji.len());
+
+                        // Cards
+                        for i in start_index..end_index {
+                            if let Some(item) = self.kanji.get(i) {
+                                egui::Frame::new()
+                                    .fill(ui.visuals().faint_bg_color)
+                                    .stroke(ui.visuals().window_stroke)
+                                    .corner_radius(4.0)
+                                    .show(ui, |ui| {
+                                        ui.set_width(card_width);
+                                        ui.set_height(card_height);
+
+                                        ui.vertical_centered(|ui| {
+                                            let center_offset = (card_height / 2.0) - (self.kanji_font_size / 2.0) - 5.0;
+                                            if center_offset > 0.0 {
+                                                ui.add_space(center_offset);
+                                            }
+
+                                            ui.label(
+                                                egui::RichText::new(&item.kanji)
+                                                    .size(self.kanji_font_size)
+                                                    .strong()
+                                            );
+                                        });
+                                    });
+                            }
+                        }
+                    });
+                    ui.add_space(spacing);
+                }
+                
+            },
+        );
+    }
 }
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-
         self.top_bar(ctx);
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading(App::name());
+            if self.current_screen == Screen::Home {
+                ui.heading(App::name());
 
-            if ui.button("Save").clicked() {
-                let localization = Localization::default();
+                if ui.button("Save").clicked() {
+                    let localization = Localization::default();
 
-                save("test.json", &localization).expect("Error Save");
+                    save("test.json", &localization).expect("Error Save");
+                }
+
+            }
+
+            if self.current_screen == Screen::All {
+                self.ui_all(ui);
             }
 
             // Settings
@@ -217,6 +310,45 @@ pub fn run() -> eframe::Result<()> {
     eframe::run_native(
         App::name(),
         native_options,
-        Box::new(|_| Ok(Box::new(App::new())))
+        Box::new(|cc| Ok(Box::new(App::new(cc))))
     )
+}
+
+
+// Set Font
+fn set_font(ctx: &egui::Context) {
+static mut LOADED: bool = false;
+    if !unsafe { LOADED } {
+        let font_data = include_bytes!("../font/NotoSansJP-VariableFont_wght.ttf");
+        let font = egui::FontData::from_static(font_data)
+            .tweak(egui::FontTweak {
+                scale: 1.0,
+                y_offset_factor: 0.0,
+                y_offset: 0.0,
+                ..Default::default()
+            });
+
+        let mut fonts = egui::FontDefinitions::default();
+        
+        fonts.font_data.insert(
+            "noto_cjk".to_owned(),
+            font.into(),
+        );
+
+        fonts
+            .families
+            .entry(egui::FontFamily::Proportional)
+            .or_insert_with(Vec::new)
+            .push("noto_cjk".to_owned());
+
+        fonts
+            .families
+            .entry(egui::FontFamily::Monospace)
+            .or_insert_with(Vec::new)
+            .push("noto_cjk".to_owned());
+
+        ctx.set_fonts(fonts);
+
+        unsafe { LOADED = true; }
+    }
 }
