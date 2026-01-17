@@ -1,6 +1,6 @@
-use eframe::egui;
-use crate::localization::*;
 use crate::core::{Database, Kanji};
+use crate::localization::*;
+use eframe::egui;
 
 #[derive(PartialEq)]
 enum Screen {
@@ -12,12 +12,23 @@ enum Screen {
     Kana,
 }
 
+enum KanjiList {
+    All,
+    Jlpt5,
+    Jlpt4,
+    Jlpt3,
+    Jlpt2,
+    Jlpt1,
+    Kanaken,
+    Radicals,
+}
+
 struct App {
     // Screen
     current_screen: Screen,
     // Kanji
     kanji: Vec<Kanji>,
-    
+
     // Localization
     localization: Localization,
     // Settings Window
@@ -44,7 +55,7 @@ impl App {
         // Load Base Localization
         let localization: Localization = load("en.json").expect("Erorr Load");
         // Load Kanji
-        let kanji = Database::new("core.db").get_kanji().expect("Error Read");
+        let kanji = Database::new("db/core.db").get_kanji().expect("Error Read");
 
         Self {
             current_screen: Screen::Home,
@@ -52,7 +63,7 @@ impl App {
             localization,
             general_settings_window: false,
             interface_font_size: 16.0,
-            kanji_font_size: 20.0,
+            kanji_font_size: 40.0,
             auto_save_progress: true,
             open_last_session_at_startup: false,
             confrim_card_delete: false,
@@ -130,9 +141,7 @@ impl App {
                 if ui.button(&self.localization.local.settings.title).clicked() {
                     self.general_settings_window = true;
                 }
-
             });
-
         });
     }
 
@@ -156,12 +165,15 @@ impl App {
                 ui.separator();
 
                 ui.label(&local.interface_font_size);
-                ui.add(egui::Slider::new(&mut self.interface_font_size, 10.0..=28.0));
+                ui.add(egui::Slider::new(
+                    &mut self.interface_font_size,
+                    10.0..=28.0,
+                ));
 
                 ui.separator();
 
                 ui.label(&local.kanji_font_size);
-                ui.add(egui::Slider::new(&mut self.kanji_font_size, 10.0..=32.0));
+                ui.add(egui::Slider::new(&mut self.kanji_font_size, 10.0..=64.0));
 
                 ui.separator();
 
@@ -171,7 +183,7 @@ impl App {
                 ui.separator();
 
                 ui.label(&local.auto_save_frequency);
-                
+
                 //egui::ComboBox::from_label("")
                 //    .selected_text("10 minutes")
                 //    .show_ui(ui, |ui| {
@@ -210,68 +222,145 @@ impl App {
                 ui.label(&local.confrim_progress_reset);
                 ui.checkbox(&mut self.confrim_progress_reset, "");
             });
-
     }
 
     // Ui Screen All
-    fn ui_all(&mut self, ui: &mut egui::Ui) {
+    fn kanji_all(&mut self, ui: &mut egui::Ui) {
+        self.show_kanji(ui, KanjiList::All);
+    }
+
+    fn kanji_n5(&mut self, ui: &mut egui::Ui) {
+        self.show_kanji(ui, KanjiList::Jlpt5);
+    }
+
+    fn kanji_n4(&mut self, ui: &mut egui::Ui) {
+        self.show_kanji(ui, KanjiList::Jlpt4);
+    }
+
+    fn kanji_n3(&mut self, ui: &mut egui::Ui) {
+        self.show_kanji(ui, KanjiList::Jlpt3);
+    }
+
+    fn kanji_n2(&mut self, ui: &mut egui::Ui) {
+        self.show_kanji(ui, KanjiList::Jlpt2);
+    }
+
+    fn kanji_n1(&mut self, ui: &mut egui::Ui) {
+        self.show_kanji(ui, KanjiList::Jlpt1);
+    }
+
+    // Show Kanji
+    fn show_kanji(&mut self, ui: &mut egui::Ui, kanji_set: KanjiList) {
         let columns = 4;
         let spacing = 10.0;
         let card_height = 150.0;
-        
+
         let row_height = card_height + spacing;
 
         let total_rows = (self.kanji.len() + columns - 1) / columns;
 
         // Scroll Area
-        egui::ScrollArea::vertical().show_rows(
-            ui,
-            row_height,
-            total_rows,
-            |ui, row_range| {
-                let available_width = ui.available_width();
-                let card_width = (available_width - (spacing * (columns as f32 - 1.0))) / columns as f32;
+        egui::ScrollArea::vertical().show_rows(ui, row_height, total_rows, |ui, row_range| {
+            let available_width = ui.available_width();
+            let card_width =
+                (available_width - (spacing * (columns as f32 - 1.0))) / columns as f32;
 
-                // Rows
-                for row_index in row_range {
-                    ui.horizontal(|ui| {
-                        ui.spacing_mut().item_spacing.x = spacing;
-                        
-                        let start_index = row_index * columns;
-                        let end_index = (start_index + columns).min(self.kanji.len());
+            // Rows
+            for row_index in row_range {
+                ui.horizontal(|ui| {
+                    ui.spacing_mut().item_spacing.x = spacing;
 
-                        // Cards
-                        for i in start_index..end_index {
-                            if let Some(item) = self.kanji.get(i) {
-                                egui::Frame::new()
-                                    .fill(ui.visuals().faint_bg_color)
-                                    .stroke(ui.visuals().window_stroke)
-                                    .corner_radius(4.0)
-                                    .show(ui, |ui| {
-                                        ui.set_width(card_width);
-                                        ui.set_height(card_height);
+                    let start_index = row_index * columns;
+                    let end_index = (start_index + columns).min(self.kanji.len());
 
-                                        ui.vertical_centered(|ui| {
-                                            let center_offset = (card_height / 2.0) - (self.kanji_font_size / 2.0) - 5.0;
-                                            if center_offset > 0.0 {
-                                                ui.add_space(center_offset);
+                    // Cards
+                    for i in start_index..end_index {
+                        if let Some(item) = self.kanji.get(i) {
+                            egui::Frame::new()
+                                .fill(ui.visuals().faint_bg_color)
+                                .stroke(ui.visuals().window_stroke)
+                                .corner_radius(4.0)
+                                .show(ui, |ui| {
+                                    ui.set_width(card_width);
+                                    ui.set_height(card_height);
+
+                                    ui.vertical_centered(|ui| {
+                                        let center_offset = (card_height / 2.0)
+                                            - (self.kanji_font_size / 2.0)
+                                            - 5.0;
+                                        if center_offset > 0.0 {
+                                            ui.add_space(center_offset);
+                                        }
+
+                                        match kanji_set {
+                                            KanjiList::All => {
+                                                ui.label(
+                                                    egui::RichText::new(&item.kanji)
+                                                        .size(self.kanji_font_size)
+                                                        .strong(),
+                                                );
                                             }
 
-                                            ui.label(
-                                                egui::RichText::new(&item.kanji)
-                                                    .size(self.kanji_font_size)
-                                                    .strong()
-                                            );
-                                        });
+                                            KanjiList::Jlpt5 => {
+                                                if item.jlpt == "N5" {
+                                                    ui.label(
+                                                        egui::RichText::new(&item.kanji)
+                                                            .size(self.kanji_font_size)
+                                                            .strong(),
+                                                    );
+                                                }
+                                            }
+
+                                            KanjiList::Jlpt4 => {
+                                                if item.jlpt == "N4" {
+                                                    ui.label(
+                                                        egui::RichText::new(&item.kanji)
+                                                            .size(self.kanji_font_size)
+                                                            .strong(),
+                                                    );
+                                                }
+                                            }
+
+                                            KanjiList::Jlpt3 => {
+                                                if item.jlpt == "N3" {
+                                                    ui.label(
+                                                        egui::RichText::new(&item.kanji)
+                                                            .size(self.kanji_font_size)
+                                                            .strong(),
+                                                    );
+                                                }
+                                            }
+
+                                            KanjiList::Jlpt2 => {
+                                                if item.jlpt == "N2" {
+                                                    ui.label(
+                                                        egui::RichText::new(&item.kanji)
+                                                            .size(self.kanji_font_size)
+                                                            .strong(),
+                                                    );
+                                                }
+                                            }
+
+                                            KanjiList::Jlpt1 => {
+                                                if item.jlpt == "N1" {
+                                                    ui.label(
+                                                        egui::RichText::new(&item.kanji)
+                                                            .size(self.kanji_font_size)
+                                                            .strong(),
+                                                    );
+                                                }
+                                            }
+
+                                            _ => {}
+                                        }
                                     });
-                            }
+                                });
                         }
-                    });
-                    ui.add_space(spacing);
-                }
-                
-            },
-        );
+                    }
+                });
+                ui.add_space(spacing);
+            }
+        });
     }
 }
 
@@ -288,11 +377,11 @@ impl eframe::App for App {
 
                     save("test.json", &localization).expect("Error Save");
                 }
-
             }
 
-            if self.current_screen == Screen::All {
-                self.ui_all(ui);
+            match self.current_screen {
+                Screen::All => self.kanji_all(ui),
+                _ => {}
             }
 
             // Settings
@@ -310,30 +399,25 @@ pub fn run() -> eframe::Result<()> {
     eframe::run_native(
         App::name(),
         native_options,
-        Box::new(|cc| Ok(Box::new(App::new(cc))))
+        Box::new(|cc| Ok(Box::new(App::new(cc)))),
     )
 }
 
-
 // Set Font
 fn set_font(ctx: &egui::Context) {
-static mut LOADED: bool = false;
+    static mut LOADED: bool = false;
     if !unsafe { LOADED } {
         let font_data = include_bytes!("../font/NotoSansJP-VariableFont_wght.ttf");
-        let font = egui::FontData::from_static(font_data)
-            .tweak(egui::FontTweak {
-                scale: 1.0,
-                y_offset_factor: 0.0,
-                y_offset: 0.0,
-                ..Default::default()
-            });
+        let font = egui::FontData::from_static(font_data).tweak(egui::FontTweak {
+            scale: 1.0,
+            y_offset_factor: 0.0,
+            y_offset: 0.0,
+            ..Default::default()
+        });
 
         let mut fonts = egui::FontDefinitions::default();
-        
-        fonts.font_data.insert(
-            "noto_cjk".to_owned(),
-            font.into(),
-        );
+
+        fonts.font_data.insert("noto_cjk".to_owned(), font.into());
 
         fonts
             .families
@@ -349,6 +433,8 @@ static mut LOADED: bool = false;
 
         ctx.set_fonts(fonts);
 
-        unsafe { LOADED = true; }
+        unsafe {
+            LOADED = true;
+        }
     }
 }

@@ -1,0 +1,34 @@
+{
+  "lang": "",
+  "local": {
+    "top_bar": {
+      "kanji": {
+        "title": "Кадзи",
+        "jlpt": "JLPT",
+        "kanaken": "Канакен",
+        "radicals": "Радикалы",
+        "all": "Все"
+      },
+      "tranning": {
+        "title": "Треннировка",
+        "jlpt": "JLPT",
+        "kanaken": "Канакен",
+        "custom": "Кастомные"
+      },
+      "card": {
+        "title": "Карточки",
+        "new": "Новые",
+        "open": "Открыть"
+      },
+      "kana": {
+        "title": "Кана",
+        "hiragana": "Хирагана",
+        "katakana": "Катакана"
+      },
+      "settings": {
+        "title": "Настройки",
+        "general": "Главные"
+      }
+    }
+  }
+}
