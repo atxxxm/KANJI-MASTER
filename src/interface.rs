@@ -23,11 +23,26 @@ enum KanjiList {
     Radicals,
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
+enum JLPT {
+    J5,
+    J4,
+    J3,
+    J2,
+    J1,
+}
+
 struct App {
     // Screen
     current_screen: Screen,
     // Kanji
     kanji: Vec<Kanji>,
+
+    // Current JLPT
+    current_jlpt: JLPT,
+
+    // Search
+    search: String,
 
     // Localization
     localization: Localization,
@@ -60,6 +75,8 @@ impl App {
         Self {
             current_screen: Screen::Home,
             kanji,
+            current_jlpt: JLPT::J5,
+            search: String::new(),
             localization,
             general_settings_window: false,
             interface_font_size: 16.0,
@@ -84,7 +101,7 @@ impl App {
                 // Kanji Menu
                 ui.menu_button(&local.kanji.title, |ui| {
                     if ui.button(&local.kanji.jlpt).clicked() {
-                        println!("JLPT");
+                        self.current_screen = Screen::Jlpt;
                     }
 
                     if ui.button(&local.kanji.kanaken).clicked() {
@@ -229,41 +246,97 @@ impl App {
         self.show_kanji(ui, KanjiList::All);
     }
 
+    // Ui Screen JLPT 5
     fn kanji_n5(&mut self, ui: &mut egui::Ui) {
         self.show_kanji(ui, KanjiList::Jlpt5);
     }
 
+    // Ui Screen JLPT 4
     fn kanji_n4(&mut self, ui: &mut egui::Ui) {
         self.show_kanji(ui, KanjiList::Jlpt4);
     }
 
+    // Ui Screen JLPT 3
     fn kanji_n3(&mut self, ui: &mut egui::Ui) {
         self.show_kanji(ui, KanjiList::Jlpt3);
     }
 
+    // Ui Screen JLPT 2
     fn kanji_n2(&mut self, ui: &mut egui::Ui) {
         self.show_kanji(ui, KanjiList::Jlpt2);
     }
 
+    // Ui Screen JLPT 1
     fn kanji_n1(&mut self, ui: &mut egui::Ui) {
         self.show_kanji(ui, KanjiList::Jlpt1);
     }
 
     // Show Kanji
     fn show_kanji(&mut self, ui: &mut egui::Ui, kanji_set: KanjiList) {
+        // Sorted kanji list
+        let filtered_kanji: Vec<&Kanji> = self.kanji
+            .iter()
+            .filter(|item| {
+                // Filter by search (if search is not empty)
+                let matches_search = self.search.is_empty() 
+                    || item.kanji.contains(&self.search);
+
+                // Filter by JLPT category
+                let matches_category = match kanji_set {
+                    KanjiList::All => true,
+                    KanjiList::Jlpt5 => item.jlpt == "N5",
+                    KanjiList::Jlpt4 => item.jlpt == "N4",
+                    KanjiList::Jlpt3 => item.jlpt == "N3",
+                    KanjiList::Jlpt2 => item.jlpt == "N2",
+                    KanjiList::Jlpt1 => item.jlpt == "N1",
+                    _ => true,
+                };
+
+                matches_search && matches_category
+            })
+            .collect();
+
+
+        // Search Field
+        ui.horizontal(|ui| {
+            let desired_size = if self.current_screen == Screen::All {
+                egui::vec2(ui.available_width(), 30.0)
+            } else {
+                egui::vec2(ui.available_width() - 150.0, 30.0)
+            };
+
+            ui.add(
+                egui::TextEdit::singleline(&mut self.search)
+                    .hint_text("Search Kanji...")
+                    .min_size(desired_size)
+            );
+
+            if self.current_screen == Screen::Jlpt {
+                egui::ComboBox::from_label("")
+                    .selected_text(format!("{:?}", self.current_jlpt))
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut self.current_jlpt, JLPT::J5, "N5");
+                        ui.selectable_value(&mut self.current_jlpt, JLPT::J4, "N4");
+                        ui.selectable_value(&mut self.current_jlpt, JLPT::J3, "N3");
+                        ui.selectable_value(&mut self.current_jlpt, JLPT::J2, "N2");
+                        ui.selectable_value(&mut self.current_jlpt, JLPT::J1, "N1");
+                    });
+            }
+        });
+
+        ui.separator();
+
         let columns = 4;
         let spacing = 10.0;
         let card_height = 150.0;
-
         let row_height = card_height + spacing;
 
-        let total_rows = (self.kanji.len() + columns - 1) / columns;
+        let total_rows = (filtered_kanji.len() + columns - 1) / columns;
 
         // Scroll Area
         egui::ScrollArea::vertical().show_rows(ui, row_height, total_rows, |ui, row_range| {
             let available_width = ui.available_width();
-            let card_width =
-                (available_width - (spacing * (columns as f32 - 1.0))) / columns as f32;
+            let card_width = (available_width - (spacing * (columns as f32 - 1.0))) / columns as f32;
 
             // Rows
             for row_index in row_range {
@@ -275,7 +348,7 @@ impl App {
 
                     // Cards
                     for i in start_index..end_index {
-                        if let Some(item) = self.kanji.get(i) {
+                        if let Some(item) = filtered_kanji.get(i) {
                             egui::Frame::new()
                                 .fill(ui.visuals().faint_bg_color)
                                 .stroke(ui.visuals().window_stroke)
@@ -285,74 +358,17 @@ impl App {
                                     ui.set_height(card_height);
 
                                     ui.vertical_centered(|ui| {
-                                        let center_offset = (card_height / 2.0)
-                                            - (self.kanji_font_size / 2.0)
-                                            - 5.0;
+                                        let center_offset = (card_height / 2.0) - (self.kanji_font_size / 2.0) - 5.0;
                                         if center_offset > 0.0 {
                                             ui.add_space(center_offset);
                                         }
 
-                                        match kanji_set {
-                                            KanjiList::All => {
-                                                ui.label(
-                                                    egui::RichText::new(&item.kanji)
-                                                        .size(self.kanji_font_size)
-                                                        .strong(),
-                                                );
-                                            }
-
-                                            KanjiList::Jlpt5 => {
-                                                if item.jlpt == "N5" {
-                                                    ui.label(
-                                                        egui::RichText::new(&item.kanji)
-                                                            .size(self.kanji_font_size)
-                                                            .strong(),
-                                                    );
-                                                }
-                                            }
-
-                                            KanjiList::Jlpt4 => {
-                                                if item.jlpt == "N4" {
-                                                    ui.label(
-                                                        egui::RichText::new(&item.kanji)
-                                                            .size(self.kanji_font_size)
-                                                            .strong(),
-                                                    );
-                                                }
-                                            }
-
-                                            KanjiList::Jlpt3 => {
-                                                if item.jlpt == "N3" {
-                                                    ui.label(
-                                                        egui::RichText::new(&item.kanji)
-                                                            .size(self.kanji_font_size)
-                                                            .strong(),
-                                                    );
-                                                }
-                                            }
-
-                                            KanjiList::Jlpt2 => {
-                                                if item.jlpt == "N2" {
-                                                    ui.label(
-                                                        egui::RichText::new(&item.kanji)
-                                                            .size(self.kanji_font_size)
-                                                            .strong(),
-                                                    );
-                                                }
-                                            }
-
-                                            KanjiList::Jlpt1 => {
-                                                if item.jlpt == "N1" {
-                                                    ui.label(
-                                                        egui::RichText::new(&item.kanji)
-                                                            .size(self.kanji_font_size)
-                                                            .strong(),
-                                                    );
-                                                }
-                                            }
-
-                                            _ => {}
-                                        }
+                                        ui.label(
+                                            egui::RichText::new(&item.kanji)
+                                                .size(self.kanji_font_size)
+                                                .strong()
+                                        );
+                                        
                                     });
                                 });
                         }
@@ -381,6 +397,15 @@ impl eframe::App for App {
 
             match self.current_screen {
                 Screen::All => self.kanji_all(ui),
+                Screen::Jlpt => {
+                    match self.current_jlpt {
+                        JLPT::J5 => self.kanji_n5(ui),
+                        JLPT::J4 => self.kanji_n4(ui),
+                        JLPT::J3 => self.kanji_n3(ui),
+                        JLPT::J2 => self.kanji_n2(ui),
+                        JLPT::J1 => self.kanji_n1(ui),
+                    }
+                }
                 _ => {}
             }
 
