@@ -5,6 +5,7 @@ use eframe::egui;
 #[derive(PartialEq)]
 enum Screen {
     Home,
+    Kanji,
     Jlpt,
     Kanaken,
     Radicals,
@@ -25,11 +26,11 @@ enum KanjiList {
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum JLPT {
-    J5,
-    J4,
-    J3,
-    J2,
-    J1,
+    N5,
+    N4,
+    N3,
+    N2,
+    N1,
 }
 
 struct App {
@@ -75,7 +76,7 @@ impl App {
         Self {
             current_screen: Screen::Home,
             kanji,
-            current_jlpt: JLPT::J5,
+            current_jlpt: JLPT::N5,
             search: String::new(),
             localization,
             general_settings_window: false,
@@ -279,7 +280,11 @@ impl App {
             .filter(|item| {
                 // Filter by search (if search is not empty)
                 let matches_search = self.search.is_empty() 
-                    || item.kanji.contains(&self.search);
+                    || item.kanji.contains(&self.search)
+                    || item.onyomi.contains(&self.search)
+                    || item.kunyomi.contains(&self.search)
+                    || item.onyomi_romaji.contains(&self.search)
+                    || item.kunyomi_romaji.contains(&self.search);
 
                 // Filter by JLPT category
                 let matches_category = match kanji_set {
@@ -315,11 +320,11 @@ impl App {
                 egui::ComboBox::from_label("")
                     .selected_text(format!("{:?}", self.current_jlpt))
                     .show_ui(ui, |ui| {
-                        ui.selectable_value(&mut self.current_jlpt, JLPT::J5, "N5");
-                        ui.selectable_value(&mut self.current_jlpt, JLPT::J4, "N4");
-                        ui.selectable_value(&mut self.current_jlpt, JLPT::J3, "N3");
-                        ui.selectable_value(&mut self.current_jlpt, JLPT::J2, "N2");
-                        ui.selectable_value(&mut self.current_jlpt, JLPT::J1, "N1");
+                        ui.selectable_value(&mut self.current_jlpt, JLPT::N5, "N5");
+                        ui.selectable_value(&mut self.current_jlpt, JLPT::N4, "N4");
+                        ui.selectable_value(&mut self.current_jlpt, JLPT::N3, "N3");
+                        ui.selectable_value(&mut self.current_jlpt, JLPT::N2, "N2");
+                        ui.selectable_value(&mut self.current_jlpt, JLPT::N1, "N1");
                     });
             }
         });
@@ -399,11 +404,11 @@ impl eframe::App for App {
                 Screen::All => self.kanji_all(ui),
                 Screen::Jlpt => {
                     match self.current_jlpt {
-                        JLPT::J5 => self.kanji_n5(ui),
-                        JLPT::J4 => self.kanji_n4(ui),
-                        JLPT::J3 => self.kanji_n3(ui),
-                        JLPT::J2 => self.kanji_n2(ui),
-                        JLPT::J1 => self.kanji_n1(ui),
+                        JLPT::N5 => self.kanji_n5(ui),
+                        JLPT::N4 => self.kanji_n4(ui),
+                        JLPT::N3 => self.kanji_n3(ui),
+                        JLPT::N2 => self.kanji_n2(ui),
+                        JLPT::N1 => self.kanji_n1(ui),
                     }
                 }
                 _ => {}
