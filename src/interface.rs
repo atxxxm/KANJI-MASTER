@@ -2,13 +2,11 @@ use crate::core::{Database, Kanji};
 use crate::localization::*;
 use eframe::egui;
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 enum Screen {
     Home,
-    Kanji,
+    Kanji(Kanji),
     Jlpt,
-    Kanaken,
-    Radicals,
     All,
     Kana,
 }
@@ -20,8 +18,6 @@ enum KanjiList {
     Jlpt3,
     Jlpt2,
     Jlpt1,
-    Kanaken,
-    Radicals,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -105,14 +101,6 @@ impl App {
                         self.current_screen = Screen::Jlpt;
                     }
 
-                    if ui.button(&local.kanji.kanaken).clicked() {
-                        println!("Kanaken");
-                    }
-
-                    if ui.button(&local.kanji.radicals).clicked() {
-                        println!("Radicals");
-                    }
-
                     if ui.button(&local.kanji.all).clicked() {
                         self.current_screen = Screen::All;
                     }
@@ -122,10 +110,6 @@ impl App {
                 ui.menu_button(&local.tranning.title, |ui| {
                     if ui.button(&local.tranning.jlpt).clicked() {
                         println!("JLPT");
-                    }
-
-                    if ui.button(&local.tranning.kanaken).clicked() {
-                        println!("Kanaken");
                     }
 
                     if ui.button(&local.tranning.custom).clicked() {
@@ -294,7 +278,6 @@ impl App {
                     KanjiList::Jlpt3 => item.jlpt == "N3",
                     KanjiList::Jlpt2 => item.jlpt == "N2",
                     KanjiList::Jlpt1 => item.jlpt == "N1",
-                    _ => true,
                 };
 
                 matches_search && matches_category
@@ -333,10 +316,16 @@ impl App {
 
         let columns = 4;
         let spacing = 10.0;
-        let card_height = 150.0;
+
+        let available_width = ui.available_width();
+        let card_width = (available_width - (spacing * (columns as f32 - 1.0))) / columns as f32;
+
+        let card_height = (card_width / 3.0) * 4.0;
         let row_height = card_height + spacing;
 
         let total_rows = (filtered_kanji.len() + columns - 1) / columns;
+
+        ui.separator();
 
         // Scroll Area
         egui::ScrollArea::vertical().show_rows(ui, row_height, total_rows, |ui, row_range| {
@@ -354,33 +343,113 @@ impl App {
                     // Cards
                     for i in start_index..end_index {
                         if let Some(item) = filtered_kanji.get(i) {
-                            egui::Frame::new()
-                                .fill(ui.visuals().faint_bg_color)
-                                .stroke(ui.visuals().window_stroke)
-                                .corner_radius(4.0)
-                                .show(ui, |ui| {
-                                    ui.set_width(card_width);
-                                    ui.set_height(card_height);
+                            let (rect, response) = ui.allocate_at_least(
+                                egui::vec2(card_width, card_height),
+                                egui::Sense::click(),
+                            );
 
-                                    ui.vertical_centered(|ui| {
-                                        let center_offset = (card_height / 2.0) - (self.kanji_font_size / 2.0) - 5.0;
-                                        if center_offset > 0.0 {
-                                            ui.add_space(center_offset);
-                                        }
+                            ui.painter().rect(
+                                rect,
+                                4.0,
+                                ui.visuals().faint_bg_color,
+                                ui.visuals().window_stroke,
+                                egui::StrokeKind::Middle,
+                            );
 
-                                        ui.label(
-                                            egui::RichText::new(&item.kanji)
-                                                .size(self.kanji_font_size)
-                                                .strong()
-                                        );
-                                        
-                                    });
+                            ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
+                                ui.vertical_centered(|ui| {
+                                    let text_height = self.kanji_font_size;
+                                    ui.add_space((card_height - text_height) / 2.0);
+
+                                    ui.label(
+                                        egui::RichText::new(&item.kanji)
+                                            .size(text_height)
+                                            .strong()
+                                    );
                                 });
+                            });
+
+                            if response.clicked() {
+                                self.current_screen = Screen::Kanji((*item).clone());
+                            }
+
+                            if response.hovered() {
+                                ui.output_mut(|o| o.cursor_icon = egui::CursorIcon::PointingHand);
+                            }
+
                         }
                     }
                 });
                 ui.add_space(spacing);
             }
+        });
+    }
+
+    // Show Current Kanji
+    fn kanji_screen(&mut self, ui: &mut egui::Ui, kanji: &Kanji) {
+        if ui.button("Back").clicked() {
+            self.current_screen = Screen::All;
+        }
+
+        ui.add_space(20.0);
+
+        ui.columns(2, |columns| {
+            columns[0].vertical_centered(|ui| {
+                let card_w = 200.0;
+                let card_h = (card_w / 3.0) * 4.0;
+                let text_size = 120.0;
+
+                egui::Frame::canvas(ui.style())
+                    .fill(ui.visuals().window_fill)
+                    .stroke(ui.visuals().window_stroke)
+                    .corner_radius(10.0)
+                    .show(ui, |ui| {
+                        ui.set_min_size(egui::vec2(card_w, card_h));
+                        ui.set_max_size(egui::vec2(card_w, card_h));
+
+                        ui.vertical_centered(|ui| {
+                            let top_space = (card_h - text_size) / 2.0;
+                            ui.add_space(top_space);
+
+                            ui.label(
+                                egui::RichText::new(&kanji.kanji)
+                                    .size(text_size)
+                                    .strong()
+                            )
+                        });
+
+                        ui.add_space(10.0);
+                    });
+            });
+
+            columns[1].vertical_centered(|ui| {
+                ui.heading("Information");
+                ui.separator();
+
+                egui::Grid::new("info_grid")
+                    .num_columns(2)
+                    .spacing([20.0, 10.0])
+                    .striped(true)
+                    .show(ui, |ui| {
+                        ui.label(egui::RichText::new("Meaning:").strong());
+
+                        ui.end_row();
+
+                        ui.label(egui::RichText::new("On:").strong());
+
+                        ui.end_row();
+
+                        ui.label(egui::RichText::new("Kun:").strong());
+
+                        ui.end_row();
+                    });
+
+                ui.add_space(20.0);
+
+                ui.collapsing("Examples", |ui| {
+                    ui.label("Examples 1 2 3 4 5");
+                });
+            });
         });
     }
 }
@@ -400,7 +469,7 @@ impl eframe::App for App {
                 }
             }
 
-            match self.current_screen {
+            match &self.current_screen {
                 Screen::All => self.kanji_all(ui),
                 Screen::Jlpt => {
                     match self.current_jlpt {
@@ -411,6 +480,12 @@ impl eframe::App for App {
                         JLPT::N1 => self.kanji_n1(ui),
                     }
                 }
+
+                Screen::Kanji(selected_kanji) => {
+                    let kanji_to_show = selected_kanji.clone();
+                    self.kanji_screen(ui, &kanji_to_show);
+                }
+
                 _ => {}
             }
 

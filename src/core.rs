@@ -6,6 +6,7 @@ pub struct Database {
     path_to_db: String,
 }
 
+#[derive(Clone, PartialEq)]
 pub struct Kanji {
     pub kanji: String,
     pub strokes: i8,
