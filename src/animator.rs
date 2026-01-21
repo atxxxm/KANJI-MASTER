@@ -15,6 +15,8 @@ pub struct KanjiAnimator {
     stroke_progress: f32, // Progress through the current stroke
     current_stroke_index: usize, // Index of the current stroke
     last_time: Option<f64>, // For tracking delta time 
+    transformed_strokes: Vec<Vec<egui::Pos2>>, // Transformed strokes for drawing
+    last_offset: Option<egui::Pos2>, // Last offset for drawing
 }
 
 impl KanjiAnimator {
@@ -25,10 +27,12 @@ impl KanjiAnimator {
             progress: 0,
             is_playing: false,
             scale: 2.0,
-            time_per_stroke: 1.0, 
+            time_per_stroke: 0.4, 
             stroke_progress: 0.0,
             current_stroke_index: 0,
             last_time: None,
+            transformed_strokes: Vec::new(),
+            last_offset: None,
         }
     }
 
@@ -66,6 +70,9 @@ impl KanjiAnimator {
             }
         }
 
+        self.transformed_strokes.clear();
+        self.last_offset = None;
+
         Ok(())
     }
 
@@ -74,25 +81,27 @@ impl KanjiAnimator {
         let painter = ui.painter_at(available_rect);
         let offset = available_rect.min;
 
+        // Обновляем кэш только при изменении позиции/размера
+        if self.last_offset != Some(offset) {
+            self.transformed_strokes = self.strokes.iter().map(|stroke| {
+                stroke.iter().map(|&p| egui::Pos2::new(p.x + offset.x, p.y + offset.y)).collect()
+            }).collect();
+            self.last_offset = Some(offset);
+        }
+
         if self.strokes.is_empty() {
             return;
         }
 
         if !self.is_playing {
-            self.draw_full_kanji(&painter, offset);
+            self.draw_full_kanji(&painter);
             return;
         }
 
         // Delta time
         let now = ui.input(|i| i.time);
-        let delta = if let Some(prev) = self.last_time {
-            (now - prev) as f32
-        } else {
-            0.016
-        };
+        let delta = if let Some(prev) = self.last_time { (now - prev) as f32 } else { 0.016 };
         self.last_time = Some(now);
-
-        ui.ctx().request_repaint();
 
         self.stroke_progress += delta / self.time_per_stroke;
 
@@ -106,26 +115,24 @@ impl KanjiAnimator {
             self.stroke_progress = 1.0;
         }
 
+        ui.ctx().request_repaint();  // только если играем — можно завернуть в if self.is_playing
+
         let mut shapes = Vec::new();
 
-        // Draw completed strokes fully + current partially
-        for (i, stroke) in self.strokes.iter().enumerate() {
+        for i in 0..self.strokes.len() {
             let points_to_take = if i < self.current_stroke_index {
-                stroke.len()      
+                self.transformed_strokes[i].len()
             } else if i == self.current_stroke_index {
-                ((stroke.len() as f32 * self.stroke_progress) as usize).max(2)
+                ((self.transformed_strokes[i].len() as f32 * self.stroke_progress) as usize).max(1)
             } else {
-                continue;               
+                continue;
             };
 
-            let transformed: Vec<egui::Pos2> = stroke.iter()
-                .take(points_to_take)
-                .map(|p| egui::Pos2::new(p.x + offset.x, p.y + offset.y))
-                .collect();
+            let slice = &self.transformed_strokes[i][0..points_to_take];
 
-            if transformed.len() > 1 {
+            if slice.len() > 1 {
                 shapes.push(egui::Shape::Path(egui::epaint::PathShape {
-                    points: transformed,
+                    points: slice.to_vec(),
                     closed: false,
                     fill: egui::Color32::TRANSPARENT,
                     stroke: egui::Stroke::new(3.5 * self.scale, egui::Color32::WHITE).into(),
@@ -139,17 +146,13 @@ impl KanjiAnimator {
     }
 
     // Function to draw the full kanji
-    fn draw_full_kanji(&self, painter: &egui::Painter, offset: egui::Pos2) {
-        let mut shapes= Vec::new();
+    fn draw_full_kanji(&self, painter: &egui::Painter) {
+        let mut shapes = Vec::new();
 
-        for stroke in &self.strokes {
-            let pts: Vec<egui::Pos2> = stroke.iter()
-                .map(|p| egui::Pos2::new(p.x + offset.x, p.y + offset.y))
-                .collect();
-
-            if pts.len() > 1 {
+        for stroke_points in &self.transformed_strokes {
+            if stroke_points.len() > 1 {
                 shapes.push(egui::Shape::Path(egui::epaint::PathShape {
-                    points: pts,
+                    points: stroke_points.clone(),
                     closed: false,
                     fill: egui::Color32::TRANSPARENT,
                     stroke: egui::Stroke::new(3.5 * self.scale, egui::Color32::WHITE).into(),
@@ -225,7 +228,7 @@ fn parse_path_to_points(d: &str, scale: f32) -> Vec<egui::Pos2> {
     }
 
     let mut points = Vec::new();
-    let tolerance = 0.01;
+    let tolerance = 0.4 / scale as f64;
     // Use kurbo to convert the path to points
     flatten(path.iter(), tolerance, |el| {
         match el {
