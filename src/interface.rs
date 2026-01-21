@@ -1,6 +1,8 @@
 use crate::core::{Database, Kanji};
 use crate::localization::*;
+use crate::animator::KanjiAnimator;
 use eframe::egui;
+
 
 #[derive(PartialEq, Clone)]
 enum Screen {
@@ -32,6 +34,7 @@ enum JLPT {
 struct App {
     // Screen
     current_screen: Screen,
+
     // Kanji
     kanji: Vec<Kanji>,
 
@@ -40,6 +43,9 @@ struct App {
 
     // Search
     search: String,
+
+    // Kanji Animator
+    animator: KanjiAnimator,
 
     // Localization
     localization: Localization,
@@ -74,6 +80,7 @@ impl App {
             kanji,
             current_jlpt: JLPT::N5,
             search: String::new(),
+            animator: KanjiAnimator::new(),
             localization,
             general_settings_window: false,
             interface_font_size: 16.0,
@@ -370,7 +377,14 @@ impl App {
                             });
 
                             if response.clicked() {
-                                self.current_screen = Screen::Kanji((*item).clone());
+                                let selected = (*item).clone();
+                                let svg_path = format!("kanji-svg/0{}.svg", item.unicode.to_lowercase());
+
+                                if let Err(e) = self.animator.load_svg(&svg_path) {
+                                    eprintln!("Failed to load SVG at {}: {}", svg_path, e);
+                                }
+
+                                self.current_screen = Screen::Kanji(selected);
                             }
 
                             if response.hovered() {
@@ -394,60 +408,100 @@ impl App {
         ui.add_space(20.0);
 
         ui.columns(2, |columns| {
+            let available_w = columns[0].available_width().min(340.0);
+            let card_w = available_w * 0.94;
+            let card_h = card_w * (4.0 / 3.0);
+
             columns[0].vertical_centered(|ui| {
-                let card_w = 200.0;
-                let card_h = (card_w / 3.0) * 4.0;
-                let text_size = 120.0;
+                ui.add_space(12.0);
 
                 egui::Frame::canvas(ui.style())
                     .fill(ui.visuals().window_fill)
                     .stroke(ui.visuals().window_stroke)
-                    .corner_radius(10.0)
+                    .corner_radius(16.0)
+                    .inner_margin(10.0)
                     .show(ui, |ui| {
-                        ui.set_min_size(egui::vec2(card_w, card_h));
-                        ui.set_max_size(egui::vec2(card_w, card_h));
+                        let (rect, response) = ui.allocate_exact_size(
+                            egui::vec2(card_w, card_h),
+                            egui::Sense::click()
+                        );
 
-                        ui.vertical_centered(|ui| {
-                            let top_space = (card_h - text_size) / 2.0;
-                            ui.add_space(top_space);
+                        if response.clicked() {
+                            self.animator.replay();
+                        }
 
-                            ui.label(
-                                egui::RichText::new(&kanji.kanji)
-                                    .size(text_size)
-                                    .strong()
-                            )
-                        });
+                        if response.hovered() {
+                            ui.output_mut(|o| o.cursor_icon = egui::CursorIcon::PointingHand);
+                        }
 
-                        ui.add_space(10.0);
+                        // ANIMATION
+                        let anim_side = rect.width().min(rect.height()) * 0.88;
+                        let center = rect.center();
+                        let draw_rect = egui::Rect::from_center_size(
+                            center,
+                            egui::vec2(anim_side, anim_side),
+                        );
+
+                        self.animator.ui(ui, draw_rect);
+
                     });
+
+                    ui.add_space(16.0);
             });
 
             columns[1].vertical_centered(|ui| {
+                ui.add_space(8.0);
                 ui.heading("Information");
+                ui.add_space(12.0);
                 ui.separator();
 
                 egui::Grid::new("info_grid")
                     .num_columns(2)
-                    .spacing([20.0, 10.0])
+                    .spacing([24.0, 12.0])
                     .striped(true)
                     .show(ui, |ui| {
                         ui.label(egui::RichText::new("Meaning:").strong());
-
                         ui.end_row();
 
-                        ui.label(egui::RichText::new("On:").strong());
-
+                        // Onyomi
+                        ui.label(egui::RichText::new(format!("On: {}", kanji.onyomi)).strong());
+                        ui.end_row();
+                        ui.label(egui::RichText::new(format!("On Romaji: {}", kanji.onyomi_romaji)).strong());
                         ui.end_row();
 
-                        ui.label(egui::RichText::new("Kun:").strong());
-
+                        // Kunyomi
+                        ui.label(egui::RichText::new(format!("Kun: {}", kanji.kunyomi)).strong());
                         ui.end_row();
+                        ui.label(egui::RichText::new(format!("Kun Romaji: {}", kanji.kunyomi_romaji)).strong());
+                        ui.end_row();
+
+                        // Kanji Info
+                        ui.label(egui::RichText::new(format!("Strokes: {}", kanji.strokes)).strong());
+                        ui.end_row();
+                        ui.label(egui::RichText::new(format!("JLPT: {}", kanji.jlpt)).strong());
+                        ui.end_row();
+                        ui.label(egui::RichText::new(format!("Grade: {}", kanji.grade)).strong());
+                        ui.end_row();
+                        ui.label(egui::RichText::new(format!("Frequency: {}", kanji.frequency)).strong());
+                        ui.end_row();
+
                     });
 
-                ui.add_space(20.0);
+                ui.add_space(28.0);
 
-                ui.collapsing("Examples", |ui| {
-                    ui.label("Examples 1 2 3 4 5");
+                // Examples
+                ui.heading("Examples");
+                ui.add_space(12.0);
+                ui.separator();
+
+                ui.vertical(|ui| {
+                    for example in &kanji.example {
+                        ui.horizontal_top(|ui| {
+                            ui.add(egui::Label::new(egui::RichText::new(example)).wrap());
+                        });
+
+                        ui.add_space(10.0);
+                    }
                 });
             });
         });

@@ -84,7 +84,9 @@ impl Database {
         for ex in examples {
             let (kanji_id, example_text) = ex?;
             if let Some(k) = kanji_map.get_mut(&kanji_id) {
-                k.example.push(example_text);
+                for part in example_text.split_whitespace() {
+                    k.example.push(part.to_string());
+                }
             }
         }
 

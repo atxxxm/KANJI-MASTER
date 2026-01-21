@@ -1,6 +1,7 @@
 mod core;
 mod interface;
 mod localization;
+mod animator;
 
 use interface::run;
 
