@@ -1,9 +1,9 @@
-use crate::core::{Database, Kanji};
-use crate::localization::*;
-use crate::animator::KanjiAnimator;
+use crate::back::core::{Database, Kanji};
+use crate::back::localization::*;
+use crate::ui::animator::KanjiAnimator;
 use eframe::egui;
 use std::path::Path;
-use crate::settings::Settings;
+use crate::ui::settings::Settings;
 
 
 // Screens
@@ -66,7 +66,7 @@ impl App {
         // Set Font
         set_font(&cc.egui_ctx);
         // Load Base Localization
-        let localization: Localization = load("en.json").expect("Erorr Load");
+        let localization: Localization = load("localization/en.json").expect("Erorr Load");
         // Load Kanji
         let kanji = Database::new("db/core.db").get_kanji().expect("Error Read");
 
@@ -358,7 +358,7 @@ impl App {
                             egui::vec2(anim_side, anim_side),
                         );
 
-                        self.animator.ui(ui, draw_rect, &kanji.kanji);
+                        self.animator.ui(ui, draw_rect, &kanji.kanji, self.settings.animation_speed);
 
                     });
 
@@ -426,6 +426,35 @@ impl App {
 
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        let mut style = (*ctx.style()).clone();
+        let font_size = self.settings.interface_font_size;
+
+        style.text_styles = [
+            (
+                egui::TextStyle::Small,
+                egui::FontId::new(font_size * 0.75, egui::FontFamily::Proportional),
+            ),
+            (
+                egui::TextStyle::Body,
+                egui::FontId::new(font_size, egui::FontFamily::Proportional),
+            ),
+            (
+                egui::TextStyle::Button,
+                egui::FontId::new(font_size, egui::FontFamily::Proportional),
+            ),
+            (
+                egui::TextStyle::Heading,
+                egui::FontId::new(font_size * 1.5, egui::FontFamily::Proportional),
+            ),
+            (
+                egui::TextStyle::Monospace,
+                egui::FontId::new(font_size, egui::FontFamily::Monospace),
+            ),
+        ]
+        .into();
+
+        ctx.set_style(style);
+
         self.top_bar(ctx);
 
         egui::CentralPanel::default().show(ctx, |ui| {
@@ -483,7 +512,7 @@ pub fn run() -> eframe::Result<()> {
 fn set_font(ctx: &egui::Context) {
     static mut LOADED: bool = false;
     if !unsafe { LOADED } {
-        let font_data = include_bytes!("../font/NotoSansJP-VariableFont_wght.ttf");
+        let font_data = include_bytes!("../../font/NotoSansJP-VariableFont_wght.ttf");
         let font = egui::FontData::from_static(font_data).tweak(egui::FontTweak {
             scale: 1.0,
             y_offset_factor: 0.0,

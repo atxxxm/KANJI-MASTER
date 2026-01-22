@@ -67,8 +67,10 @@ pub struct KanaTopBar {
 pub struct Settings {
     pub title: String,
     pub lang: String,
+    pub kanji_localization: String,
     pub lang_button: String,
     pub interface_font_size: String,
+    pub kanji_animation_speed: String,
     pub kanji_font_size: String,
     pub auto_save_progress: String,
     pub auto_save_frequency: String,

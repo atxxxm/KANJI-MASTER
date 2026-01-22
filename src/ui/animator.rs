@@ -22,7 +22,6 @@ struct Stroke {
 pub struct KanjiAnimator {
     strokes: Vec<Stroke>, // Stroke Data
     is_playing: bool, // Is Playing
-    time_per_stroke: f32, // Time Per Stroke
     stroke_progress: f32, // Stroke Progress
     current_stroke_index: usize, // Current Stroke Index
     last_time: Option<f64>, // Last Time 
@@ -33,7 +32,6 @@ impl KanjiAnimator {
         Self {
             strokes: Vec::new(),
             is_playing: false,
-            time_per_stroke: 0.75,
             stroke_progress: 0.0,
             current_stroke_index: 0,
             last_time: None,
@@ -155,7 +153,7 @@ impl KanjiAnimator {
     }
 
     // Display animation
-    pub fn ui(&mut self, ui: &mut egui::Ui, rect: egui::Rect, char_to_show: &str) {
+    pub fn ui(&mut self, ui: &mut egui::Ui, rect: egui::Rect, char_to_show: &str, speed: f32) {
         let painter = ui.painter_at(rect);
 
         if self.strokes.is_empty() {
@@ -197,7 +195,7 @@ impl KanjiAnimator {
             };
             self.last_time = Some(now);
 
-            self.stroke_progress += delta / self.time_per_stroke;
+            self.stroke_progress += delta / speed;
 
             if self.stroke_progress >= 1.0 {
                 self.stroke_progress = 0.0;

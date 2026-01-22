@@ -1,4 +1,5 @@
 /target
 /db
-*json
+/localization
+/kanji-localization
 /kanji-svg

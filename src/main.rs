@@ -1,10 +1,7 @@
-mod core;
-mod interface;
-mod localization;
-mod animator;
-mod settings;
+mod ui;
+mod back;
 
-use interface::run;
+use ui::interface::run;
 
 fn main() {
     run().expect("Error run app");
