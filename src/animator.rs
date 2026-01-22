@@ -4,18 +4,21 @@ use roxmltree::{Document, ParsingOptions};
 use std::fs;
 use svgtypes::{PathParser, PathSegment};
 
+// Stroke Point Data
 #[derive(Clone, Debug)]
 struct StrokePoint {
     pos: Point,
     dist: f32,
 }
 
+// Stroke Data
 #[derive(Clone)]
 struct Stroke {
     points: Vec<StrokePoint>,
     total_length: f32,
 }
 
+// Kanji Animator
 pub struct KanjiAnimator {
     strokes: Vec<Stroke>, // Stroke Data
     is_playing: bool, // Is Playing
@@ -163,7 +166,7 @@ impl KanjiAnimator {
                 egui::Align2::CENTER_CENTER,
                 char_to_show,
                 egui::FontId::proportional(font_size),
-                ui.visuals().text_color(),
+                egui::Color32::WHITE,
             );
 
             return;

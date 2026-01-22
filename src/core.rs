@@ -59,10 +59,10 @@ impl Database {
                 grade: row.get("grade")?,
                 frequency: row.get("frequency")?,
                 unicode: row.get("unicode")?,
-                onyomi: row.get("onyomi").unwrap_or_default(),
-                onyomi_romaji: row.get("onyomi_romaji").unwrap_or_default(),
-                kunyomi: row.get("kunyomi").unwrap_or_default(),
-                kunyomi_romaji: row.get("kunyomi_romaji").unwrap_or_default(),
+                onyomi: row.get::<_, Option<String>>("onyomi")?.map_or(String::new(), |s| self.split_on_or_kun(&s)),
+                onyomi_romaji: row.get::<_, Option<String>>("onyomi_romaji")?.map_or(String::new(), |s| self.split_romaji(&s)),
+                kunyomi: row.get::<_, Option<String>>("kunyomi")?.map_or(String::new(), |s| self.split_on_or_kun(&s)),
+                kunyomi_romaji: row.get::<_, Option<String>>("kunyomi_romaji")?.map_or(String::new(), |s| self.split_romaji(&s)),
                 example: Vec::new(),
             };
             Ok((id, kanji))
@@ -95,5 +95,20 @@ impl Database {
 
         Ok(result)
 
+    }
+
+
+    fn split_on_or_kun(&self, text: &str) -> String {
+        if text.trim().is_empty() {
+            return String::new();
+        }
+        text.split_whitespace().collect::<Vec<_>>().join("、")
+    }
+
+    fn split_romaji(&self, text: &str) -> String {
+        if text.trim().is_empty() {
+            return String::new();
+        }
+        text.split_whitespace().collect::<Vec<_>>().join(", ")
     }
 }

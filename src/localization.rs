@@ -3,7 +3,7 @@ use std::fs::File;
 use serde::{Serialize, Deserialize, de::DeserializeOwned};
 use anyhow;
 // Main Localization Struct
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 pub struct Localization {
     pub lang: String,
     pub local: Local,
@@ -11,14 +11,15 @@ pub struct Localization {
 }
 
 // Local Struct
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 pub struct Local {
     pub top_bar: TopBar,
     pub settings: Settings,
+    pub screens: Screens,
 }
 
 // Top Bar Struct
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 pub struct TopBar {
     pub kanji: KanjiTopBar,
     pub tranning: TranningTopBar,
@@ -27,7 +28,7 @@ pub struct TopBar {
 }
 
 // Kanji Top Bar Struct
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 pub struct KanjiTopBar {
     pub title: String,
     pub jlpt: String,
@@ -37,7 +38,7 @@ pub struct KanjiTopBar {
 }
 
 // Tranning Top Bar Struct
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 pub struct TranningTopBar {
     pub title: String,
     pub jlpt: String,
@@ -46,7 +47,7 @@ pub struct TranningTopBar {
 }
 
 // Card Top Bar Struct
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 pub struct CardTopBar {
     pub title: String,
     pub new: String,
@@ -54,16 +55,15 @@ pub struct CardTopBar {
 }
 
 // Kana Top Bar Struct
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 pub struct KanaTopBar {
     pub title: String,
     pub hiragana: String,
     pub katakana: String,
 }
 
-
 // Settings Struct
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 pub struct Settings {
     pub title: String,
     pub lang: String,
@@ -78,6 +78,30 @@ pub struct Settings {
     pub confrim_progress_reset: String,
 }
 
+// Screens Struct
+#[derive(Serialize, Deserialize, Default, Clone)]
+pub struct Screens {
+    pub search: String,
+    pub current_kanji: CurrentKanji,
+}
+
+// Current Kanji Struct
+#[derive(Serialize, Deserialize, Default, Clone)]
+pub struct CurrentKanji {
+    pub back_button: String,
+    pub information: String,
+    pub meaning: String,
+    pub onyomi: String,
+    pub onyomi_romaji: String,
+    pub kunyomi: String,
+    pub kunyomi_romaji: String,
+    pub strokes: String,
+    pub jlpt: String,
+    pub grade: String,
+    pub frequency: String,
+    pub examples: String,
+}
+
 // Save file (Serialize)
 pub fn save<T: Serialize>(path: &str, data: &T) -> anyhow::Result<()> {
     let file = File::create(path)?;
@@ -85,6 +109,7 @@ pub fn save<T: Serialize>(path: &str, data: &T) -> anyhow::Result<()> {
     Ok(())
 }
 
+// Load file (Deserialize)
 pub fn load<T: DeserializeOwned>(path: &str) -> anyhow::Result<T> {
     let file = File::open(path)?;
     let data: T = serde_json::from_reader(file)?;

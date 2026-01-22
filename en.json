@@ -38,6 +38,23 @@
       "startup_screen": "Startup screen",
       "confrim_card_delete": "Confrim card delete",
       "confrim_progress_reset": "Confrim progress reset"
+    },
+    "screens": {
+      "search": "Search Kanji...",
+      "current_kanji": {
+        "back_button": "Back",
+        "information": "Information",
+        "meaning": "Meaning",
+        "onyomi": "On",
+        "onyomi_romaji": "On Romaji",
+        "kunyomi": "Kun",
+        "kunyomi_romaji": "Kun Romaji",
+        "strokes": "Strokes",
+        "jlpt": "JLPT",
+        "grade": "Grade",
+        "frequency": "Frequency",
+        "examples": "Examples"
+      }
     }
   }
 }

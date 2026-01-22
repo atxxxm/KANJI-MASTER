@@ -3,8 +3,10 @@ use crate::localization::*;
 use crate::animator::KanjiAnimator;
 use eframe::egui;
 use std::path::Path;
+use crate::settings::Settings;
 
 
+// Screens
 #[derive(PartialEq, Clone)]
 enum Screen {
     Home,
@@ -14,6 +16,7 @@ enum Screen {
     Kana,
 }
 
+// Kanji List
 enum KanjiList {
     All,
     Jlpt5,
@@ -23,6 +26,7 @@ enum KanjiList {
     Jlpt1,
 }
 
+// JLPT Levels
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum JLPT {
     N5,
@@ -45,26 +49,16 @@ struct App {
     // Search
     search: String,
 
+    // Settings
+    settings: Settings,
+
     // Kanji Animator
     animator: KanjiAnimator,
 
     // Localization
     localization: Localization,
     // Settings Window
-    general_settings_window: bool,
-    // Interface Font Size Value
-    interface_font_size: f32,
-    // Kanji Font Size Value
-    kanji_font_size: f32,
-    // Auto Save Progress
-    auto_save_progress: bool,
-
-    // Open Last Session At Startup
-    open_last_session_at_startup: bool,
-    // Confrim Delete Card
-    confrim_card_delete: bool,
-    // Confrim Reset Progress
-    confrim_progress_reset: bool,
+    settings_window: bool,
 }
 
 impl App {
@@ -81,15 +75,10 @@ impl App {
             kanji,
             current_jlpt: JLPT::N5,
             search: String::new(),
+            settings: Settings::new(localization.clone()),
             animator: KanjiAnimator::new(),
             localization,
-            general_settings_window: false,
-            interface_font_size: 16.0,
-            kanji_font_size: 40.0,
-            auto_save_progress: true,
-            open_last_session_at_startup: false,
-            confrim_card_delete: false,
-            confrim_progress_reset: false,
+            settings_window: false,
         }
     }
 
@@ -149,89 +138,10 @@ impl App {
 
                 // Settings Menu
                 if ui.button(&self.localization.local.settings.title).clicked() {
-                    self.general_settings_window = true;
+                    self.settings_window = true;
                 }
             });
         });
-    }
-
-    // Settings Window
-    fn setting(&mut self, ctx: &egui::Context) {
-        if !self.general_settings_window {
-            return;
-        }
-
-        let local = &self.localization.local.settings;
-
-        egui::Window::new(&local.title)
-            .open(&mut self.general_settings_window)
-            .resizable(true)
-            .show(ctx, |ui| {
-                ui.label(&local.lang);
-                if ui.button(&local.lang_button).clicked() {
-                    println!("Select");
-                }
-
-                ui.separator();
-
-                ui.label(&local.interface_font_size);
-                ui.add(egui::Slider::new(
-                    &mut self.interface_font_size,
-                    10.0..=28.0,
-                ));
-
-                ui.separator();
-
-                ui.label(&local.kanji_font_size);
-                ui.add(egui::Slider::new(&mut self.kanji_font_size, 10.0..=64.0));
-
-                ui.separator();
-
-                ui.label(&local.auto_save_progress);
-                ui.checkbox(&mut self.auto_save_progress, "");
-
-                ui.separator();
-
-                ui.label(&local.auto_save_frequency);
-
-                //egui::ComboBox::from_label("")
-                //    .selected_text("10 minutes")
-                //    .show_ui(ui, |ui| {
-                //        ui.selectable_value(
-                //            &mut self.auto_save_frequency,
-                //            "10 minutes".to_string(),
-                //            "10 minutes",
-                //        );
-                //    });
-
-                ui.separator();
-
-                ui.label(&local.open_last_session_at_startup);
-                ui.checkbox(&mut self.open_last_session_at_startup, "");
-
-                ui.separator();
-
-                ui.label(&local.startup_screen);
-                //egui::ComboBox::from_label("")
-                //    .selected_text("10 minutes")
-                //    .show_ui(ui, |ui| {
-                //        ui.selectable_value(
-                //            &mut self.auto_save_frequency,
-                //            "10 minutes".to_string(),
-                //            "10 minutes",
-                //        );
-                //    });
-
-                ui.separator();
-
-                ui.label(&local.confrim_card_delete);
-                ui.checkbox(&mut self.confrim_card_delete, "");
-
-                ui.separator();
-
-                ui.label(&local.confrim_progress_reset);
-                ui.checkbox(&mut self.confrim_progress_reset, "");
-            });
     }
 
     // Ui Screen All
@@ -303,7 +213,7 @@ impl App {
 
             ui.add(
                 egui::TextEdit::singleline(&mut self.search)
-                    .hint_text("Search Kanji...")
+                    .hint_text(&self.localization.local.screens.search)
                     .min_size(desired_size)
             );
 
@@ -366,7 +276,7 @@ impl App {
 
                             ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
                                 ui.vertical_centered(|ui| {
-                                    let text_height = self.kanji_font_size;
+                                    let text_height = self.settings.kanji_font_size;
                                     ui.add_space((card_height - text_height) / 2.0);
 
                                     ui.label(
@@ -406,7 +316,8 @@ impl App {
 
     // Show Current Kanji
     fn kanji_screen(&mut self, ui: &mut egui::Ui, kanji: &Kanji) {
-        if ui.button("Back").clicked() {
+        let local = &self.localization.local.screens.current_kanji;
+        if ui.button(&local.back_button).clicked() {
             self.current_screen = Screen::All;
         }
 
@@ -456,7 +367,7 @@ impl App {
 
             columns[1].vertical_centered(|ui| {
                 ui.add_space(8.0);
-                ui.heading("Information");
+                ui.heading(&local.information);
                 ui.add_space(12.0);
                 ui.separator();
 
@@ -465,29 +376,29 @@ impl App {
                     .spacing([24.0, 12.0])
                     .striped(true)
                     .show(ui, |ui| {
-                        ui.label(egui::RichText::new("Meaning:").strong());
+                        ui.label(egui::RichText::new(&format!("{}:", &local.meaning)).strong());
                         ui.end_row();
 
                         // Onyomi
-                        ui.label(egui::RichText::new(format!("On: {}", kanji.onyomi)).strong());
+                        ui.label(egui::RichText::new(format!("{}: {}", &local.onyomi, kanji.onyomi)).strong());
                         ui.end_row();
-                        ui.label(egui::RichText::new(format!("On Romaji: {}", kanji.onyomi_romaji)).strong());
+                        ui.label(egui::RichText::new(format!("{}: {}", &local.onyomi_romaji, kanji.onyomi_romaji)).strong());
                         ui.end_row();
 
                         // Kunyomi
-                        ui.label(egui::RichText::new(format!("Kun: {}", kanji.kunyomi)).strong());
+                        ui.label(egui::RichText::new(format!("{}: {}", &local.kunyomi, kanji.kunyomi)).strong());
                         ui.end_row();
-                        ui.label(egui::RichText::new(format!("Kun Romaji: {}", kanji.kunyomi_romaji)).strong());
+                        ui.label(egui::RichText::new(format!("{}: {}", &local.kunyomi_romaji, kanji.kunyomi_romaji)).strong());
                         ui.end_row();
 
                         // Kanji Info
-                        ui.label(egui::RichText::new(format!("Strokes: {}", kanji.strokes)).strong());
+                        ui.label(egui::RichText::new(format!("{}: {}", &local.strokes, kanji.strokes)).strong());
                         ui.end_row();
-                        ui.label(egui::RichText::new(format!("JLPT: {}", kanji.jlpt)).strong());
+                        ui.label(egui::RichText::new(format!("{}: {}", &local.jlpt, kanji.jlpt)).strong());
                         ui.end_row();
-                        ui.label(egui::RichText::new(format!("Grade: {}", kanji.grade)).strong());
+                        ui.label(egui::RichText::new(format!("{}: {}", &local.grade, kanji.grade)).strong());
                         ui.end_row();
-                        ui.label(egui::RichText::new(format!("Frequency: {}", kanji.frequency)).strong());
+                        ui.label(egui::RichText::new(format!("{}: {}", &local.frequency, kanji.frequency)).strong());
                         ui.end_row();
 
                     });
@@ -549,11 +460,12 @@ impl eframe::App for App {
             }
 
             // Settings
-            self.setting(ctx);
+            self.settings.setting(&mut self.settings_window, ctx);
         });
     }
 }
 
+// Run App
 pub fn run() -> eframe::Result<()> {
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_inner_size((800.0, 600.0)),
