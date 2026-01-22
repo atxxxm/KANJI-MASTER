@@ -2,6 +2,7 @@ use crate::core::{Database, Kanji};
 use crate::localization::*;
 use crate::animator::KanjiAnimator;
 use eframe::egui;
+use std::path::Path;
 
 
 #[derive(PartialEq, Clone)]
@@ -379,11 +380,15 @@ impl App {
                             if response.clicked() {
                                 let selected = (*item).clone();
                                 let svg_path = format!("kanji-svg/0{}.svg", item.unicode.to_lowercase());
-
-                                if let Err(e) = self.animator.load_svg(&svg_path) {
-                                    eprintln!("Failed to load SVG at {}: {}", svg_path, e);
+                                
+                                if Path::new(&svg_path).exists() {
+                                    if let Err(_) = self.animator.load_svg(&svg_path) {
+                                        self.animator.clear();
+                                    }
+                                } else {
+                                    self.animator.clear();
                                 }
-
+                        
                                 self.current_screen = Screen::Kanji(selected);
                             }
 
@@ -442,7 +447,7 @@ impl App {
                             egui::vec2(anim_side, anim_side),
                         );
 
-                        self.animator.ui(ui, draw_rect);
+                        self.animator.ui(ui, draw_rect, &kanji.kanji);
 
                     });
 
