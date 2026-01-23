@@ -23,6 +23,7 @@ pub struct Local {
     pub top_bar: TopBar,
     pub settings: Settings,
     pub screens: Screens,
+    pub kana: Kana,
 }
 
 // Top Bar Struct
@@ -106,6 +107,14 @@ pub struct CurrentKanji {
     pub grade: String,
     pub frequency: String,
     pub examples: String,
+}
+
+// Kana Struct
+#[derive(Serialize, Deserialize, Default, Clone)]
+pub struct Kana {
+    pub title: String,
+    pub hiragana: String,
+    pub katakana: String,
 }
 
 // Save file (Serialize)
