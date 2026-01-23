@@ -8,6 +8,7 @@ pub struct Database {
 
 #[derive(Clone, PartialEq)]
 pub struct Kanji {
+    pub id: i32,
     pub kanji: String,
     pub strokes: i8,
     pub jlpt: String,
@@ -53,6 +54,7 @@ impl Database {
         let rows = stmt.query_map([], |row| {
             let id: i32 = row.get("id")?;
             let kanji = Kanji {
+                id,
                 kanji: row.get("kanji")?,
                 strokes: row.get("strokes")?,
                 jlpt: row.get("jlpt")?,

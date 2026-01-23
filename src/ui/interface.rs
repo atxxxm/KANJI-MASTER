@@ -6,6 +6,7 @@ use std::path::Path;
 use crate::ui::settings::Settings;
 use crate::back::config::{Config, save_config};
 use crate::back::romaji_kana::to_kana;
+use crate::back::translation::*;
 
 
 // Screens
@@ -79,6 +80,9 @@ struct App {
 
     // Romaji Input
     romaji_input: String,
+
+    // Translation State
+    translate_state: TranslateState,
 }
 
 impl App {
@@ -96,6 +100,35 @@ impl App {
             path_to_kanji_localization: config.path_to_kanji_localization.clone(),
         };
 
+        let message_data = MessageTranslationData {
+            file_load_success: localization.local.top_bar.tools.translate_kanji_locale.file_load_success.clone(),
+            file_not_found_or_invalid: localization.local.top_bar.tools.translate_kanji_locale.file_not_found_or_invalid.clone(),
+            saved_at_id: localization.local.top_bar.tools.translate_kanji_locale.saved_at_id.clone(),
+            error_searialize_json: localization.local.top_bar.tools.translate_kanji_locale.error_searialize_json.clone(),
+            error_create_file: localization.local.top_bar.tools.translate_kanji_locale.error_create_file.clone(),
+        };
+
+        let mut translate_state = TranslateState::new(&config.path_to_kanji_localization, message_data);
+        
+        let loaded_successfully = translate_state.load(&config.path_to_kanji_localization);
+
+        if let Some(first_kanji) = kanji.get(translate_state.current_index) {
+            translate_state.sync_translation_buffers(&first_kanji);
+        }
+
+        // If the load was successful, update the current index
+        if loaded_successfully {
+            if let Some(pos) = kanji.iter().position(|k| k.id == translate_state.data.last_id) {
+                translate_state.current_index = pos;
+            }
+            if let Some(first_kanji) = kanji.get(translate_state.current_index) {
+                translate_state.sync_translation_buffers(&first_kanji);
+            }
+        }
+
+        // If loading failed, reset the state
+        let settings_window = !loaded_successfully;
+
         Self {
             current_screen: Screen::Home,
             kanji,
@@ -105,15 +138,59 @@ impl App {
             settings: Settings::new(localization.clone(), config),
             animator: KanjiAnimator::new(),
             localization,
-            settings_window: false,
+            settings_window,
             is_katakana: false,
             romaji_input: String::new(),
+            translate_state,
         }
     }
 
     // Name
     fn name() -> &'static str {
         "Kanji Master"
+    }
+
+    // Auxiliary function for reloading localization UI
+    fn reload_interface_localization(&mut self) {
+        if let Ok(new_loc) = load::<Localization>(&self.paths.path_to_localization) {
+            self.localization = new_loc.clone();
+            self.settings.update_localization(new_loc);
+        }
+    }
+
+    // Auxiliary function for restarting when changing settings
+    fn reload_translations(&mut self) {
+        // Load translations from the new path
+        if self.translate_state.load(&self.paths.path_to_kanji_localization) {
+            // If successful, update the position
+            if let Some(pos) = self.kanji.iter().position(|k| k.id == self.translate_state.data.last_id) {
+                self.translate_state.current_index = pos;
+            }
+            // Sync UI buffers
+            if let Some(k) = self.kanji.get(self.translate_state.current_index) {
+                self.translate_state.sync_translation_buffers(k);
+            }
+        }
+    }
+
+    // Save Config
+    fn save(&mut self) {
+        let current_config = Config {
+            interface_font_size: self.settings.interface_font_size,
+            kanji_font_size: self.settings.kanji_font_size,
+            auto_save_progress: self.settings.auto_save_progress,
+            open_last_session_at_startup: self.settings.open_last_session_at_startup,
+            confrim_card_delete: self.settings.confrim_card_delete,
+            confrim_progress_reset: self.settings.confrim_progress_reset,
+            animation_speed: self.settings.animation_speed,
+            path_to_db_core: self.paths.path_to_db_core.clone(),
+            path_to_localization: self.paths.path_to_localization.clone(),
+            path_to_kanji_localization: self.paths.path_to_kanji_localization.clone(),
+        };
+
+        if let Err(e) = save_config("config.toml", &current_config) {
+            eprintln!("Error saving config: {}", e.to_string());
+        }
     }
 
     // Top Bar
@@ -171,7 +248,7 @@ impl App {
                     }
 
                     if ui.button(&local.tools.translate_kanji).clicked() {
-                        println!("Translate Kanji");
+                        self.current_screen = Screen::TranslateKana;
                     }
                 });
             });
@@ -630,6 +707,152 @@ impl App {
             });
         });
     }
+
+    // Translate Tool Screen
+    fn translate_kanji_screen(&mut self, ui: &mut egui::Ui) {
+        let local = &self.localization.local.top_bar.tools.translate_kanji_locale;
+        ui.heading(&local.title);
+
+        ui.horizontal(|ui| {
+            ui.label(&local.jump_to);
+            let response = ui.add(
+                egui::TextEdit::singleline(&mut self.translate_state.jump_search_buffer)
+                    .desired_width(50.0).hint_text(&local.hint_kanji_input)
+            );
+
+            if ui.button(&local.go_button).clicked() || (response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter))) {
+                let search = self.translate_state.jump_search_buffer.trim();
+                
+                if let Some(pos) = self.kanji.iter().position(|k| k.kanji == search) {
+                    self.translate_state.current_index = pos;
+
+                    if let Some(k) = self.kanji.get(pos) {
+                        self.translate_state.sync_translation_buffers(k);
+                    }
+
+                    self.translate_state.status_message = local.found.clone();
+                } else {
+                    self.translate_state.status_message = local.not_found.clone();
+                }
+            }
+
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui.button(&local.save_progress_button).clicked() {
+                    self.translate_state.save_translations(&self.kanji);
+                }
+                ui.label(&self.translate_state.status_message);
+            });
+        });
+
+        ui.separator();
+
+        // Check if we've reached the end of the list
+        if self.translate_state.current_index >= self.kanji.len() {
+            ui.centered_and_justified(|ui| {
+                ui.heading(&local.all_kanji_processed);
+            });
+            return;
+        }
+
+        let current_kanji = self.kanji[self.translate_state.current_index].clone();
+
+        egui::ScrollArea::vertical().show(ui, |ui| {
+            ui.add_space(10.0);
+            
+            // Title: Kanji and ID
+            ui.horizontal(|ui| {
+                ui.heading(egui::RichText::new(&current_kanji.kanji).size(40.0).strong());
+                ui.label(format!("(ID: {}, Index: {}/{})", current_kanji.id, self.translate_state.current_index + 1, self.kanji.len()));
+            });
+
+            ui.add_space(10.0);
+
+            // Field: Meaning
+            ui.label(egui::RichText::new(&local.meaning).strong());
+            ui.add(
+                egui::TextEdit::singleline(&mut self.translate_state.meaning_buffer)
+                    .hint_text(&local.hint_meaning_input)
+                    .desired_width(f32::INFINITY)
+            );
+
+            ui.add_space(20.0);
+            ui.separator();
+            ui.heading(&local.examples);
+            ui.add_space(10.0);
+            
+            // Grid for alignment: Original | Translation
+            egui::Grid::new("examples_grid")
+                .num_columns(2)
+                .spacing([20.0, 10.0])
+                .striped(true)
+                .show(ui, |ui| {
+                    for (idx, original_ex) in current_kanji.example.iter().enumerate() {
+                        // Колонка 1: Оригинал
+                        ui.label(original_ex);
+
+                        // Field: Input Translation
+                        if idx < self.translate_state.examples_buffer.len() {
+                            ui.add(
+                                egui::TextEdit::multiline(&mut self.translate_state.examples_buffer[idx])
+                                    .hint_text(&local.hint_examples_input)
+                                    .desired_width(300.0)
+                            );
+                        } else {
+                            ui.label(&local.error_buffer_mismatch);
+                        }
+                        ui.end_row();
+                    }
+                });
+            
+            ui.add_space(20.0);
+            
+            // Buttons: Previous, Next
+            ui.horizontal(|ui| {
+                if ui.button(format!("⬅ {}", &local.previous_button)).clicked() {
+                    if self.translate_state.current_index > 0 {
+                        // Save current to memory (but not to disk to be faster)
+                        let entry = KanjiTranslation {
+                            meaning: self.translate_state.meaning_buffer.clone(),
+                            translate_examples: self.translate_state.examples_buffer.clone(),
+                        };
+                        self.translate_state.data.entries.insert(current_kanji.kanji.clone(), entry);
+
+                        // Backward switch
+                        self.translate_state.current_index -= 1;
+                        if let Some(k) = self.kanji.get(self.translate_state.current_index) {
+                            self.translate_state.sync_translation_buffers(k);
+                        }
+                        self.translate_state.status_message.clear();
+                    }
+                }
+
+                // Button NEXT (Saves to memory and switches)
+                if ui.button(format!("{} ➡", &local.next_button)).clicked() {
+                    // Save current data to memory
+                    let entry = KanjiTranslation {
+                        meaning: self.translate_state.meaning_buffer.clone(),
+                        translate_examples: self.translate_state.examples_buffer.clone(),
+                    };
+                    self.translate_state.data.entries.insert(current_kanji.kanji.clone(), entry);
+                    
+                    // Update last_id
+                    self.translate_state.data.last_id = current_kanji.id;
+
+                    // (Optional) Auto-save to disk on each Next click
+                    // self.save_translations(); 
+
+                    // Next kanji
+                    self.translate_state.current_index += 1;
+                    
+                    // Sync buffers for new kanji
+                    if let Some(next_k) = self.kanji.get(self.translate_state.current_index) {
+                        self.translate_state.sync_translation_buffers(next_k);
+                    }
+                    self.translate_state.status_message.clear();
+                }
+            });
+        });
+    }
 }
 
 impl eframe::App for App {
@@ -701,32 +924,25 @@ impl eframe::App for App {
                     self.romaji_to_kana_screen(ui);
                 }
 
+                Screen::TranslateKana => {
+                    self.translate_kanji_screen(ui);
+                }
+
                 _ => {}
             }
 
-            // Settings
-            self.settings.setting(&mut self.settings_window, &mut self.paths, ctx);
         });
+
+        if self.settings.setting(&mut self.settings_window, &mut self.paths, ctx) {
+            self.reload_translations();
+            self.reload_interface_localization();
+            self.save();
+        }
     }
 
     // On Exit and Save Config
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
-        let current_config = Config {
-            interface_font_size: self.settings.interface_font_size,
-            kanji_font_size: self.settings.kanji_font_size,
-            auto_save_progress: self.settings.auto_save_progress,
-            open_last_session_at_startup: self.settings.open_last_session_at_startup,
-            confrim_card_delete: self.settings.confrim_card_delete,
-            confrim_progress_reset: self.settings.confrim_progress_reset,
-            animation_speed: self.settings.animation_speed,
-            path_to_db_core: self.paths.path_to_db_core.clone(),
-            path_to_localization: self.paths.path_to_localization.clone(),
-            path_to_kanji_localization: self.paths.path_to_kanji_localization.clone(),
-        };
-
-        if let Err(e) = save_config("config.toml", &current_config) {
-            eprintln!("Error saving config: {}", e.to_string());
-        }
+        self.save();
     }
 }
 

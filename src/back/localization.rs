@@ -75,6 +75,7 @@ pub struct Tools {
     pub romaji_to_kana: String,
     pub translate_kanji: String,
     pub romaji_to_kana_locale: RomajiToKana,
+    pub translate_kanji_locale: TranslateToKanji,
 }
 
 // Romaji To Kana Struct
@@ -88,6 +89,36 @@ pub struct RomajiToKana {
     pub hint_input: String,
     pub output: String,
     pub copy_button: String,
+}
+
+// Translate To Kanji Struct
+#[derive(Serialize, Deserialize, Default, Clone)]
+pub struct TranslateToKanji {
+    // Messages
+    pub file_load_success: String,
+    pub file_not_found_or_invalid: String,
+    pub saved_at_id: String,
+    pub error_searialize_json: String,
+    pub error_create_file: String,
+    pub found: String,
+    pub not_found: String,
+
+    // Screen
+    pub title: String,
+    pub jump_to: String,
+    pub hint_kanji_input: String,
+    pub go_button: String,
+    pub save_progress_button: String,
+    pub all_kanji_processed: String,
+    pub meaning: String,
+    pub hint_meaning_input: String,
+    pub examples: String,
+    pub hint_examples_input: String,
+    pub error_buffer_mismatch: String,
+    pub previous_button: String,
+    pub next_button: String,
+
+
 }
 
 // Settings Struct
