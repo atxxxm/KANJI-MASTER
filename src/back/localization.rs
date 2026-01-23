@@ -1,7 +1,14 @@
 use std::fs::File;
-
 use serde::{Serialize, Deserialize, de::DeserializeOwned};
 use anyhow;
+
+// Paths to files Struct
+pub struct Paths {
+    pub path_to_db_core: String,
+    pub path_to_localization: String,
+    pub path_to_kanji_localization: String,
+}
+
 // Main Localization Struct
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct Localization {
@@ -32,8 +39,6 @@ pub struct TopBar {
 pub struct KanjiTopBar {
     pub title: String,
     pub jlpt: String,
-    pub kanaken: String,
-    pub radicals: String,
     pub all: String,
 }
 
@@ -42,7 +47,6 @@ pub struct KanjiTopBar {
 pub struct TranningTopBar {
     pub title: String,
     pub jlpt: String,
-    pub kanaken: String,
     pub custom: String,
 }
 

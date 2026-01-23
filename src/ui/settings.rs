@@ -1,5 +1,6 @@
-use crate::back::localization::Localization;
+use crate::back::localization::{Localization, Paths};
 use rfd::FileDialog;
+use crate::back::config::Config;
 
 pub struct Settings {
     localization: Localization, // Localization Settings
@@ -14,20 +15,20 @@ pub struct Settings {
 
 
 impl Settings {
-    pub fn new(localization: Localization) -> Self {
+    pub fn new(localization: Localization, config: Config) -> Self {
         Self {
             localization,
-            interface_font_size: 14.0,
-            kanji_font_size: 48.0,
-            auto_save_progress: false,
-            open_last_session_at_startup: false,
-            confrim_card_delete: false,
-            confrim_progress_reset: false,
-            animation_speed: 0.75,
+            interface_font_size: config.interface_font_size,
+            kanji_font_size: config.kanji_font_size,
+            auto_save_progress: config.auto_save_progress,
+            open_last_session_at_startup: config.open_last_session_at_startup,
+            confrim_card_delete: config.confrim_card_delete,
+            confrim_progress_reset: config.confrim_progress_reset,
+            animation_speed: config.animation_speed,
         }
     }
 
-    pub fn setting(&mut self, is_open: &mut bool, ctx: &egui::Context) {
+    pub fn setting(&mut self, is_open: &mut bool, paths: &mut Paths, ctx: &egui::Context) {
         if !*is_open {
             return;
         }
@@ -122,35 +123,33 @@ impl Settings {
             });
 
         if open_file_localization {
-            self.open_localization_file();
+            self.open_localization_file(paths);
         }
 
         if open_file_kanji_localization {
-            self.open_kanji_localization_file();
+            self.open_kanji_localization_file(paths);
         }
     }
 
     // Open Localization File
-    fn open_localization_file(&self) {
+    fn open_localization_file(&self, paths: &mut Paths) {
         let file_path = FileDialog::new()
             .add_filter("Localization File (*json)", &["json"])
             .pick_file();
 
-        match file_path {
-            Some(path) => println!("Selected file: {:?}", path),
-            None => println!("No file selected"),
+        if let Some(path) = file_path {
+            paths.path_to_localization = path.display().to_string();
         }
     }
 
     // Open Kanji Localization File
-    fn open_kanji_localization_file(&self) {
+    fn open_kanji_localization_file(&self, paths: &mut Paths) {
         let file_path = FileDialog::new()
             .add_filter("Kanji Localization File (*json)", &["json"])
             .pick_file();
 
-        match file_path {
-            Some(path) => println!("Selected file: {:?}", path),
-            None => println!("No file selected"),
+        if let Some(path) = file_path {
+            paths.path_to_kanji_localization = path.display().to_string();
         }
     }
 

@@ -10,6 +10,7 @@ pub struct Config {
     pub confrim_card_delete: bool, 
     pub confrim_progress_reset: bool, 
     pub animation_speed: f32,
+    pub path_to_db_core: String,
     pub path_to_localization: String,
     pub path_to_kanji_localization: String,
 }
@@ -24,9 +25,9 @@ impl Config {
             confrim_card_delete: false,
             confrim_progress_reset: false,
             animation_speed: 0.75,
+            path_to_db_core: "db/core.db".to_string(),
             path_to_localization: "localization/en.json".to_string(),
-            path_to_kanji_localization: "kanji_localization/en.json".to_string(),
-            
+            path_to_kanji_localization: "kanji_localization/en.json".to_string(),            
         }
     }
 }

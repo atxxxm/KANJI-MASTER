@@ -4,6 +4,7 @@ use crate::ui::animator::KanjiAnimator;
 use eframe::egui;
 use std::path::Path;
 use crate::ui::settings::Settings;
+use crate::back::config::{Config, save_config};
 
 
 // Screens
@@ -43,6 +44,9 @@ struct App {
     // Kanji
     kanji: Vec<Kanji>,
 
+    // Paths to Files
+    paths: Paths,
+
     // Current JLPT
     current_jlpt: JLPT,
 
@@ -62,20 +66,27 @@ struct App {
 }
 
 impl App {
-    fn new(cc: &eframe::CreationContext<'_>) -> Self {
+    fn new(cc: &eframe::CreationContext<'_>, config: Config) -> Self {
         // Set Font
         set_font(&cc.egui_ctx);
         // Load Base Localization
-        let localization: Localization = load("localization/en.json").expect("Erorr Load");
+        let localization: Localization = load(&config.path_to_localization).expect("Erorr Load");
         // Load Kanji
-        let kanji = Database::new("db/core.db").get_kanji().expect("Error Read");
+        let kanji = Database::new(&config.path_to_db_core).get_kanji().expect("Error Read");
+
+        let paths = Paths {
+            path_to_db_core: config.path_to_db_core.clone(),
+            path_to_localization: config.path_to_localization.clone(),
+            path_to_kanji_localization: config.path_to_kanji_localization.clone(),
+        };
 
         Self {
             current_screen: Screen::Home,
             kanji,
+            paths,
             current_jlpt: JLPT::N5,
             search: String::new(),
-            settings: Settings::new(localization.clone()),
+            settings: Settings::new(localization.clone(), config),
             animator: KanjiAnimator::new(),
             localization,
             settings_window: false,
@@ -489,13 +500,32 @@ impl eframe::App for App {
             }
 
             // Settings
-            self.settings.setting(&mut self.settings_window, ctx);
+            self.settings.setting(&mut self.settings_window, &mut self.paths, ctx);
         });
+    }
+
+    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+        let current_config = Config {
+            interface_font_size: self.settings.interface_font_size,
+            kanji_font_size: self.settings.kanji_font_size,
+            auto_save_progress: self.settings.auto_save_progress,
+            open_last_session_at_startup: self.settings.open_last_session_at_startup,
+            confrim_card_delete: self.settings.confrim_card_delete,
+            confrim_progress_reset: self.settings.confrim_progress_reset,
+            animation_speed: self.settings.animation_speed,
+            path_to_db_core: self.paths.path_to_db_core.clone(),
+            path_to_localization: self.paths.path_to_localization.clone(),
+            path_to_kanji_localization: self.paths.path_to_kanji_localization.clone(),
+        };
+
+        if let Err(e) = save_config("config.toml", &current_config) {
+            eprintln!("Error saving config: {}", e.to_string());
+        }
     }
 }
 
 // Run App
-pub fn run() -> eframe::Result<()> {
+pub fn run(config: Config) -> eframe::Result<()> {
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default().with_inner_size((800.0, 600.0)),
         ..eframe::NativeOptions::default()
@@ -504,7 +534,7 @@ pub fn run() -> eframe::Result<()> {
     eframe::run_native(
         App::name(),
         native_options,
-        Box::new(|cc| Ok(Box::new(App::new(cc)))),
+        Box::new(|cc| Ok(Box::new(App::new(cc, config)))),
     )
 }
 
