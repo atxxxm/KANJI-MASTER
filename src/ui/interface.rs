@@ -5,6 +5,7 @@ use eframe::egui;
 use std::path::Path;
 use crate::ui::settings::Settings;
 use crate::back::config::{Config, save_config};
+use crate::back::romaji_kana::to_kana;
 
 
 // Screens
@@ -15,6 +16,8 @@ enum Screen {
     Jlpt,
     All,
     Kana,
+    RomajiToKana,
+    TranslateKana,
 }
 
 // Hiragana and Katakana Struct
@@ -73,6 +76,9 @@ struct App {
 
     // Is Katakana
     is_katakana: bool,
+
+    // Romaji Input
+    romaji_input: String,
 }
 
 impl App {
@@ -101,6 +107,7 @@ impl App {
             localization,
             settings_window: false,
             is_katakana: false,
+            romaji_input: String::new(),
         }
     }
 
@@ -147,15 +154,26 @@ impl App {
                     }
                 });
 
-                // Kana Menu
+                // Kana Button
                 if ui.button(&local.kana.title).clicked() {
                     self.current_screen = Screen::Kana;
                 }
 
-                // Settings Menu
+                // Settings Button
                 if ui.button(&self.localization.local.settings.title).clicked() {
                     self.settings_window = true;
                 }
+
+                // Tools Menu
+                ui.menu_button(&local.tools.title, |ui| {
+                    if ui.button(&local.tools.romaji_to_kana).clicked() {
+                        self.current_screen = Screen::RomajiToKana;
+                    }
+
+                    if ui.button(&local.tools.translate_kanji).clicked() {
+                        println!("Translate Kanji");
+                    }
+                });
             });
         });
     }
@@ -557,6 +575,61 @@ impl App {
         });
         
     }
+
+    // Romaji to Kana Screen
+    fn romaji_to_kana_screen(&mut self, ui: &mut egui::Ui) {
+        let local = &self.localization.local.top_bar.tools.romaji_to_kana_locale;
+
+        ui.heading(&local.title);
+        ui.add_space(10.0);
+
+        // Hiragana/Katakana toggle
+        ui.horizontal(|ui| {
+            ui.label(&format!("{}:", &local.output_mode));
+            ui.radio_value(&mut self.is_katakana, false, &local.output_hiragana);
+            ui.radio_value(&mut self.is_katakana, true, &local.output_katakana);
+        });
+
+        ui.add_space(15.0);
+
+        ui.columns(2, |columns| {
+            // Left column: Input (Romaji)
+            columns[0].vertical(|ui| {
+                ui.label(egui::RichText::new(&local.input).strong());
+                ui.add(
+                    egui::TextEdit::multiline(&mut self.romaji_input)
+                        .hint_text(&local.hint_input)
+                        .desired_width(f32::INFINITY)
+                        .min_size(egui::vec2(0.0, 200.0)),
+                );
+            });
+
+            // Right column: Output (Kana)
+            columns[1].vertical(|ui| {
+                ui.label(egui::RichText::new(&local.output).strong());
+                
+                // Convert in real time
+                let output_text = to_kana(&self.romaji_input, self.is_katakana);
+
+                // Display result (read-only)
+                egui::ScrollArea::vertical().id_salt("output_scroll").show(ui, |ui| {
+                    ui.add(
+                        egui::TextEdit::multiline(&mut output_text.clone())
+                            .desired_width(f32::INFINITY)
+                            .min_size(egui::vec2(0.0, 200.0))
+                            .font(egui::FontId::proportional(24.0)),
+                    );
+                });
+
+                ui.add_space(5.0);
+                
+                // Copy button
+                if ui.button(&local.copy_button).clicked() {
+                    ui.ctx().copy_text(output_text);
+                }
+            });
+        });
+    }
 }
 
 impl eframe::App for App {
@@ -622,6 +695,10 @@ impl eframe::App for App {
                 }
                 Screen::Kana => {
                     self.kana_screen(ui);
+                }
+
+                Screen::RomajiToKana => {
+                    self.romaji_to_kana_screen(ui);
                 }
 
                 _ => {}

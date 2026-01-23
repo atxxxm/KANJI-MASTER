@@ -33,6 +33,7 @@ pub struct TopBar {
     pub tranning: TranningTopBar,
     pub card: CardTopBar,
     pub kana: KanaTopBar,
+    pub tools: Tools,
 }
 
 // Kanji Top Bar Struct
@@ -65,6 +66,28 @@ pub struct KanaTopBar {
     pub title: String,
     pub hiragana: String,
     pub katakana: String,
+}
+
+// Tools Struct
+#[derive(Serialize, Deserialize, Default, Clone)]
+pub struct Tools {
+    pub title: String,
+    pub romaji_to_kana: String,
+    pub translate_kanji: String,
+    pub romaji_to_kana_locale: RomajiToKana,
+}
+
+// Romaji To Kana Struct
+#[derive(Serialize, Deserialize, Default, Clone)]
+pub struct RomajiToKana {
+    pub title: String,
+    pub output_mode: String,
+    pub output_hiragana: String,
+    pub output_katakana: String,
+    pub input: String,
+    pub hint_input: String,
+    pub output: String,
+    pub copy_button: String,
 }
 
 // Settings Struct
