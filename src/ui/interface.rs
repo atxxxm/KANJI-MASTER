@@ -348,10 +348,6 @@ impl App {
         let current_config = Config {
             interface_font_size: self.settings.interface_font_size,
             kanji_font_size: self.settings.kanji_font_size,
-            auto_save_progress: self.settings.auto_save_progress,
-            open_last_session_at_startup: self.settings.open_last_session_at_startup,
-            confrim_card_delete: self.settings.confrim_card_delete,
-            confrim_progress_reset: self.settings.confrim_progress_reset,
             animation_speed: self.settings.animation_speed,
             path_to_db_core: self.paths.path_to_db_core.clone(),
             path_to_localization: self.paths.path_to_localization.clone(),

@@ -6,10 +6,6 @@ use std::collections::HashMap;
 pub struct Config {
     pub interface_font_size: f32,
     pub kanji_font_size: f32, 
-    pub auto_save_progress: bool,
-    pub open_last_session_at_startup: bool,
-    pub confrim_card_delete: bool, 
-    pub confrim_progress_reset: bool, 
     pub animation_speed: f32,
     pub path_to_db_core: String,
     pub path_to_localization: String,
@@ -26,10 +22,6 @@ impl Config {
        Self {
             interface_font_size: 14.0,
             kanji_font_size: 48.0,
-            auto_save_progress: false,
-            open_last_session_at_startup: false,
-            confrim_card_delete: false,
-            confrim_progress_reset: false,
             animation_speed: 0.75,
             path_to_db_core: "db/core.db".to_string(),
             path_to_localization: "localization/en.json".to_string(),

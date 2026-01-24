@@ -6,10 +6,6 @@ pub struct Settings {
     localization: Localization, // Localization Settings
     pub interface_font_size: f32, // Interface Font Size
     pub kanji_font_size: f32, // Kanji Font Size
-    pub auto_save_progress: bool, // Auto Save Progress
-    pub open_last_session_at_startup: bool, // Open Last Session At Startup
-    pub confrim_card_delete: bool, // Confrim Card Delete
-    pub confrim_progress_reset: bool, // Confrim Progress Reset
     pub animation_speed: f32, // Animation Speed
     pub show_kanji_meaning: bool, // Show Kanji Meaning
     pub focus_on_search: bool, // Focus on search when opening the app
@@ -22,10 +18,6 @@ impl Settings {
             localization,
             interface_font_size: config.interface_font_size,
             kanji_font_size: config.kanji_font_size,
-            auto_save_progress: config.auto_save_progress,
-            open_last_session_at_startup: config.open_last_session_at_startup,
-            confrim_card_delete: config.confrim_card_delete,
-            confrim_progress_reset: config.confrim_progress_reset,
             animation_speed: config.animation_speed,
             show_kanji_meaning: config.show_kanji_meaning,
             focus_on_search: config.focus_on_search,
@@ -91,12 +83,6 @@ impl Settings {
 
                 ui.separator();
 
-                // Auto Save Progress
-                ui.label(&local.auto_save_progress);
-                ui.checkbox(&mut self.auto_save_progress, "");
-
-                ui.separator();
-
                 // Focus on search when opening the app
                 ui.label(&local.focus_on_search);
                 ui.checkbox(&mut self.focus_on_search, "");
@@ -106,53 +92,6 @@ impl Settings {
                 // Show Kanji Meaning
                 ui.label(&local.show_kanji_meaning);
                 ui.checkbox(&mut self.show_kanji_meaning, "");
-
-                ui.separator();
-
-                // Auto Save Frequency
-                ui.label(&local.auto_save_frequency);
-
-                //egui::ComboBox::from_label("")
-                //    .selected_text("10 minutes")
-                //    .show_ui(ui, |ui| {
-                //        ui.selectable_value(
-                //            &mut self.auto_save_frequency,
-                //            "10 minutes".to_string(),
-                //            "10 minutes",
-                //        );
-                //    });
-
-                ui.separator();
-
-                // Open Last Session At Startup
-                ui.label(&local.open_last_session_at_startup);
-                ui.checkbox(&mut self.open_last_session_at_startup, "");
-
-                ui.separator();
-
-                // Startup Screen
-                ui.label(&local.startup_screen);
-                //egui::ComboBox::from_label("")
-                //    .selected_text("10 minutes")
-                //    .show_ui(ui, |ui| {
-                //        ui.selectable_value(
-                //            &mut self.auto_save_frequency,
-                //            "10 minutes".to_string(),
-                //            "10 minutes",
-                //        );
-                //    });
-
-                ui.separator();
-
-                // Confrim Card Delete
-                ui.label(&local.confrim_card_delete);
-                ui.checkbox(&mut self.confrim_card_delete, "");
-
-                ui.separator();
-
-                // Confrim Progress Reset
-                ui.label(&local.confrim_progress_reset);
-                ui.checkbox(&mut self.confrim_progress_reset, "");
 
                 ui.separator();
 
