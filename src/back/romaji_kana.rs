@@ -62,6 +62,20 @@ pub fn to_kana(input: &str, is_katakana: bool) -> String {
             continue;
         }
 
+        // Processing "。"
+        if chars[i] == '.' {
+            results.push_str("。");
+            i += 1;
+            continue;
+        }
+
+        // Processing "、"
+        if chars[i] == ',' {
+            results.push_str("、");
+            i += 1;
+            continue;
+        }
+
         // If no match is found, just add the character as is
         results.push(chars[i]);
         i += 1;

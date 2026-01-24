@@ -220,17 +220,6 @@ impl App {
                     }
                 });
 
-                // Card Menu
-                ui.menu_button(&local.card.title, |ui| {
-                    if ui.button(&local.card.new).clicked() {
-                        println!("New");
-                    }
-
-                    if ui.button(&local.card.open).clicked() {
-                        println!("Open");
-                    }
-                });
-
                 // Kana Button
                 if ui.button(&local.kana.title).clicked() {
                     self.current_screen = Screen::Kana;
@@ -287,17 +276,43 @@ impl App {
 
     // Show Kanji
     fn show_kanji(&mut self, ui: &mut egui::Ui, kanji_set: KanjiList) {
+        let translations = &self.translate_state.data.entries;
+        let search_query = self.search.trim().to_lowercase();
+        
         // Sorted kanji list
         let filtered_kanji: Vec<&Kanji> = self.kanji
             .iter()
             .filter(|item| {
+                
+                // If search is empty, show all
+                if self.search.is_empty() {
+                    return match kanji_set {
+                        KanjiList::All => true,
+                        KanjiList::Jlpt5 => item.jlpt == "N5",
+                        KanjiList::Jlpt4 => item.jlpt == "N4",
+                        KanjiList::Jlpt3 => item.jlpt == "N3",
+                        KanjiList::Jlpt2 => item.jlpt == "N2",
+                        KanjiList::Jlpt1 => item.jlpt == "N1",
+                    };
+                }
+
                 // Filter by search (if search is not empty)
-                let matches_search = self.search.is_empty() 
+                let matches_basic = self.search.is_empty() 
                     || item.kanji.contains(&self.search)
                     || item.onyomi.contains(&self.search)
                     || item.kunyomi.contains(&self.search)
                     || item.onyomi_romaji.contains(&self.search)
                     || item.kunyomi_romaji.contains(&self.search);
+
+
+                // Filter by meaning if meaning is exist
+                let matches_meaining = if let Some(entry) = translations.get(&item.kanji) {
+                    entry.meaning.to_lowercase().contains(&search_query)
+                } else {
+                    false
+                };
+
+                let matches_search = matches_basic || matches_meaining;
 
                 // Filter by JLPT category
                 let matches_category = match kanji_set {
@@ -395,6 +410,20 @@ impl App {
                                             .size(text_height)
                                             .strong()
                                     );
+
+                                    if self.settings.show_kanji_meaning {
+                                        let maybe_translation = translations.get(&item.kanji);
+                                        if let Some(entry) = maybe_translation {
+                                            if !entry.meaning.is_empty() {
+                                                ui.label(
+                                                    egui::RichText::new(&entry.meaning)
+                                                        .size(self.settings.interface_font_size * 0.8)
+                                                        .color(ui.visuals().text_color().gamma_multiply(0.7))
+                                                );
+                                            }
+                                        }
+                                    }
+                                   
                                 });
                             });
 
@@ -428,6 +457,9 @@ impl App {
     // Show Current Kanji
     fn kanji_screen(&mut self, ui: &mut egui::Ui, kanji: &Kanji) {
         let local = &self.localization.local.screens.current_kanji;
+
+        let translation_entry = self.translate_state.data.entries.get(&kanji.kanji);
+
         if ui.button(&local.back_button).clicked() {
             self.current_screen = Screen::All;
         }
@@ -487,7 +519,18 @@ impl App {
                     .spacing([24.0, 12.0])
                     .striped(true)
                     .show(ui, |ui| {
-                        ui.label(egui::RichText::new(&format!("{}:", &local.meaning)).strong());
+
+                        let meaining = if let Some(entry) = translation_entry {
+                            if !entry.meaning.is_empty() {
+                                &entry.meaning
+                            } else {
+                                ""
+                            }
+                        } else {
+                            ""
+                        };
+
+                        ui.label(egui::RichText::new(&format!("{}: {}", &local.meaning, meaining)).strong());
                         ui.end_row();
 
                         // Onyomi
@@ -521,15 +564,41 @@ impl App {
                 ui.add_space(12.0);
                 ui.separator();
 
-                ui.vertical(|ui| {
-                    for example in &kanji.example {
-                        ui.horizontal_top(|ui| {
-                            ui.add(egui::Label::new(egui::RichText::new(example)).wrap());
-                        });
+                let availible_width = ui.available_width();
+                let col_width = (availible_width / 2.0) - 15.0;
 
-                        ui.add_space(10.0);
-                    }
-                });
+                egui::Grid::new("examples_display_grid")
+                    .num_columns(2)
+                    .spacing([20.0, 10.0])
+                    .striped(true)
+                    .min_col_width(col_width)
+                    .max_col_width(col_width)
+                    .show(ui, |ui| {
+                        for (index, examples) in kanji.example.iter().enumerate() {
+                            ui.add(egui::Label::new(examples).wrap());
+
+                            let translation_text = if let Some(entry) = translation_entry {
+                                if let Some(trans) = entry.translate_examples.get(index) {
+                                    trans.clone()
+                                } else {
+                                    String::new()
+                                }
+                            } else {
+                                String::new()
+                            };
+
+                            ui.add(
+                                egui::Label::new(
+                                    egui::RichText::new(&translation_text)
+                                    .italics()
+                                    .color(ui.visuals().text_color().gamma_multiply(0.8))
+                                ).wrap()
+                            );
+
+
+                            ui.end_row();
+                        }
+                    });
             });
         });
     }

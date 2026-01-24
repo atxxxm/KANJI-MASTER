@@ -11,6 +11,7 @@ pub struct Settings {
     pub confrim_card_delete: bool, // Confrim Card Delete
     pub confrim_progress_reset: bool, // Confrim Progress Reset
     pub animation_speed: f32, // Animation Speed
+    pub show_kanji_meaning: bool, // Show Kanji Meaning
 }
 
 
@@ -25,6 +26,7 @@ impl Settings {
             confrim_card_delete: config.confrim_card_delete,
             confrim_progress_reset: config.confrim_progress_reset,
             animation_speed: config.animation_speed,
+            show_kanji_meaning: false,
         }
     }
 
@@ -82,6 +84,11 @@ impl Settings {
 
                 ui.label(&local.auto_save_progress);
                 ui.checkbox(&mut self.auto_save_progress, "");
+
+                ui.separator();
+
+                ui.label(&local.show_kanji_meaning);
+                ui.checkbox(&mut self.show_kanji_meaning, "");
 
                 ui.separator();
 

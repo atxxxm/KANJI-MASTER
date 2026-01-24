@@ -31,7 +31,6 @@ pub struct Local {
 pub struct TopBar {
     pub kanji: KanjiTopBar,
     pub tranning: TranningTopBar,
-    pub card: CardTopBar,
     pub kana: KanaTopBar,
     pub tools: Tools,
 }
@@ -50,14 +49,6 @@ pub struct TranningTopBar {
     pub title: String,
     pub jlpt: String,
     pub custom: String,
-}
-
-// Card Top Bar Struct
-#[derive(Serialize, Deserialize, Default, Clone)]
-pub struct CardTopBar {
-    pub title: String,
-    pub new: String,
-    pub open: String,
 }
 
 // Kana Top Bar Struct
@@ -137,6 +128,7 @@ pub struct Settings {
     pub startup_screen: String,
     pub confrim_card_delete: String,
     pub confrim_progress_reset: String,
+    pub show_kanji_meaning: String,
 }
 
 // Screens Struct
