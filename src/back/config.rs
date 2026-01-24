@@ -1,5 +1,6 @@
 use serde::{Serialize, Deserialize, de::DeserializeOwned};
 use std::{fs::File, io::{Read, Write}};
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct Config {
@@ -13,6 +14,9 @@ pub struct Config {
     pub path_to_db_core: String,
     pub path_to_localization: String,
     pub path_to_kanji_localization: String,
+
+    #[serde(default)]
+    pub custom_decks: HashMap<String, Vec<i32>>,
 }
 
 impl Config {
@@ -27,7 +31,8 @@ impl Config {
             animation_speed: 0.75,
             path_to_db_core: "db/core.db".to_string(),
             path_to_localization: "localization/en.json".to_string(),
-            path_to_kanji_localization: "kanji_localization/en.json".to_string(),            
+            path_to_kanji_localization: "kanji_localization/en.json".to_string(),
+            custom_decks: HashMap::new(),
         }
     }
 }

@@ -7,6 +7,7 @@ use crate::ui::settings::Settings;
 use crate::back::config::{Config, save_config};
 use crate::back::romaji_kana::to_kana;
 use crate::back::translation::*;
+use crate::back::cards::*;
 
 
 // Screens
@@ -19,6 +20,9 @@ enum Screen {
     Kana,
     RomajiToKana,
     TranslateKana,
+    CardsSetup,
+    CardsActive,
+    DeckManager,
 }
 
 // Hiragana and Katakana Struct
@@ -54,6 +58,9 @@ struct App {
     // Kanji
     kanji: Vec<Kanji>,
 
+    // Config
+    config: Config,
+
     // Paths to Files
     paths: Paths,
 
@@ -83,6 +90,18 @@ struct App {
 
     // Translation State
     translate_state: TranslateState,
+
+    // Cards
+    cards_session: Option<CardsSession>,
+
+    // Deck Builder
+    deck_builder: DeckBuilderState,
+
+    // Card limit
+    card_limit: usize,
+
+    // Selected Deck Name
+    selected_deck_name: String,
 }
 
 impl App {
@@ -132,16 +151,21 @@ impl App {
         Self {
             current_screen: Screen::Home,
             kanji,
+            settings: Settings::new(localization.clone(), &config),
+            config,
             paths,
             current_jlpt: JLPT::N5,
             search: String::new(),
-            settings: Settings::new(localization.clone(), config),
             animator: KanjiAnimator::new(),
             localization,
             settings_window,
             is_katakana: false,
             romaji_input: String::new(),
             translate_state,
+            cards_session: None,
+            deck_builder: DeckBuilderState::default(),
+            card_limit: 10,
+            selected_deck_name: String::new(),
         }
     }
 
@@ -186,6 +210,7 @@ impl App {
             path_to_db_core: self.paths.path_to_db_core.clone(),
             path_to_localization: self.paths.path_to_localization.clone(),
             path_to_kanji_localization: self.paths.path_to_kanji_localization.clone(),
+            custom_decks: self.config.custom_decks.clone(),
         };
 
         if let Err(e) = save_config("config.toml", &current_config) {
@@ -210,15 +235,9 @@ impl App {
                 });
 
                 // Tranning Menu
-                ui.menu_button(&local.tranning.title, |ui| {
-                    if ui.button(&local.tranning.jlpt).clicked() {
-                        println!("JLPT");
-                    }
-
-                    if ui.button(&local.tranning.custom).clicked() {
-                        println!("Custom");
-                    }
-                });
+                if ui.button(&local.cards.title).clicked() {
+                    self.current_screen = Screen::CardsSetup;
+                }
 
                 // Kana Button
                 if ui.button(&local.kana.title).clicked() {
@@ -922,6 +941,349 @@ impl App {
             });
         });
     }
+
+    // Cards Setup Screen
+    fn ui_card_setup(&mut self, ui: &mut egui::Ui) {
+        let local = self.localization.local.top_bar.cards.clone();
+        ui.heading(&local.card_setup_title);
+        ui.add_space(20.0);
+
+        ui.columns(2, |ui| {
+            // JLPT Levels
+            ui[0].vertical(|ui| {
+                ui.heading(&local.jlpt_level);
+                ui.add_space(10.0);
+                
+                // Select card limit
+                ui.horizontal(|ui| {
+                    ui.label(format!("{}:", &local.card_count));
+                    ui.add(egui::DragValue::new(&mut self.card_limit).range(0..=1000));
+                });
+
+                ui.add_space(10.0);
+
+                let levels = vec!["N5", "N4", "N3", "N2", "N1"];
+
+                for level in levels {
+                    if ui.button(format!("{} {}", &local.card_setup_start, level)).clicked() {
+                        self.selected_deck_name = format!("JLPT {}", level);
+                        // Filter kanji by level
+                        let filtered: Vec<Kanji> = self.kanji.iter()
+                            .filter(|k| k.jlpt == level)
+                            .cloned()
+                            .collect();
+                        
+                        if !filtered.is_empty() {
+                            self.cards_session = Some(CardsSession::new(filtered, self.card_limit));
+                            self.current_screen = Screen::CardsActive;
+                        }
+                    }
+
+                    ui.add_space(5.0);
+                }
+
+            });
+
+            // Custom Decks
+            ui[1].vertical(|ui| {
+                ui.heading(&local.custom_deck_title);
+                ui.add_space(10.0);
+
+                if ui.button(&local.manage_decks).clicked() {
+                    self.current_screen = Screen::DeckManager;
+                    self.deck_builder = DeckBuilderState::default(); // Reset
+                    self.deck_builder.is_editing = false;
+                }
+
+                ui.separator();
+                ui.label(format!("{}:", &local.my_decks));
+
+                let deck_names: Vec<String> = self.config.custom_decks.keys().cloned().collect();
+
+                if deck_names.is_empty() {
+                    ui.label(&local.no_custom_decks_created);
+                } else {
+                    egui::ScrollArea::vertical().max_height(300.0).show(ui, |ui| {
+                        for name in deck_names {
+                            ui.group(|ui| {
+                                ui.horizontal(|ui| {
+                                    ui.label(egui::RichText::new(&name).strong());
+
+                                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                        if ui.button(egui::RichText::new("🗑").color(egui::Color32::RED))
+                                            .on_hover_text(&local.delete_deck).clicked() {
+                                                self.config.custom_decks.remove(&name);
+                                                self.save();
+                                            }
+
+                                        if ui.button("✏").on_hover_text(&local.edit_deck).clicked() {
+                                            if let Some(ids) = self.config.custom_decks.get(&name) {
+                                                self.deck_builder.deck_name_buffer = name.clone();
+                                                self.deck_builder.selected_kanji_idx = ids.clone();
+                                                self.deck_builder.is_editing = true;
+                                                self.current_screen = Screen::DeckManager;
+                                            }
+                                        }
+
+                                        if ui.button(format!("▶ {}", &local.play_deck)).clicked() {
+                                            self.selected_deck_name = name.clone();
+
+                                            if let Some(ids) = self.config.custom_decks.get(&name) {
+                                                let deck_kanji: Vec<Kanji> = self.kanji.iter()
+                                                    .filter(|k| ids.contains(&k.id))
+                                                    .cloned()
+                                                    .collect();
+
+                                                if !deck_kanji.is_empty() {
+                                                    self.cards_session = Some(CardsSession::new(deck_kanji, 0));
+
+                                                    self.current_screen = Screen::CardsActive;
+                                                }
+                                            }
+                                        }
+                                    });
+                                });
+                            });
+
+                            ui.add_space(4.0);
+                        }
+                    });
+                }
+            })
+        });
+
+    }
+
+    // Cards Active Screen
+    fn ui_card_session(&mut self, ui: &mut egui::Ui) {
+        let local = self.localization.local.top_bar.cards.clone();
+
+        let state_snapshot = if let Some(session) = &self.cards_session {
+            if session.finished {
+                Some((true, None, 0, 0, false)) // finished, no kanji
+            } else {
+                let current_kanji = session.queue.get(session.current_index).cloned();
+                Some((
+                    false, 
+                    current_kanji, 
+                    session.total_count, 
+                    session.current_index, 
+                    session.is_card_flipped
+                ))
+            }
+        } else {
+            None
+        };
+
+
+        if state_snapshot.is_none() {
+            self.current_screen = Screen::CardsSetup;
+            return;
+        }
+
+        let (finished, current_kanji_opt, total, current_idx, is_flipped) = state_snapshot.unwrap();
+
+        if finished {
+            ui.centered_and_justified(|ui| {
+                ui.vertical_centered(|ui| {
+                    ui.heading(&local.session_complete);
+                    if ui.button(&local.return_to_menu).clicked() {
+                        self.current_screen = Screen::CardsSetup;
+                        self.cards_session = None;
+                    }
+                });
+            });
+
+            return;
+        }
+
+        // Top panel: Progress and Exit
+        ui.horizontal(|ui| {
+            ui.heading(&self.selected_deck_name);
+            ui.label(format!("{} {} / {}", &local.card, current_idx + 1, total));
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui.button(&local.exit_training).clicked() {
+                    self.current_screen = Screen::CardsSetup;
+                    self.cards_session = None;
+                }
+            });
+        });
+
+        ui.add_space(20.0);
+
+        // Current Card
+        if let Some(kanji) = current_kanji_opt {
+            let card_size = egui::vec2(300.0, 400.0);
+            
+            ui.vertical_centered(|ui| {
+                let (rect, response) = ui.allocate_exact_size(card_size, egui::Sense::click());
+
+                // Draw card background
+                ui.painter().rect(
+                    rect,
+                    10.0,
+                    ui.visuals().window_fill,
+                    egui::Stroke::new(2.0, ui.visuals().window_stroke.color),
+                    egui::StrokeKind::Middle,
+                );
+
+                // Process click (flip card)
+                if response.clicked() {
+                    if let Some(session) = &mut self.cards_session {
+                        session.is_card_flipped = !session.is_card_flipped;
+                    }
+                }
+                
+                // Card content
+                ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
+                    ui.vertical_centered(|ui| {
+                        ui.add_space(40.0);
+                        
+                        // Always show Kanji
+                        ui.label(egui::RichText::new(&kanji.kanji).size(80.0).strong());
+                        
+                        ui.add_space(20.0);
+
+                        if is_flipped {
+                            // Show answer
+                            ui.separator();
+                            ui.add_space(10.0);
+                            
+                            ui.label(egui::RichText::new(&local.onyomi).strong());
+                            ui.label(&kanji.onyomi);
+                            ui.label(egui::RichText::new(&kanji.onyomi_romaji).weak());
+                            
+                            ui.add_space(10.0);
+                            
+                            ui.label(egui::RichText::new(&local.kunyomi).strong());
+                            ui.label(&kanji.kunyomi);
+                            ui.label(egui::RichText::new(&kanji.kunyomi_romaji).weak());
+
+                        } else {
+                            // Front side
+                            ui.add_space(40.0);
+                            ui.label(egui::RichText::new(&local.click_to_flip).weak().italics());
+                        }
+                    });
+                });
+
+                ui.add_space(20.0);
+
+                // Button "Next"
+                if ui.button(egui::RichText::new(format!("{} ➡", &local.next_card)).size(20.0)).clicked() {
+                    if let Some(session) = &mut self.cards_session {
+                        session.next();
+                    }
+                }
+            });
+        }
+
+    }
+
+    // Deck Manager Screen
+    fn ui_deck_manager(&mut self, ui: &mut egui::Ui) {
+        let local = self.localization.local.top_bar.cards.clone();
+        ui.horizontal(|ui| {
+            if ui.button(format!("⬅ {}", &local.back)).clicked() {
+                self.current_screen = Screen::CardsSetup;
+            }
+
+            if self.deck_builder.is_editing {
+                ui.heading(&local.edit_deck);
+            } else {
+                ui.heading(&local.deck_manager);
+            }
+        });
+        ui.separator();
+
+        // Top panel: Deck Name and Save
+        ui.horizontal(|ui| {
+            ui.label(format!("{}:", &local.deck_name));
+            ui.text_edit_singleline(&mut self.deck_builder.deck_name_buffer);
+
+            ui.add_enabled(!self.deck_builder.is_editing, egui::TextEdit::singleline(&mut self.deck_builder.deck_name_buffer));
+
+            let btn_text = if self.deck_builder.is_editing { &local.update_deck } else { &local.save_deck };
+
+            if ui.button(btn_text).clicked() {
+                if !self.deck_builder.deck_name_buffer.is_empty() && !self.deck_builder.selected_kanji_idx.is_empty() {
+                    // Save to config
+                    self.config.custom_decks.insert(
+                        self.deck_builder.deck_name_buffer.clone(),
+                        self.deck_builder.selected_kanji_idx.clone()
+                    );
+                    self.save();
+                    self.deck_builder = DeckBuilderState::default(); 
+                }
+            }
+        });
+
+        ui.add_space(10.0);
+        ui.separator();
+
+        // Two columns: Search and Deck Content
+        ui.columns(2, |cols| {
+            // Left column: Search
+            cols[0].vertical(|ui| {
+                ui.heading(&local.avaliable_kanji);
+                ui.text_edit_singleline(&mut self.deck_builder.search_buffer).on_hover_text(&local.search_kanji_hint);
+                
+                let search = self.deck_builder.search_buffer.to_lowercase();
+                
+                egui::ScrollArea::vertical().id_salt("source_list").max_height(400.0).show(ui, |ui| {
+                    // Filter all kanji
+                    let filtered: Vec<&Kanji> = self.kanji.iter()
+                        .filter(|k| {
+                            if search.is_empty() { return false; }
+                            k.kanji.contains(&search) || k.onyomi_romaji.contains(&search) || k.kunyomi_romaji.contains(&search)
+                        })
+                        .take(50) 
+                        .collect();
+
+                    for k in filtered {
+                        ui.horizontal(|ui| {
+                            ui.label(&k.kanji);
+                            if ui.button(format!("{} ➡", &local.add_kanji)).clicked() {
+                                if !self.deck_builder.selected_kanji_idx.contains(&k.id) {
+                                    self.deck_builder.selected_kanji_idx.push(k.id);
+                                }
+                            }
+                        });
+                    }
+                    if search.is_empty() {
+                        ui.label(&local.type_search_hint);
+                    }
+                });
+            });
+
+            // Right column: Deck Content
+            cols[1].vertical(|ui| {
+                ui.heading(format!("{} ({})", &local.deck_content, self.deck_builder.selected_kanji_idx.len()));
+                
+                egui::ScrollArea::vertical().id_salt("deck_list").max_height(400.0).show(ui, |ui| {
+                    
+                    let mut ids_to_remove = Vec::new();
+
+                    for (idx, id) in self.deck_builder.selected_kanji_idx.iter().enumerate() {
+                        if let Some(k) = self.kanji.iter().find(|k| k.id == *id) {
+                            ui.horizontal(|ui| {
+                                if ui.button("❌").clicked() {
+                                    ids_to_remove.push(idx);
+                                }
+                                ui.label(&k.kanji);
+                                ui.label(egui::RichText::new(&k.onyomi).size(10.0));
+                            });
+                        }
+                    }
+
+                    // Delete marked
+                    for idx in ids_to_remove.iter().rev() {
+                        self.deck_builder.selected_kanji_idx.remove(*idx);
+                    }
+                });
+            });
+        });
+    }
 }
 
 impl eframe::App for App {
@@ -985,17 +1347,12 @@ impl eframe::App for App {
                     let kanji_to_show = selected_kanji.clone();
                     self.kanji_screen(ui, &kanji_to_show);
                 }
-                Screen::Kana => {
-                    self.kana_screen(ui);
-                }
-
-                Screen::RomajiToKana => {
-                    self.romaji_to_kana_screen(ui);
-                }
-
-                Screen::TranslateKana => {
-                    self.translate_kanji_screen(ui);
-                }
+                Screen::Kana => self.kana_screen(ui),
+                Screen::RomajiToKana => self.romaji_to_kana_screen(ui),
+                Screen::TranslateKana => self.translate_kanji_screen(ui),
+                Screen::CardsSetup => self.ui_card_setup(ui),
+                Screen::CardsActive => self.ui_card_session(ui),
+                Screen::DeckManager => self.ui_deck_manager(ui),
 
                 _ => {}
             }

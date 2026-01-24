@@ -16,7 +16,7 @@ pub struct Settings {
 
 
 impl Settings {
-    pub fn new(localization: Localization, config: Config) -> Self {
+    pub fn new(localization: Localization, config: &Config) -> Self {
         Self {
             localization,
             interface_font_size: config.interface_font_size,
