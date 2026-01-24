@@ -47,7 +47,6 @@ pub struct TopBar {
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct KanjiTopBar {
     pub title: String,
-    pub jlpt: String,
     pub all: String,
 }
 

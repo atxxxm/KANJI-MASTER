@@ -32,6 +32,7 @@ struct KanaItem {
 }
 
 // Kanji List
+#[derive(Debug, PartialEq, Clone, Copy)]
 enum KanjiList {
     All,
     Jlpt5,
@@ -102,6 +103,9 @@ struct App {
 
     // Selected Deck Name
     selected_deck_name: String,
+
+    // Selected Kanji List
+    selected_kanji_list: KanjiList, 
 }
 
 impl App {
@@ -166,6 +170,7 @@ impl App {
             deck_builder: DeckBuilderState::default(),
             card_limit: 10,
             selected_deck_name: String::new(),
+            selected_kanji_list: KanjiList::All,
         }
     }
 
@@ -552,75 +557,49 @@ impl App {
 
     // Ui Screen All
     fn kanji_all(&mut self, ui: &mut egui::Ui) {
-        self.show_kanji(ui, KanjiList::All);
+        self.show_kanji(ui);
     }
 
     // Ui Screen JLPT 5
     fn kanji_n5(&mut self, ui: &mut egui::Ui) {
-        self.show_kanji(ui, KanjiList::Jlpt5);
+        self.selected_kanji_list = KanjiList::Jlpt5;
+        self.show_kanji(ui);
     }
 
     // Ui Screen JLPT 4
     fn kanji_n4(&mut self, ui: &mut egui::Ui) {
-        self.show_kanji(ui, KanjiList::Jlpt4);
+        self.selected_kanji_list = KanjiList::Jlpt4;
+        self.show_kanji(ui);
     }
 
     // Ui Screen JLPT 3
     fn kanji_n3(&mut self, ui: &mut egui::Ui) {
-        self.show_kanji(ui, KanjiList::Jlpt3);
+        self.selected_kanji_list = KanjiList::Jlpt3;
+        self.show_kanji(ui);
     }
 
     // Ui Screen JLPT 2
     fn kanji_n2(&mut self, ui: &mut egui::Ui) {
-        self.show_kanji(ui, KanjiList::Jlpt2);
+        self.selected_kanji_list = KanjiList::Jlpt2;
+        self.show_kanji(ui);
     }
 
     // Ui Screen JLPT 1
     fn kanji_n1(&mut self, ui: &mut egui::Ui) {
-        self.show_kanji(ui, KanjiList::Jlpt1);
+        self.selected_kanji_list = KanjiList::Jlpt1;
+        self.show_kanji(ui);
     }
 
     // Show Kanji
-    fn show_kanji(&mut self, ui: &mut egui::Ui, kanji_set: KanjiList) {
+    fn show_kanji(&mut self, ui: &mut egui::Ui) {
+        let kanji_set = self.selected_kanji_list;
         let translations = &self.translate_state.data.entries;
         let search_query = self.search.trim().to_lowercase();
-        
-        // Sorted kanji list
+        let is_search_empty = self.search.trim().is_empty();
+
         let filtered_kanji: Vec<&Kanji> = self.kanji
             .iter()
             .filter(|item| {
-                
-                // If search is empty, show all
-                if self.search.is_empty() {
-                    return match kanji_set {
-                        KanjiList::All => true,
-                        KanjiList::Jlpt5 => item.jlpt == "N5",
-                        KanjiList::Jlpt4 => item.jlpt == "N4",
-                        KanjiList::Jlpt3 => item.jlpt == "N3",
-                        KanjiList::Jlpt2 => item.jlpt == "N2",
-                        KanjiList::Jlpt1 => item.jlpt == "N1",
-                    };
-                }
-
-                // Filter by search (if search is not empty)
-                let matches_basic = self.search.is_empty() 
-                    || item.kanji.contains(&self.search)
-                    || item.onyomi.contains(&self.search)
-                    || item.kunyomi.contains(&self.search)
-                    || item.onyomi_romaji.contains(&self.search)
-                    || item.kunyomi_romaji.contains(&self.search);
-
-
-                // Filter by meaning if meaning is exist
-                let matches_meaining = if let Some(entry) = translations.get(&item.kanji) {
-                    entry.meaning.to_lowercase().contains(&search_query)
-                } else {
-                    false
-                };
-
-                let matches_search = matches_basic || matches_meaining;
-
-                // Filter by JLPT category
                 let matches_category = match kanji_set {
                     KanjiList::All => true,
                     KanjiList::Jlpt5 => item.jlpt == "N5",
@@ -630,113 +609,202 @@ impl App {
                     KanjiList::Jlpt1 => item.jlpt == "N1",
                 };
 
-                matches_search && matches_category
+                if !matches_category {
+                    return false;
+                }
+
+                if is_search_empty {
+                    return true;
+                }
+
+                let matches_basic = item.kanji.contains(&self.search)
+                    || item.onyomi.contains(&self.search)
+                    || item.kunyomi.contains(&self.search)
+                    || item.onyomi_romaji.contains(&self.search)
+                    || item.kunyomi_romaji.contains(&self.search);
+
+                let matches_meaning = if let Some(entry) = translations.get(&item.kanji) {
+                    entry.meaning.to_lowercase().contains(&search_query)
+                } else {
+                    false
+                };
+
+                matches_basic || matches_meaning
             })
             .collect();
 
+        ui.add_space(15.0);
+        
+        let max_width = 800.0f32;
+        let available_width = ui.available_width();
 
-        // Search Field
-        ui.horizontal(|ui| {
-            let desired_size = if self.current_screen == Screen::All {
-                egui::vec2(ui.available_width(), 30.0)
-            } else {
-                egui::vec2(ui.available_width() - 150.0, 30.0)
-            };
+        ui.vertical_centered(|ui| {
+            let content_width = max_width.min(available_width - 40.0);
+            ui.set_width(content_width);
 
-            ui.add(
-                egui::TextEdit::singleline(&mut self.search)
-                    .hint_text(&self.localization.local.screens.search)
-                    .min_size(desired_size)
-            );
+            let pill_color = ui.visuals().widgets.inactive.bg_fill;
+            let pill_stroke = ui.visuals().widgets.noninteractive.bg_stroke;
+            let pill_rounding = egui::CornerRadius::same(20);
+            
+            let pill_frame = egui::Frame::NONE
+                .fill(pill_color)
+                .corner_radius(pill_rounding)
+                .stroke(pill_stroke)
+                .inner_margin(egui::Margin::symmetric(15, 8));
 
-            if self.current_screen == Screen::Jlpt {
-                egui::ComboBox::from_label("")
-                    .selected_text(format!("{:?}", self.current_jlpt))
-                    .show_ui(ui, |ui| {
-                        ui.selectable_value(&mut self.current_jlpt, JLPT::N5, "N5");
-                        ui.selectable_value(&mut self.current_jlpt, JLPT::N4, "N4");
-                        ui.selectable_value(&mut self.current_jlpt, JLPT::N3, "N3");
-                        ui.selectable_value(&mut self.current_jlpt, JLPT::N2, "N2");
-                        ui.selectable_value(&mut self.current_jlpt, JLPT::N1, "N1");
+            ui.horizontal(|ui| {
+                let filter_width = 110.0;
+                let spacing = 10.0;
+                let search_width = ui.available_width() - filter_width - spacing;
+
+                // === A. SEARCH BAR (Left Pill) ===
+                pill_frame.show(ui, |ui| {
+                    ui.set_width(search_width);
+                    ui.horizontal(|ui| {
+                        ui.label(egui::RichText::new("🔍").size(16.0).color(ui.visuals().text_color().gamma_multiply(0.5)));
+                        ui.add_space(5.0);
+                        
+                        let text_edit = egui::TextEdit::singleline(&mut self.search)
+                            .id_source("list_search_field")
+                            .hint_text(&self.localization.local.screens.search)
+                            .frame(false) 
+                            .desired_width(f32::INFINITY)
+                            .font(egui::FontId::proportional(18.0))
+                            .margin(egui::vec2(0.0, 2.0));
+                        
+                        ui.add(text_edit);
                     });
-            }
+                });
+
+                ui.add_space(spacing);
+
+                pill_frame.show(ui, |ui| {
+                    ui.set_width(filter_width);
+                    ui.set_min_height(28.0); 
+
+                    let combo_label = match self.selected_kanji_list {
+                        KanjiList::All => "All",
+                        KanjiList::Jlpt5 => "N5",
+                        KanjiList::Jlpt4 => "N4",
+                        KanjiList::Jlpt3 => "N3",
+                        KanjiList::Jlpt2 => "N2",
+                        KanjiList::Jlpt1 => "N1",
+                    };
+
+                    ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                        ui.add_space(2.0); 
+                        
+                        egui::ComboBox::from_id_salt("kanji_filter_combo")
+                            .selected_text(egui::RichText::new(format!("⚡ {}", combo_label)).strong())
+                            .width(filter_width - 20.0)
+                            .show_ui(ui, |ui| {
+                                ui.selectable_value(&mut self.selected_kanji_list, KanjiList::All, &self.localization.local.top_bar.kanji.all);
+                                ui.separator();
+                                ui.selectable_value(&mut self.selected_kanji_list, KanjiList::Jlpt5, "JLPT N5");
+                                ui.selectable_value(&mut self.selected_kanji_list, KanjiList::Jlpt4, "JLPT N4");
+                                ui.selectable_value(&mut self.selected_kanji_list, KanjiList::Jlpt3, "JLPT N3");
+                                ui.selectable_value(&mut self.selected_kanji_list, KanjiList::Jlpt2, "JLPT N2");
+                                ui.selectable_value(&mut self.selected_kanji_list, KanjiList::Jlpt1, "JLPT N1");
+                            });
+                    });
+                });
+            });
         });
 
-        ui.separator();
+        ui.add_space(20.0);
 
-        let columns = 4;
-        let spacing = 10.0;
+        if filtered_kanji.is_empty() {
+            ui.centered_and_justified(|ui| {
+            ui.label(egui::RichText::new(&self.localization.local.home.kanji_not_found).weak().size(18.0));
+            });
+            return;
+        }
 
-        let available_width = ui.available_width();
-        let card_width = (available_width - (spacing * (columns as f32 - 1.0))) / columns as f32;
-
-        let card_height = (card_width / 3.0) * 4.0;
-        let row_height = card_height + spacing;
-
+        let item_spacing = 15.0;
+        let content_width = if available_width > max_width { max_width } else { available_width - 20.0 };
+        let side_padding = (available_width - content_width) / 2.0;
+        let columns = (content_width / 150.0).floor().max(2.0) as usize;
+        let card_width = (content_width - (item_spacing * (columns as f32 - 1.0))) / columns as f32;
+        let card_height = card_width * 1.1;
+        let row_height = card_height + item_spacing;
         let total_rows = (filtered_kanji.len() + columns - 1) / columns;
 
-        ui.separator();
+        egui::ScrollArea::vertical()
+            .auto_shrink([false, false]) 
+            .show_rows(ui, row_height, total_rows, |ui, row_range| {
+            
+            ui.spacing_mut().item_spacing.x = item_spacing;
+            ui.spacing_mut().item_spacing.y = item_spacing;
 
-        // Scroll Area
-        egui::ScrollArea::vertical().show_rows(ui, row_height, total_rows, |ui, row_range| {
-            let available_width = ui.available_width();
-            let card_width = (available_width - (spacing * (columns as f32 - 1.0))) / columns as f32;
-
-            // Rows
             for row_index in row_range {
                 ui.horizontal(|ui| {
-                    ui.spacing_mut().item_spacing.x = spacing;
-
+                    ui.add_space(side_padding); 
                     let start_index = row_index * columns;
-                    let end_index = (start_index + columns).min(self.kanji.len());
+                    let end_index = (start_index + columns).min(filtered_kanji.len());
 
-                    // Cards
                     for i in start_index..end_index {
                         if let Some(item) = filtered_kanji.get(i) {
                             let (rect, response) = ui.allocate_at_least(
                                 egui::vec2(card_width, card_height),
                                 egui::Sense::click(),
                             );
+                            
+                            let bg_color = if response.hovered() {
+                                ui.visuals().widgets.hovered.bg_fill
+                            } else {
+                                ui.visuals().faint_bg_color
+                            };
+                            
+                            let stroke = if response.hovered() {
+                                ui.visuals().widgets.hovered.fg_stroke
+                            } else {
+                                egui::Stroke::NONE
+                            };
 
                             ui.painter().rect(
                                 rect,
-                                4.0,
-                                ui.visuals().faint_bg_color,
-                                ui.visuals().window_stroke,
-                                egui::StrokeKind::Middle,
+                                egui::CornerRadius::same(12),
+                                bg_color,
+                                stroke,
+                                egui::StrokeKind::Outside,
                             );
 
                             ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
                                 ui.vertical_centered(|ui| {
-                                    let text_height = self.settings.kanji_font_size;
-                                    ui.add_space((card_height - text_height) / 2.0);
+                                    let kanji_size = self.settings.kanji_font_size;
+                                    let content_height = kanji_size + 20.0;
+                                    ui.add_space((card_height - content_height) / 2.0 - 5.0);
 
                                     ui.label(
                                         egui::RichText::new(&item.kanji)
-                                            .size(text_height)
+                                            .size(kanji_size)
                                             .strong()
+                                            .color(ui.visuals().strong_text_color())
                                     );
 
                                     if self.settings.show_kanji_meaning {
-                                        let maybe_translation = translations.get(&item.kanji);
-                                        if let Some(entry) = maybe_translation {
+                                        if let Some(entry) = translations.get(&item.kanji) {
                                             if !entry.meaning.is_empty() {
+                                                let meaning_text = if entry.meaning.len() > 18 {
+                                                    format!("{}...", &entry.meaning[0..16])
+                                                } else {
+                                                    entry.meaning.clone()
+                                                };
+
                                                 ui.label(
-                                                    egui::RichText::new(&entry.meaning)
+                                                    egui::RichText::new(meaning_text)
                                                         .size(self.settings.interface_font_size * 0.8)
                                                         .color(ui.visuals().text_color().gamma_multiply(0.7))
                                                 );
                                             }
                                         }
                                     }
-                                   
                                 });
                             });
 
                             if response.clicked() {
                                 let selected = (*item).clone();
                                 let svg_path = format!("kanji-svg/0{}.svg", item.unicode.to_lowercase());
-                                
                                 if Path::new(&svg_path).exists() {
                                     if let Err(_) = self.animator.load_svg(&svg_path) {
                                         self.animator.clear();
@@ -744,18 +812,15 @@ impl App {
                                 } else {
                                     self.animator.clear();
                                 }
-                        
                                 self.current_screen = Screen::Kanji(selected);
                             }
 
                             if response.hovered() {
                                 ui.output_mut(|o| o.cursor_icon = egui::CursorIcon::PointingHand);
                             }
-
                         }
                     }
                 });
-                ui.add_space(spacing);
             }
         });
     }
