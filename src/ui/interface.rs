@@ -1058,6 +1058,8 @@ impl App {
     fn ui_card_session(&mut self, ui: &mut egui::Ui) {
         let local = self.localization.local.top_bar.cards.clone();
 
+        let local_common  =&self.localization.local.screens.current_kanji;
+
         let state_snapshot = if let Some(session) = &self.cards_session {
             if session.finished {
                 Some((true, None, 0, 0, false)) // finished, no kanji
@@ -1113,7 +1115,7 @@ impl App {
 
         // Current Card
         if let Some(kanji) = current_kanji_opt {
-            let card_size = egui::vec2(300.0, 400.0);
+            let card_size = egui::vec2(300.0, 450.0);
             
             ui.vertical_centered(|ui| {
                 let (rect, response) = ui.allocate_exact_size(card_size, egui::Sense::click());
@@ -1148,6 +1150,20 @@ impl App {
                             // Show answer
                             ui.separator();
                             ui.add_space(10.0);
+
+                            let meaning_text = if let Some(entry) = self.translate_state.data.entries.get(&kanji.kanji) {
+                                &entry.meaning
+                            } else {
+                                ""
+                            };
+
+                            if !meaning_text.is_empty() {
+                                ui.label(egui::RichText::new(&local_common.meaning).strong());
+                                ui.label(egui::RichText::new(meaning_text).size(18.0)); 
+                                ui.add_space(10.0);
+                                ui.separator();
+                                ui.add_space(5.0);
+                            }
                             
                             ui.label(egui::RichText::new(&local.onyomi).strong());
                             ui.label(&kanji.onyomi);
