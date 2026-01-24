@@ -191,6 +191,8 @@ pub struct CurrentKanji {
     pub grade: String,
     pub frequency: String,
     pub examples: String,
+    pub click_to_replay: String,
+    pub no_examples_available: String,
 }
 
 // Kana Struct

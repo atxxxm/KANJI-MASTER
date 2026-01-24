@@ -828,14 +828,29 @@ impl App {
     // Show Current Kanji
     fn kanji_screen(&mut self, ui: &mut egui::Ui, kanji: &Kanji) {
         let local = &self.localization.local.screens.current_kanji;
-
         let translation_entry = self.translate_state.data.entries.get(&kanji.kanji);
 
-        if ui.button(&local.back_button).clicked() {
-            self.current_screen = Screen::All;
-        }
+        let panel_rounding = egui::CornerRadius::same(16);
+        let panel_fill = ui.visuals().faint_bg_color;
+        let panel_stroke = ui.visuals().widgets.noninteractive.bg_stroke;
+        
+        let content_frame = egui::Frame::NONE
+            .fill(panel_fill)
+            .corner_radius(panel_rounding)
+            .stroke(panel_stroke)
+            .inner_margin(15.0);
 
-        ui.add_space(20.0);
+        ui.add_space(10.0);
+        ui.horizontal(|ui| {
+            let btn_text = egui::RichText::new(format!("⬅ {}", &local.back_button))
+                .size(16.0)
+                .strong();
+            
+            if ui.add(egui::Button::new(btn_text).frame(false)).clicked() {
+                self.current_screen = Screen::All;
+            }
+        });
+        ui.add_space(15.0);
 
         ui.columns(2, |columns| {
             let available_w = columns[0].available_width().min(340.0);
@@ -843,12 +858,14 @@ impl App {
             let card_h = card_w * (4.0 / 3.0);
 
             columns[0].vertical_centered(|ui| {
-                ui.add_space(12.0);
+                ui.add_space(5.0);
 
+                // Card Frame
                 egui::Frame::canvas(ui.style())
                     .fill(ui.visuals().window_fill)
-                    .stroke(ui.visuals().window_stroke)
-                    .corner_radius(16.0)
+                    .stroke(egui::Stroke::new(1.5, ui.visuals().widgets.noninteractive.bg_stroke.color))
+                    .corner_radius(20)
+                    .shadow(egui::Shadow::NONE) 
                     .inner_margin(10.0)
                     .show(ui, |ui| {
                         let (rect, response) = ui.allocate_exact_size(
@@ -864,7 +881,6 @@ impl App {
                             ui.output_mut(|o| o.cursor_icon = egui::CursorIcon::PointingHand);
                         }
 
-                        // ANIMATION
                         let anim_side = rect.width().min(rect.height()) * 0.88;
                         let center = rect.center();
                         let draw_rect = egui::Rect::from_center_size(
@@ -873,103 +889,133 @@ impl App {
                         );
 
                         self.animator.ui(ui, draw_rect, &kanji.kanji, self.settings.animation_speed);
-
                     });
-
-                    ui.add_space(16.0);
+                
+                ui.add_space(10.0);
+                ui.label(egui::RichText::new(&local.click_to_replay).size(10.0).weak());
             });
 
-            columns[1].vertical_centered(|ui| {
-                ui.add_space(8.0);
-                ui.heading(&local.information);
-                ui.add_space(12.0);
-                ui.separator();
+            columns[1].vertical(|ui| {
+                ui.add_space(5.0);
 
-                egui::Grid::new("info_grid")
-                    .num_columns(2)
-                    .spacing([24.0, 12.0])
-                    .striped(true)
-                    .show(ui, |ui| {
+                let meaning = if let Some(entry) = translation_entry {
+                    if !entry.meaning.is_empty() { &entry.meaning } else { "" }
+                } else {
+                    ""
+                };
 
-                        let meaining = if let Some(entry) = translation_entry {
-                            if !entry.meaning.is_empty() {
-                                &entry.meaning
-                            } else {
-                                ""
-                            }
-                        } else {
-                            ""
-                        };
+                ui.vertical_centered_justified(|ui| {
+                    ui.label(
+                        egui::RichText::new(meaning)
+                            .size(28.0)
+                            .strong()
+                            .color(ui.visuals().strong_text_color())
+                    );
+                });
+                ui.add_space(15.0);
 
-                        ui.label(egui::RichText::new(&format!("{}: {}", &local.meaning, meaining)).strong());
-                        ui.end_row();
+                let badge = |ui: &mut egui::Ui, label: &str, value: &str| {
+                    let bg = ui.visuals().widgets.inactive.bg_fill;
+                    egui::Frame::NONE
+                        .fill(bg)
+                        .corner_radius(12)
+                        .inner_margin(egui::Margin::symmetric(12, 6))
+                        .show(ui, |ui| {
+                            ui.horizontal(|ui| {
+                                ui.label(egui::RichText::new(label).size(11.0).weak());
+                                ui.label(egui::RichText::new(value).size(12.0).strong());
+                            });
+                        });
+                };
 
-                        // Onyomi
-                        ui.label(egui::RichText::new(format!("{}: {}", &local.onyomi, kanji.onyomi)).strong());
-                        ui.end_row();
-                        ui.label(egui::RichText::new(format!("{}: {}", &local.onyomi_romaji, kanji.onyomi_romaji)).strong());
-                        ui.end_row();
+                ui.horizontal_wrapped(|ui| {
+                    badge(ui, &local.jlpt, &kanji.jlpt);
+                    ui.add_space(5.0);
+                    badge(ui, &local.grade, &kanji.grade);
+                    ui.add_space(5.0);
+                    badge(ui, &local.strokes, &format!("{}", &kanji.strokes));
+                    ui.add_space(5.0);
+                    badge(ui, &local.frequency, &kanji.frequency);
+                });
 
-                        // Kunyomi
-                        ui.label(egui::RichText::new(format!("{}: {}", &local.kunyomi, kanji.kunyomi)).strong());
-                        ui.end_row();
-                        ui.label(egui::RichText::new(format!("{}: {}", &local.kunyomi_romaji, kanji.kunyomi_romaji)).strong());
-                        ui.end_row();
+                ui.add_space(15.0);
 
-                        // Kanji Info
-                        ui.label(egui::RichText::new(format!("{}: {}", &local.strokes, kanji.strokes)).strong());
-                        ui.end_row();
-                        ui.label(egui::RichText::new(format!("{}: {}", &local.jlpt, kanji.jlpt)).strong());
-                        ui.end_row();
-                        ui.label(egui::RichText::new(format!("{}: {}", &local.grade, kanji.grade)).strong());
-                        ui.end_row();
-                        ui.label(egui::RichText::new(format!("{}: {}", &local.frequency, kanji.frequency)).strong());
-                        ui.end_row();
+                content_frame.show(ui, |ui| {
+                    ui.set_width(ui.available_width());
+                    
+                    ui.horizontal(|ui| {
+                        ui.vertical(|ui| {
+                            ui.label(egui::RichText::new(&local.onyomi).size(12.0).weak().italics());
+                            ui.add_space(2.0);
+                            ui.label(egui::RichText::new(&kanji.onyomi).size(16.0).strong());
+                            ui.label(egui::RichText::new(&kanji.onyomi_romaji).size(12.0).color(ui.visuals().text_color().gamma_multiply(0.6)));
+                        });
 
+                        ui.add_space(20.0);
+                        ui.separator();
+                        ui.add_space(20.0);
+
+                        ui.vertical(|ui| {
+                            ui.label(egui::RichText::new(&local.kunyomi).size(12.0).weak().italics());
+                            ui.add_space(2.0);
+                            ui.label(egui::RichText::new(&kanji.kunyomi).size(16.0).strong());
+                            ui.label(egui::RichText::new(&kanji.kunyomi_romaji).size(12.0).color(ui.visuals().text_color().gamma_multiply(0.6)));
+                        });
                     });
+                });
 
-                ui.add_space(28.0);
+                ui.add_space(20.0);
 
-                // Examples
-                ui.heading("Examples");
-                ui.add_space(12.0);
-                ui.separator();
+                ui.label(egui::RichText::new(&local.examples).strong().size(18.0));
+                ui.add_space(8.0);
 
-                let availible_width = ui.available_width();
-                let col_width = (availible_width / 2.0) - 15.0;
-
-                egui::Grid::new("examples_display_grid")
-                    .num_columns(2)
-                    .spacing([20.0, 10.0])
-                    .striped(true)
-                    .min_col_width(col_width)
-                    .max_col_width(col_width)
+                let scroll_height = ui.available_height() - 20.0;
+                
+                egui::ScrollArea::vertical()
+                    .max_height(scroll_height)
+                    .id_salt("examples_scroll")
                     .show(ui, |ui| {
-                        for (index, examples) in kanji.example.iter().enumerate() {
-                            ui.add(egui::Label::new(examples).wrap());
-
+                        for (index, example_jp) in kanji.example.iter().enumerate() {
                             let translation_text = if let Some(entry) = translation_entry {
-                                if let Some(trans) = entry.translate_examples.get(index) {
-                                    trans.clone()
-                                } else {
-                                    String::new()
-                                }
+                                entry.translate_examples.get(index).cloned().unwrap_or_default()
                             } else {
                                 String::new()
                             };
 
-                            ui.add(
-                                egui::Label::new(
-                                    egui::RichText::new(&translation_text)
-                                    .italics()
-                                    .color(ui.visuals().text_color().gamma_multiply(0.8))
-                                ).wrap()
-                            );
-
-
-                            ui.end_row();
+                            egui::Frame::NONE
+                                .fill(ui.visuals().widgets.open.weak_bg_fill)
+                                .corner_radius(8)
+                                .stroke(egui::Stroke::new(1.0, ui.visuals().widgets.noninteractive.bg_stroke.color.gamma_multiply(0.5)))
+                                .inner_margin(10.0)
+                                .show(ui, |ui| {
+                                    ui.set_width(ui.available_width());
+                                    ui.horizontal(|ui| {
+                                        ui.label(egui::RichText::new("•").color(ui.visuals().warn_fg_color)); 
+                                        
+                                        ui.vertical(|ui| {
+                                            ui.label(egui::RichText::new(example_jp).size(15.0));
+                                            
+                                            if !translation_text.is_empty() {
+                                                ui.add_space(2.0);
+                                                ui.label(
+                                                    egui::RichText::new(&translation_text)
+                                                        .italics()
+                                                        .size(13.0)
+                                                        .color(ui.visuals().text_color().gamma_multiply(0.7))
+                                                );
+                                            }
+                                        });
+                                    });
+                                });
+                            
+                            ui.add_space(8.0);
+                        }
+                        
+                        if kanji.example.is_empty() {
+                             ui.label(egui::RichText::new(&local.no_examples_available).weak().italics());
                         }
                     });
+
             });
         });
     }
