@@ -1,5 +1,5 @@
 use eframe::egui;
-use kurbo::{BezPath, Point, PathEl};
+use kurbo::{BezPath, PathEl, Point};
 use roxmltree::{Document, ParsingOptions};
 use std::fs;
 use svgtypes::{PathParser, PathSegment};
@@ -20,11 +20,11 @@ struct Stroke {
 
 // Kanji Animator
 pub struct KanjiAnimator {
-    strokes: Vec<Stroke>, // Stroke Data
-    is_playing: bool, // Is Playing
-    stroke_progress: f32, // Stroke Progress
+    strokes: Vec<Stroke>,        // Stroke Data
+    is_playing: bool,            // Is Playing
+    stroke_progress: f32,        // Stroke Progress
     current_stroke_index: usize, // Current Stroke Index
-    last_time: Option<f64>, // Last Time 
+    last_time: Option<f64>,      // Last Time
 }
 
 impl KanjiAnimator {
@@ -48,7 +48,7 @@ impl KanjiAnimator {
 
         let raw_text = fs::read_to_string(path)?;
         let text = raw_text.replace("kvg:", "kvg_");
-        
+
         let opt = ParsingOptions {
             allow_dtd: true,
             ..ParsingOptions::default()
@@ -68,19 +68,47 @@ impl KanjiAnimator {
                     for seg in PathParser::from(d) {
                         match seg? {
                             PathSegment::MoveTo { abs, x, y } => {
-                                let p = if abs { Point::new(x, y) } else { current + (x, y) };
+                                let p = if abs {
+                                    Point::new(x, y)
+                                } else {
+                                    current + (x, y)
+                                };
                                 bez_path.move_to(p);
                                 current = p;
                             }
                             PathSegment::LineTo { abs, x, y } => {
-                                let p = if abs { Point::new(x, y) } else { current + (x, y) };
+                                let p = if abs {
+                                    Point::new(x, y)
+                                } else {
+                                    current + (x, y)
+                                };
                                 bez_path.line_to(p);
                                 current = p;
                             }
-                            PathSegment::CurveTo { abs, x1, y1, x2, y2, x, y } => {
-                                let c1 = if abs { Point::new(x1, y1) } else { current + (x1, y1)};
-                                let c2 = if abs { Point::new(x2, y2) } else { current + (x2, y2) };
-                                let p = if abs { Point::new(x, y) } else { current + (x, y) };
+                            PathSegment::CurveTo {
+                                abs,
+                                x1,
+                                y1,
+                                x2,
+                                y2,
+                                x,
+                                y,
+                            } => {
+                                let c1 = if abs {
+                                    Point::new(x1, y1)
+                                } else {
+                                    current + (x1, y1)
+                                };
+                                let c2 = if abs {
+                                    Point::new(x2, y2)
+                                } else {
+                                    current + (x2, y2)
+                                };
+                                let p = if abs {
+                                    Point::new(x, y)
+                                } else {
+                                    current + (x, y)
+                                };
                                 bez_path.curve_to(c1, c2, p);
                                 current = p;
                             }
@@ -99,10 +127,7 @@ impl KanjiAnimator {
                             PathEl::MoveTo(p) => {
                                 last_pos = p;
                                 if is_first {
-                                    points.push(StrokePoint {
-                                        pos: p,
-                                        dist: 0.0,
-                                    });
+                                    points.push(StrokePoint { pos: p, dist: 0.0 });
                                     is_first = false;
                                 }
                             }
@@ -110,7 +135,7 @@ impl KanjiAnimator {
                             PathEl::LineTo(p) => {
                                 let dist = last_pos.distance(p);
                                 total_dist += dist;
-                                
+
                                 points.push(StrokePoint {
                                     pos: p,
                                     dist: total_dist as f32,
@@ -173,7 +198,7 @@ impl KanjiAnimator {
         // Scale
         let desired_size = 109.0;
         let scale = (rect.width().min(rect.height())) / desired_size;
-        
+
         let offset_x = rect.min.x + (rect.width() - desired_size * scale) / 2.0;
         let offset_y = rect.min.y + (rect.height() - desired_size * scale) / 2.0;
         let offset = egui::vec2(offset_x, offset_y);
@@ -200,10 +225,10 @@ impl KanjiAnimator {
             if self.stroke_progress >= 1.0 {
                 self.stroke_progress = 0.0;
                 self.current_stroke_index += 1;
-                
+
                 if self.current_stroke_index >= self.strokes.len() {
                     self.is_playing = false;
-                    self.current_stroke_index = self.strokes.len(); 
+                    self.current_stroke_index = self.strokes.len();
                 }
             }
             ui.ctx().request_repaint();
@@ -217,10 +242,9 @@ impl KanjiAnimator {
 
             if i < self.current_stroke_index {
                 // Draw full stroke
-                let screen_points: Vec<egui::Pos2> = stroke.points.iter()
-                    .map(|sp| transform(sp.pos))
-                    .collect();
-                
+                let screen_points: Vec<egui::Pos2> =
+                    stroke.points.iter().map(|sp| transform(sp.pos)).collect();
+
                 if screen_points.len() > 1 {
                     painter.add(egui::Shape::Path(egui::epaint::PathShape {
                         points: screen_points,
@@ -241,14 +265,14 @@ impl KanjiAnimator {
                         if idx > 0 {
                             let prev = &stroke.points[idx - 1];
                             let segment_len = sp.dist - prev.dist;
-                            
+
                             if segment_len > 0.0001 {
                                 let dist_needed = target_len - prev.dist;
                                 let t = (dist_needed / segment_len) as f64;
-                                
+
                                 let x = prev.pos.x + (sp.pos.x - prev.pos.x) * t;
                                 let y = prev.pos.y + (sp.pos.y - prev.pos.y) * t;
-                                
+
                                 screen_points.push(transform(Point::new(x, y)));
                             }
                         }

@@ -1,14 +1,14 @@
-use rand::seq::SliceRandom;
-use rand::rng;
 use crate::back::core::Kanji;
+use rand::rng;
+use rand::seq::SliceRandom;
 
 // Active cards session status
 pub struct CardsSession {
-    pub queue: Vec<Kanji>, // Queue of kanji
-    pub current_index: usize, // Current index of kanji in queue
+    pub queue: Vec<Kanji>,     // Queue of kanji
+    pub current_index: usize,  // Current index of kanji in queue
     pub is_card_flipped: bool, // Is card flipped
-    pub total_count: usize, // Total count of kanji
-    pub finished: bool, // Is session finished
+    pub total_count: usize,    // Total count of kanji
+    pub finished: bool,        // Is session finished
 }
 
 impl CardsSession {

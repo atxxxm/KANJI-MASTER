@@ -1,10 +1,10 @@
-mod ui;
 mod back;
+mod ui;
 use anyhow;
 
-use ui::interface::run;
+use back::config::{Config, load_config};
 use std::path::Path;
-use back::config::{load_config, Config};
+use ui::interface::run;
 
 fn main() -> anyhow::Result<()> {
     let config: Config = if !Path::new("config.toml").exists() {

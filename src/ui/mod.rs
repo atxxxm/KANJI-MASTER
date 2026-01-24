@@ -1,3 +1,3 @@
-pub mod settings;
-pub mod interface;
 pub mod animator;
+pub mod interface;
+pub mod settings;

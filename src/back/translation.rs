@@ -1,8 +1,7 @@
-use std::collections::HashMap;
-use serde::{Serialize, Deserialize};
-use std::fs;
 use crate::back::core::Kanji;
-
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::fs;
 
 pub struct MessageTranslationData {
     pub file_load_success: String,
@@ -39,14 +38,14 @@ pub struct TranslationFile {
 }
 
 pub struct TranslateState {
-    path_to_file: String, // Path to JSON file
+    path_to_file: String,                 // Path to JSON file
     message_data: MessageTranslationData, // Messages
-    pub data: TranslationFile, // All loaded data
-    pub current_index: usize, // Current index at vector self.kanji
-    pub meaning_buffer: String, // Buffer for meaning
-    pub examples_buffer: Vec<String>, // Buffer for examples
-    pub jump_search_buffer: String, // Buffer for jump search
-    pub status_message: String, // Status message
+    pub data: TranslationFile,            // All loaded data
+    pub current_index: usize,             // Current index at vector self.kanji
+    pub meaning_buffer: String,           // Buffer for meaning
+    pub examples_buffer: Vec<String>,     // Buffer for examples
+    pub jump_search_buffer: String,       // Buffer for jump search
+    pub status_message: String,           // Status message
 }
 
 impl Default for TranslateState {
@@ -76,7 +75,7 @@ impl TranslateState {
     // Load JSON from file
     pub fn load(&mut self, new_path: &str) -> bool {
         self.path_to_file = new_path.to_string();
-        
+
         if let Ok(content) = fs::read_to_string(&self.path_to_file) {
             if let Ok(loaded_data) = serde_json::from_str::<TranslationFile>(&content) {
                 self.data = loaded_data;
@@ -108,10 +107,10 @@ impl TranslateState {
     }
 
     // Function for saving JSON
-    pub fn save_translations(&mut self, kanji: &Vec<Kanji>) {        
+    pub fn save_translations(&mut self, kanji: &Vec<Kanji>) {
         // Update current entry before saving
         if let Some(k) = kanji.get(self.current_index) {
-                let entry = KanjiTranslation {
+            let entry = KanjiTranslation {
                 meaning: self.meaning_buffer.clone(),
                 translate_examples: self.examples_buffer.clone(),
             };
@@ -123,7 +122,8 @@ impl TranslateState {
         match fs::File::create(&self.path_to_file) {
             Ok(file) => {
                 if serde_json::to_writer_pretty(file, &self.data).is_ok() {
-                    self.status_message = format!("{}: {}", self.message_data.saved_at_id, self.data.last_id);
+                    self.status_message =
+                        format!("{}: {}", self.message_data.saved_at_id, self.data.last_id);
                 } else {
                     self.status_message = self.message_data.error_searialize_json.clone();
                 }
@@ -134,5 +134,3 @@ impl TranslateState {
         }
     }
 }
-
-

@@ -1,5 +1,5 @@
-use rusqlite::Connection;
 use anyhow;
+use rusqlite::Connection;
 use std::collections::HashMap;
 
 pub struct Database {
@@ -32,7 +32,8 @@ impl Database {
     pub fn get_kanji(&self) -> anyhow::Result<Vec<Kanji>> {
         let conn = Connection::open(&self.path_to_db)?;
 
-        let mut stmt = conn.prepare("
+        let mut stmt = conn.prepare(
+            "
             SELECT
                 k.id,
                 k.kanji,
@@ -47,7 +48,8 @@ impl Database {
                 r.kunyomi_romaji
             FROM kanji k
             LEFT JOIN read r ON k.id = r.kanji_id
-        ")?;
+        ",
+        )?;
 
         let mut kanji_map: HashMap<i32, Kanji> = HashMap::new();
 
@@ -61,10 +63,18 @@ impl Database {
                 grade: row.get("grade")?,
                 frequency: row.get("frequency")?,
                 unicode: row.get("unicode")?,
-                onyomi: row.get::<_, Option<String>>("onyomi")?.map_or(String::new(), |s| self.split_on_or_kun(&s)),
-                onyomi_romaji: row.get::<_, Option<String>>("onyomi_romaji")?.map_or(String::new(), |s| self.split_romaji(&s)),
-                kunyomi: row.get::<_, Option<String>>("kunyomi")?.map_or(String::new(), |s| self.split_on_or_kun(&s)),
-                kunyomi_romaji: row.get::<_, Option<String>>("kunyomi_romaji")?.map_or(String::new(), |s| self.split_romaji(&s)),
+                onyomi: row
+                    .get::<_, Option<String>>("onyomi")?
+                    .map_or(String::new(), |s| self.split_on_or_kun(&s)),
+                onyomi_romaji: row
+                    .get::<_, Option<String>>("onyomi_romaji")?
+                    .map_or(String::new(), |s| self.split_romaji(&s)),
+                kunyomi: row
+                    .get::<_, Option<String>>("kunyomi")?
+                    .map_or(String::new(), |s| self.split_on_or_kun(&s)),
+                kunyomi_romaji: row
+                    .get::<_, Option<String>>("kunyomi_romaji")?
+                    .map_or(String::new(), |s| self.split_romaji(&s)),
                 example: Vec::new(),
             };
             Ok((id, kanji))
@@ -96,9 +106,7 @@ impl Database {
         result.sort_by(|a, b| a.kanji.cmp(&b.kanji));
 
         Ok(result)
-
     }
-
 
     fn split_on_or_kun(&self, text: &str) -> String {
         if text.trim().is_empty() {

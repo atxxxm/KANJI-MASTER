@@ -1,11 +1,14 @@
-use serde::{Serialize, Deserialize, de::DeserializeOwned};
-use std::{fs::File, io::{Read, Write}};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::collections::HashMap;
+use std::{
+    fs::File,
+    io::{Read, Write},
+};
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct Config {
     pub interface_font_size: f32,
-    pub kanji_font_size: f32, 
+    pub kanji_font_size: f32,
     pub animation_speed: f32,
     pub path_to_db_core: String,
     pub path_to_localization: String,
@@ -19,7 +22,7 @@ pub struct Config {
 
 impl Config {
     pub fn default() -> Self {
-       Self {
+        Self {
             interface_font_size: 14.0,
             kanji_font_size: 48.0,
             animation_speed: 0.75,
@@ -32,7 +35,6 @@ impl Config {
         }
     }
 }
-
 
 // Load config
 pub fn load_config<T: DeserializeOwned>(path: &str) -> anyhow::Result<T> {

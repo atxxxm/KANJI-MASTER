@@ -1,16 +1,15 @@
+use crate::back::config::Config;
 use crate::back::localization::{Localization, Paths, save};
 use rfd::FileDialog;
-use crate::back::config::Config;
 
 pub struct Settings {
-    localization: Localization, // Localization Settings
+    localization: Localization,   // Localization Settings
     pub interface_font_size: f32, // Interface Font Size
-    pub kanji_font_size: f32, // Kanji Font Size
-    pub animation_speed: f32, // Animation Speed
+    pub kanji_font_size: f32,     // Kanji Font Size
+    pub animation_speed: f32,     // Animation Speed
     pub show_kanji_meaning: bool, // Show Kanji Meaning
-    pub focus_on_search: bool, // Focus on search when opening the app
+    pub focus_on_search: bool,    // Focus on search when opening the app
 }
-
 
 impl Settings {
     pub fn new(localization: Localization, config: &Config) -> Self {
@@ -61,10 +60,7 @@ impl Settings {
 
                 // Interface Font Size
                 ui.label(&local.interface_font_size);
-                ui.add(egui::Slider::new(
-                    &mut self.interface_font_size,
-                    8.0..=32.0,
-                ));
+                ui.add(egui::Slider::new(&mut self.interface_font_size, 8.0..=32.0));
 
                 ui.separator();
 
@@ -76,10 +72,7 @@ impl Settings {
 
                 // Animation Speed Kanji
                 ui.label(&local.kanji_animation_speed);
-                ui.add(egui::Slider::new(
-                    &mut self.animation_speed,
-                    0.1..=3.0,
-                ));
+                ui.add(egui::Slider::new(&mut self.animation_speed, 0.1..=3.0));
 
                 ui.separator();
 
@@ -168,15 +161,13 @@ impl Settings {
             if let Some(path_str) = path.to_str() {
                 // Create default structure
                 let default_loc = Localization::default();
-                
+
                 // Try to save
                 match save(path_str, &default_loc) {
-                    Ok(_) => {},
+                    Ok(_) => {}
                     Err(e) => eprintln!("Error saving localization: {}", e),
                 }
             }
         }
     }
-
 }
-

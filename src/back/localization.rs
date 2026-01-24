@@ -1,6 +1,6 @@
-use std::fs::File;
-use serde::{Serialize, Deserialize, de::DeserializeOwned};
 use anyhow;
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use std::fs::File;
 
 // Paths to files Struct
 pub struct Paths {
@@ -14,7 +14,6 @@ pub struct Paths {
 pub struct Localization {
     pub lang: String,
     pub local: Local,
-    
 }
 
 // Local Struct
@@ -83,7 +82,6 @@ pub struct CardsTopBar {
     pub add_kanji: String,
     pub type_search_hint: String,
     pub deck_content: String,
-
 }
 
 // Kana Top Bar Struct
@@ -143,8 +141,6 @@ pub struct TranslateToKanji {
     pub error_buffer_mismatch: String,
     pub previous_button: String,
     pub next_button: String,
-
-
 }
 
 // Settings Struct
