@@ -82,6 +82,11 @@ pub struct CardsTopBar {
     pub add_kanji: String,
     pub type_search_hint: String,
     pub deck_content: String,
+    pub my_new_decks: String,
+    pub no_matches: String,
+    pub added: String,
+    pub decks_is_empty: String,
+
 }
 
 // Kana Top Bar Struct
