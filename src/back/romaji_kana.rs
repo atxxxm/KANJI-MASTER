@@ -41,7 +41,7 @@ pub fn to_kana(input: &str, is_katakana: bool) -> String {
 
         // Processing double consonants (Sokun: tt, kk, pp -> っ)
         // If the current letter matches the next once addd it is a constant
-        if i + 1 < chars.len() && chars[i] == chars[i+1] && !is_vowel(chars[i]) {
+        if i + 1 < chars.len() && chars[i] == chars[i+1] && !is_vowel(chars[i]) && chars[i].is_alphabetic() {
             results.push_str(if is_katakana { "ッ" } else { "っ" });
             i += 1;
             continue;
