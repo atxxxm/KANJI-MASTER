@@ -1,4 +1,4 @@
-use crate::back::localization::{Localization, Paths};
+use crate::back::localization::{Localization, Paths, save};
 use rfd::FileDialog;
 use crate::back::config::Config;
 
@@ -12,6 +12,7 @@ pub struct Settings {
     pub confrim_progress_reset: bool, // Confrim Progress Reset
     pub animation_speed: f32, // Animation Speed
     pub show_kanji_meaning: bool, // Show Kanji Meaning
+    pub focus_on_search: bool, // Focus on search when opening the app
 }
 
 
@@ -26,7 +27,8 @@ impl Settings {
             confrim_card_delete: config.confrim_card_delete,
             confrim_progress_reset: config.confrim_progress_reset,
             animation_speed: config.animation_speed,
-            show_kanji_meaning: false,
+            show_kanji_meaning: config.show_kanji_meaning,
+            focus_on_search: config.focus_on_search,
         }
     }
 
@@ -40,11 +42,14 @@ impl Settings {
         let local = &self.localization.local.settings;
         let mut open_file_localization = false;
         let mut open_file_kanji_localization = false;
+        let mut create_default_localization_file = false;
 
         egui::Window::new(&local.title)
             .open(is_open)
             .resizable(true)
+            .vscroll(true)
             .show(ctx, |ui| {
+                // Localization
                 ui.label(&local.lang);
                 ui.label(egui::RichText::new(&paths.path_to_localization).size(10.0));
                 if ui.button(&local.lang_button).clicked() {
@@ -53,6 +58,7 @@ impl Settings {
 
                 ui.separator();
 
+                // Kanji Localization
                 ui.label(&local.kanji_localization);
                 ui.label(egui::RichText::new(&paths.path_to_kanji_localization).size(10.0));
                 if ui.button(&local.lang_button).clicked() {
@@ -61,6 +67,7 @@ impl Settings {
 
                 ui.separator();
 
+                // Interface Font Size
                 ui.label(&local.interface_font_size);
                 ui.add(egui::Slider::new(
                     &mut self.interface_font_size,
@@ -69,11 +76,13 @@ impl Settings {
 
                 ui.separator();
 
+                // Kanji Font Size
                 ui.label(&local.kanji_font_size);
                 ui.add(egui::Slider::new(&mut self.kanji_font_size, 10.0..=90.0));
 
                 ui.separator();
 
+                // Animation Speed Kanji
                 ui.label(&local.kanji_animation_speed);
                 ui.add(egui::Slider::new(
                     &mut self.animation_speed,
@@ -82,16 +91,25 @@ impl Settings {
 
                 ui.separator();
 
+                // Auto Save Progress
                 ui.label(&local.auto_save_progress);
                 ui.checkbox(&mut self.auto_save_progress, "");
 
                 ui.separator();
 
+                // Focus on search when opening the app
+                ui.label(&local.focus_on_search);
+                ui.checkbox(&mut self.focus_on_search, "");
+
+                ui.separator();
+
+                // Show Kanji Meaning
                 ui.label(&local.show_kanji_meaning);
                 ui.checkbox(&mut self.show_kanji_meaning, "");
 
                 ui.separator();
 
+                // Auto Save Frequency
                 ui.label(&local.auto_save_frequency);
 
                 //egui::ComboBox::from_label("")
@@ -106,11 +124,13 @@ impl Settings {
 
                 ui.separator();
 
+                // Open Last Session At Startup
                 ui.label(&local.open_last_session_at_startup);
                 ui.checkbox(&mut self.open_last_session_at_startup, "");
 
                 ui.separator();
 
+                // Startup Screen
                 ui.label(&local.startup_screen);
                 //egui::ComboBox::from_label("")
                 //    .selected_text("10 minutes")
@@ -124,13 +144,25 @@ impl Settings {
 
                 ui.separator();
 
+                // Confrim Card Delete
                 ui.label(&local.confrim_card_delete);
                 ui.checkbox(&mut self.confrim_card_delete, "");
 
                 ui.separator();
 
+                // Confrim Progress Reset
                 ui.label(&local.confrim_progress_reset);
                 ui.checkbox(&mut self.confrim_progress_reset, "");
+
+                ui.separator();
+
+                // Tools
+                ui.heading(&local.tools);
+
+                // Create Default Localization File
+                if ui.button(&local.create_default_localization_file).clicked() {
+                    create_default_localization_file = true;
+                }
             });
 
         if open_file_localization {
@@ -143,6 +175,10 @@ impl Settings {
             if self.open_kanji_localization_file(paths) {
                 path_changed = true;
             }
+        }
+
+        if create_default_localization_file {
+            self.create_default_localization_file();
         }
 
         path_changed
@@ -179,6 +215,28 @@ impl Settings {
     // Update Localization
     pub fn update_localization(&mut self, new_local: Localization) {
         self.localization = new_local;
+    }
+
+    // Create Default Localization File
+    fn create_default_localization_file(&self) {
+        // Open save dialog
+        let file_path = FileDialog::new()
+            .set_file_name("default_localization.json")
+            .add_filter("JSON", &["json"])
+            .save_file();
+
+        if let Some(path) = file_path {
+            if let Some(path_str) = path.to_str() {
+                // Create default structure
+                let default_loc = Localization::default();
+                
+                // Try to save
+                match save(path_str, &default_loc) {
+                    Ok(_) => {},
+                    Err(e) => eprintln!("Error saving localization: {}", e),
+                }
+            }
+        }
     }
 
 }

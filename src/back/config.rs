@@ -14,6 +14,8 @@ pub struct Config {
     pub path_to_db_core: String,
     pub path_to_localization: String,
     pub path_to_kanji_localization: String,
+    pub show_kanji_meaning: bool,
+    pub focus_on_search: bool,
 
     #[serde(default)]
     pub custom_decks: HashMap<String, Vec<i32>>,
@@ -32,6 +34,8 @@ impl Config {
             path_to_db_core: "db/core.db".to_string(),
             path_to_localization: "localization/en.json".to_string(),
             path_to_kanji_localization: "kanji_localization/en.json".to_string(),
+            show_kanji_meaning: false,
+            focus_on_search: true,
             custom_decks: HashMap::new(),
         }
     }

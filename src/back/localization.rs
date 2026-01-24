@@ -157,6 +157,9 @@ pub struct Settings {
     pub confrim_card_delete: String,
     pub confrim_progress_reset: String,
     pub show_kanji_meaning: String,
+    pub tools: String,
+    pub create_default_localization_file: String,
+    pub focus_on_search: String,
 }
 
 // Screens Struct
