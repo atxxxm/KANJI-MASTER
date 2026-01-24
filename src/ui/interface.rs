@@ -364,47 +364,119 @@ impl App {
 
     // Top Bar
     fn top_bar(&mut self, ctx: &egui::Context) {
-        egui::TopBottomPanel::top("top_panel").show(ctx, |ui| {
-            egui::MenuBar::new().ui(ui, |ui| {
-                let local = &self.localization.local.top_bar;
-                // Kanji Menu
-                ui.menu_button(&local.kanji.title, |ui| {
-                    if ui.button(&local.kanji.jlpt).clicked() {
-                        self.current_screen = Screen::Jlpt;
+        let local = self.localization.local.top_bar.clone();
+
+        let panel_frame = egui::Frame::NONE
+            .fill(ctx.style().visuals.window_fill)
+            .inner_margin(egui::Margin::symmetric(20, 15))
+            .stroke(egui::Stroke::new(1.0, ctx.style().visuals.widgets.noninteractive.bg_stroke.color));
+
+        egui::TopBottomPanel::top("top_panel")
+            .frame(panel_frame)
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    
+                    let logo_text = egui::RichText::new("Kanji Master")
+                        .family(egui::FontFamily::Proportional)
+                        .size(22.0)
+                        .strong();
+
+                    if ui.add(egui::Label::new(logo_text).sense(egui::Sense::click())).clicked() {
+                        self.current_screen = Screen::Home;
                     }
 
-                    if ui.button(&local.kanji.all).clicked() {
-                        self.current_screen = Screen::All;
-                    }
-                });
+                    ui.add_space(30.0);
+                    ui.add(egui::Separator::default().vertical().spacing(20.0));
+                    ui.add_space(10.0);
 
-                // Tranning Menu
-                if ui.button(&local.cards.title).clicked() {
-                    self.current_screen = Screen::CardsSetup;
-                }
+                    self.nav_button(ui, &local.kanji.title, Screen::All);
+                    self.nav_button(ui, &local.kana.title, Screen::Kana);
+                    self.nav_button(ui, &local.cards.title, Screen::CardsSetup);
 
-                // Kana Button
-                if ui.button(&local.kana.title).clicked() {
-                    self.current_screen = Screen::Kana;
-                }
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        
+                        let settings_btn = ui.add(
+                            egui::Button::new(egui::RichText::new("⚙").size(18.0))
+                            .frame(false)
+                        );
 
-                // Settings Button
-                if ui.button(&self.localization.local.settings.title).clicked() {
-                    self.settings_window = true;
-                }
+                        if settings_btn.clicked() {
+                            self.settings_window = true;
+                        }
 
-                // Tools Menu
-                ui.menu_button(&local.tools.title, |ui| {
-                    if ui.button(&local.tools.romaji_to_kana).clicked() {
-                        self.current_screen = Screen::RomajiToKana;
-                    }
+                        if settings_btn.hovered() {
+                            ui.output_mut(|o| o.cursor_icon = egui::CursorIcon::PointingHand);
+                        }
 
-                    if ui.button(&local.tools.translate_kanji).clicked() {
-                        self.current_screen = Screen::TranslateKana;
-                    }
+                        ui.add_space(15.0);
+
+                        ui.menu_button(egui::RichText::new(&local.tools.title), |ui| {
+                            ui.set_min_width(150.0);
+
+                            if ui.button(&local.tools.romaji_to_kana).clicked() {
+                                self.current_screen = Screen::RomajiToKana;
+                                ui.close();
+                            }
+
+                            if ui.button(&local.tools.translate_kanji).clicked() {
+                                self.current_screen = Screen::TranslateKana;
+                                ui.close();
+                            }
+                        });
+                    });
+
                 });
             });
-        });
+    }
+
+    // Auxiliary function for navigation buttons
+    fn nav_button(&mut self, ui: &mut egui::Ui, text: &str, target_screen: Screen) {
+        let is_active = match (&self.current_screen, &target_screen) {
+            (Screen::All, Screen::All) => true,
+            (Screen::Kanji(_), Screen::All) => true,
+            (Screen::Jlpt, Screen::All) => true,
+            (Screen::Kana, Screen::Kana) => true,
+            (Screen::CardsSetup, Screen::CardsSetup) => true,
+            (Screen::CardsActive, Screen::CardsSetup) => true,
+            (Screen::DeckManager, Screen::CardsSetup) => true,
+            _ => false,
+        };
+
+        let text_color = if is_active {
+            ui.visuals().text_color()
+        } else {
+            ui.visuals().text_color().gamma_multiply(0.6)
+        };
+
+        let rich_text = egui::RichText::new(text)
+            .size(17.0)
+            .color(text_color)
+            .strong();
+
+        let response = ui.add(egui::Button::new(rich_text).frame(false));
+
+        if is_active || response.hovered() {
+            let rect = response.rect;
+            let stroke = egui::Stroke::new(2.0, text_color);
+
+            ui.painter().line_segment(
+                [
+                    egui::pos2(rect.min.x + 4.0, rect.max.y - 2.0),
+                    egui::pos2(rect.max.x - 4.0, rect.max.y - 2.0),
+                ],
+                stroke,
+            );
+        }
+
+        if response.clicked() {
+            self.current_screen = target_screen;
+        }
+        
+        if response.hovered() {
+            ui.output_mut(|o| o.cursor_icon = egui::CursorIcon::PointingHand);
+        }
+
+        ui.add_space(20.0);
     }
 
     // Ui Screen All
