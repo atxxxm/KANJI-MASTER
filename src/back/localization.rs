@@ -141,6 +141,8 @@ pub struct TranslateToKanji {
     pub error_buffer_mismatch: String,
     pub previous_button: String,
     pub next_button: String,
+    pub original: String,
+    pub translation: String,
 }
 
 // Settings Struct
