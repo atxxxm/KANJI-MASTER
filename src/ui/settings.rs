@@ -1,6 +1,7 @@
 use crate::back::config::Config;
 use crate::back::localization::{Localization, Paths, save};
 use rfd::FileDialog;
+use eframe::egui;
 
 pub struct Settings {
     localization: Localization,   // Localization Settings
@@ -35,66 +36,141 @@ impl Settings {
         let mut open_file_kanji_localization = false;
         let mut create_default_localization_file = false;
 
-        egui::Window::new(&local.title)
+        let panel_rounding = egui::CornerRadius::same(12);
+        let border_stroke = ctx.style().visuals.widgets.noninteractive.bg_stroke;
+        let panel_bg = ctx.style().visuals.faint_bg_color;
+
+        egui::Window::new(egui::RichText::new(&local.title).strong())
             .open(is_open)
             .resizable(true)
             .vscroll(true)
+            .default_width(450.0)
             .show(ctx, |ui| {
-                // Localization
-                ui.label(&local.lang);
-                ui.label(egui::RichText::new(&paths.path_to_localization).size(10.0));
-                if ui.button(&local.lang_button).clicked() {
-                    open_file_localization = true;
-                }
+                ui.add_space(5.0);
 
-                ui.separator();
+                ui.label(egui::RichText::new(format!("📂 {}", &local.files_and_data)).strong());
+                ui.add_space(5.0);
 
-                // Kanji Localization
-                ui.label(&local.kanji_localization);
-                ui.label(egui::RichText::new(&paths.path_to_kanji_localization).size(10.0));
-                if ui.button(&local.lang_button).clicked() {
-                    open_file_kanji_localization = true;
-                }
+                egui::Frame::NONE
+                    .fill(panel_bg)
+                    .stroke(border_stroke)
+                    .corner_radius(panel_rounding)
+                    .inner_margin(12.0)
+                    .show(ui, |ui| {
+                        ui.label(egui::RichText::new(&local.lang).size(12.0).weak());
+                        ui.horizontal(|ui| {
+                            let path_bg = ui.visuals().widgets.inactive.bg_fill;
+                            egui::Frame::NONE
+                                .fill(path_bg)
+                                .corner_radius(8)
+                                .inner_margin(egui::Margin::symmetric(8, 4))
+                                .show(ui, |ui| {
+                                    ui.add(
+                                        egui::Label::new(
+                                            egui::RichText::new(&paths.path_to_localization).monospace().size(11.0)
+                                        ).truncate()
+                                    );
+                                });
+                            
+                            if ui.button("📂").on_hover_text(&local.lang_button).clicked() {
+                                open_file_localization = true;
+                            }
+                        });
 
-                ui.separator();
+                        ui.add_space(10.0);
+                        ui.separator();
+                        ui.add_space(10.0);
 
-                // Interface Font Size
-                ui.label(&local.interface_font_size);
-                ui.add(egui::Slider::new(&mut self.interface_font_size, 8.0..=32.0));
+                        ui.label(egui::RichText::new(&local.kanji_localization).size(12.0).weak());
+                        ui.horizontal(|ui| {
+                            let path_bg = ui.visuals().widgets.inactive.bg_fill;
+                            egui::Frame::NONE
+                                .fill(path_bg)
+                                .corner_radius(8)
+                                .inner_margin(egui::Margin::symmetric(8, 4))
+                                .show(ui, |ui| {
+                                    ui.add(
+                                        egui::Label::new(
+                                            egui::RichText::new(&paths.path_to_kanji_localization).monospace().size(11.0)
+                                        ).truncate()
+                                    );
+                                });
 
-                ui.separator();
+                            if ui.button("📂").on_hover_text(&local.lang_button).clicked() {
+                                open_file_kanji_localization = true;
+                            }
+                        });
+                    });
 
-                // Kanji Font Size
-                ui.label(&local.kanji_font_size);
-                ui.add(egui::Slider::new(&mut self.kanji_font_size, 10.0..=90.0));
+                ui.add_space(20.0);
 
-                ui.separator();
+                ui.label(egui::RichText::new(format!("🎨 {}", &local.appearance)).strong());
+                ui.add_space(5.0);
 
-                // Animation Speed Kanji
-                ui.label(&local.kanji_animation_speed);
-                ui.add(egui::Slider::new(&mut self.animation_speed, 0.1..=3.0));
+                egui::Frame::NONE
+                    .fill(panel_bg)
+                    .stroke(border_stroke)
+                    .corner_radius(panel_rounding)
+                    .inner_margin(12.0)
+                    .show(ui, |ui| {
+                        egui::Grid::new("settings_grid")
+                            .num_columns(2)
+                            .spacing([20.0, 15.0])
+                            .show(ui, |ui| {
+                                ui.label(&local.interface_font_size);
+                                ui.add(egui::Slider::new(&mut self.interface_font_size, 12.0..=32.0).suffix(" px"));
+                                ui.end_row();
 
-                ui.separator();
+                                ui.label(&local.kanji_font_size);
+                                ui.add(egui::Slider::new(&mut self.kanji_font_size, 20.0..=120.0).suffix(" px"));
+                                ui.end_row();
 
-                // Focus on search when opening the app
-                ui.label(&local.focus_on_search);
-                ui.checkbox(&mut self.focus_on_search, "");
+                                ui.label(&local.kanji_animation_speed);
+                                ui.add(egui::Slider::new(&mut self.animation_speed, 0.1..=5.0).logarithmic(true));
+                                ui.end_row();
+                            });
+                    });
 
-                ui.separator();
+                ui.add_space(20.0);
 
-                // Show Kanji Meaning
-                ui.label(&local.show_kanji_meaning);
-                ui.checkbox(&mut self.show_kanji_meaning, "");
+                ui.label(egui::RichText::new(format!("⚙ {}", &local.behavior)).strong());
+                ui.add_space(5.0);
 
-                ui.separator();
+                egui::Frame::NONE
+                    .fill(panel_bg)
+                    .stroke(border_stroke)
+                    .corner_radius(panel_rounding)
+                    .inner_margin(12.0)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.checkbox(&mut self.focus_on_search, "");
+                            ui.label(&local.focus_on_search);
+                        });
 
-                // Tools
-                ui.heading(&local.tools);
+                        ui.add_space(5.0);
+                        ui.separator();
+                        ui.add_space(5.0);
 
-                // Create Default Localization File
-                if ui.button(&local.create_default_localization_file).clicked() {
+                        // Show Meaning
+                        ui.horizontal(|ui| {
+                            ui.checkbox(&mut self.show_kanji_meaning, "");
+                            ui.label(&local.show_kanji_meaning);
+                        });
+                    });
+
+                ui.add_space(20.0);
+
+                ui.label(egui::RichText::new(&local.tools).strong());
+                ui.add_space(5.0);
+                
+                let btn = egui::Button::new(format!("📝 {}", &local.create_default_localization_file))
+                    .min_size(egui::vec2(ui.available_width(), 35.0));
+                
+                if ui.add(btn).clicked() {
                     create_default_localization_file = true;
                 }
+                
+                ui.add_space(10.0);
             });
 
         if open_file_localization {

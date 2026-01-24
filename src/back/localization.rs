@@ -154,6 +154,9 @@ pub struct TranslateToKanji {
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct Settings {
     pub title: String,
+    pub files_and_data: String,
+    pub appearance: String,
+    pub behavior: String,
     pub lang: String,
     pub kanji_localization: String,
     pub lang_button: String,
