@@ -176,47 +176,14 @@ impl App {
 
     // Home Screen
     fn home_screen(&mut self, ui: &mut egui::Ui) {
-        let is_search_empty = self.search.trim().is_empty();
-
-        ui.vertical_centered(|ui| {
-            if is_search_empty {
-                ui.add_space(ui.available_height() * 0.35); 
-            } else {
-                ui.add_space(20.0);
-            }
-
-            ui.heading(egui::RichText::new(App::name()).size(40.0).strong());
-            ui.add_space(20.0);
-
-            let search_rect = ui.add(
-                egui::TextEdit::singleline(&mut self.search)
-                    .hint_text(&self.localization.local.screens.search)
-                    .desired_width(400.0)
-                    .font(egui::FontId::proportional(22.0))
-                    .margin(egui::vec2(10.0, 10.0))
-            );
-
-            if self.settings.focus_on_search {
-                if self.search.is_empty() && !ui.memory(|m| m.has_focus(search_rect.id)) {
-                    search_rect.request_focus();
-                }
-            }
-
-            ui.add_space(20.0);
-        });
-
-        if is_search_empty {
-            return;
-        }
-
-        ui.separator();
-
         let translations = &self.translate_state.data.entries;
         let search_query = self.search.trim().to_lowercase();
+        let is_search_empty = self.search.trim().is_empty();
 
         let filtered_kanji: Vec<&Kanji> = self.kanji
             .iter()
             .filter(|item| {
+                if is_search_empty { return false; }
 
                 let matches_basic = item.kanji.contains(&self.search)
                     || item.onyomi.contains(&self.search)
@@ -234,25 +201,111 @@ impl App {
             })
             .collect();
 
-        if filtered_kanji.is_empty() {
-             ui.centered_and_justified(|ui| {
-                ui.label(egui::RichText::new("No kanji found").weak().size(18.0));
-             });
-             return;
+        let max_width = 800.0;
+        let available_width = ui.available_width();
+        
+        ui.vertical_centered(|ui| {
+            let top_spacer = if is_search_empty {
+                ui.available_height() * 0.3
+            } else {
+                40.0
+            };
+            ui.add_space(top_spacer);
+
+            if is_search_empty {
+                ui.label(
+                    egui::RichText::new("Kanji Master")
+                        .size(48.0)
+                        .strong()
+                        .family(egui::FontFamily::Proportional)
+                        .color(ui.visuals().strong_text_color())
+                );
+                ui.add_space(10.0);
+                ui.label(
+                    egui::RichText::new(&self.localization.local.screens.search)
+                        .size(18.0)
+                        .color(ui.visuals().text_color().gamma_multiply(0.6))
+                );
+                ui.add_space(30.0);
+            } else {
+                ui.label(egui::RichText::new("Kanji Master").size(24.0).strong().color(ui.visuals().weak_text_color()));
+                ui.add_space(15.0);
+            }
+
+            let base_width = if is_search_empty { 500.0 as f32 } else { 600.0 as f32 };
+            let search_bar_width = base_width.min(available_width - 40.0);
+
+            let search_bg = ui.visuals().widgets.inactive.bg_fill;
+            let search_frame = egui::Frame::NONE
+                .fill(search_bg)
+                .corner_radius(egui::CornerRadius::same(24)) 
+                .stroke(ui.visuals().widgets.noninteractive.bg_stroke)
+                .inner_margin(egui::Margin::symmetric(15, 12)); 
+
+            search_frame.show(ui, |ui| {
+                ui.set_width(search_bar_width);
+                ui.horizontal(|ui| {
+                    ui.label(egui::RichText::new("🔍").size(18.0).color(ui.visuals().text_color().gamma_multiply(0.5)));
+                    ui.add_space(5.0);
+                    
+                    let text_edit = egui::TextEdit::singleline(&mut self.search)
+                        .id_source("home_search_field")
+                        .hint_text(&self.localization.local.home.kanji_search_hint)
+                        .frame(false)
+                        .desired_width(f32::INFINITY)
+                        .font(egui::FontId::proportional(20.0));
+
+                    let output = ui.add(text_edit);
+
+                    if self.settings.focus_on_search {
+                            if self.search.is_empty() && !ui.memory(|m| m.has_focus(output.id)) {
+                            output.request_focus();
+                        }
+                    }
+                });
+            });
+
+            ui.add_space(30.0);
+        });
+
+        if is_search_empty {
+            return;
         }
 
-        let columns = 4;
-        let spacing = 10.0;
-        let available_width = ui.available_width();
-        let card_width = (available_width - (spacing * (columns as f32 - 1.0))) / columns as f32;
-        let card_height = (card_width / 3.0) * 4.0;
-        let row_height = card_height + spacing;
+        if filtered_kanji.is_empty() {
+            ui.vertical_centered(|ui| {
+                ui.add_space(20.0);
+                ui.label(egui::RichText::new(&self.localization.local.home.kanji_not_found).weak().size(18.0));
+            });
+            return;
+        }
+
+        ui.separator();
+        ui.add_space(10.0);
+
+        let item_spacing = 15.0;
+        let scroll_width = ui.available_width();
+        
+        let content_width = if scroll_width > max_width { max_width } else { scroll_width - 20.0 };
+        let side_padding = (scroll_width - content_width) / 2.0;
+
+        let columns = (content_width / 160.0).floor().max(2.0) as usize;
+        let card_width = (content_width - (item_spacing * (columns as f32 - 1.0))) / columns as f32;
+        let card_height = card_width * 1.1;
+        let row_height = card_height + item_spacing;
         let total_rows = (filtered_kanji.len() + columns - 1) / columns;
 
-        egui::ScrollArea::vertical().show_rows(ui, row_height, total_rows, |ui, row_range| {
+        egui::ScrollArea::vertical()
+            .auto_shrink([false, false])
+            .show_rows(ui, row_height, total_rows, |ui, row_range| {
+            
+            ui.spacing_mut().item_spacing.x = item_spacing;
+            ui.spacing_mut().item_spacing.y = item_spacing;
+
             for row_index in row_range {
                 ui.horizontal(|ui| {
-                    ui.spacing_mut().item_spacing.x = spacing;
+                    ui.add_space(side_padding);
+
                     let start_index = row_index * columns;
                     let end_index = (start_index + columns).min(filtered_kanji.len());
 
@@ -263,32 +316,51 @@ impl App {
                                 egui::Sense::click(),
                             );
 
+                            let bg_color = if response.hovered() {
+                                ui.visuals().widgets.hovered.bg_fill
+                            } else {
+                                ui.visuals().faint_bg_color
+                            };
+                            
+                            let stroke = if response.hovered() {
+                                ui.visuals().widgets.hovered.fg_stroke
+                            } else {
+                                egui::Stroke::NONE
+                            };
+
                             ui.painter().rect(
                                 rect,
-                                4.0,
-                                ui.visuals().faint_bg_color,
-                                ui.visuals().window_stroke,
-                                egui::StrokeKind::Middle,
+                                egui::CornerRadius::same(12), 
+                                bg_color,
+                                stroke,
+                                egui::StrokeKind::Outside,
                             );
 
                             ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
                                 ui.vertical_centered(|ui| {
-                                    let text_height = self.settings.kanji_font_size;
-                                    ui.add_space((card_height - text_height) / 2.0);
+                                    let kanji_size = self.settings.kanji_font_size;
+                                    let content_height = kanji_size + 20.0;
+                                    ui.add_space((card_height - content_height) / 2.0 - 5.0);
 
                                     ui.label(
                                         egui::RichText::new(&item.kanji)
-                                            .size(text_height)
-                                            .strong()
+                                            .size(kanji_size)
+                                            .color(ui.visuals().strong_text_color())
                                     );
 
                                     if self.settings.show_kanji_meaning {
                                         if let Some(entry) = translations.get(&item.kanji) {
                                             if !entry.meaning.is_empty() {
+                                                let meaning = if entry.meaning.len() > 20 {
+                                                    format!("{}...", &entry.meaning[0..18])
+                                                } else {
+                                                    entry.meaning.clone()
+                                                };
+
                                                 ui.label(
-                                                    egui::RichText::new(&entry.meaning)
-                                                        .size(self.settings.interface_font_size * 0.8)
-                                                        .color(ui.visuals().text_color().gamma_multiply(0.7))
+                                                    egui::RichText::new(meaning)
+                                                        .size(12.0)
+                                                        .color(ui.visuals().text_color().gamma_multiply(0.6))
                                                 );
                                             }
                                         }
@@ -315,7 +387,6 @@ impl App {
                         }
                     }
                 });
-                ui.add_space(spacing);
             }
         });
     }

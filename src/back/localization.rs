@@ -20,10 +20,18 @@ pub struct Localization {
 // Local Struct
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct Local {
+    pub home: Home,
     pub top_bar: TopBar,
     pub settings: Settings,
     pub screens: Screens,
     pub kana: Kana,
+}
+
+// Home Struct
+#[derive(Serialize, Deserialize, Default, Clone)]
+pub struct Home {
+    pub kanji_search_hint: String,
+    pub kanji_not_found: String,
 }
 
 // Top Bar Struct
