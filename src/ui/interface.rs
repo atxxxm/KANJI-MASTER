@@ -1049,36 +1049,96 @@ impl App {
         ];
 
         let current_list = if self.is_katakana { &katakana_list } else { &hiragana_list };
+        let local = &self.localization.local.kana;
 
-        ui.horizontal(|ui| {
-            let local = &self.localization.local.kana;
-            ui.heading(&local.title);
-            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                // Buttons for switching
-                if ui.selectable_label(self.is_katakana, &local.katakana).clicked() {
-                    self.is_katakana = true;
-                }
-                if ui.selectable_label(!self.is_katakana, &local.hiragana).clicked() {
-                    self.is_katakana = false;
-                }
+        ui.add_space(10.0);
+        
+        ui.vertical_centered(|ui| {
+            ui.label(egui::RichText::new(&local.title).size(24.0).strong().color(ui.visuals().strong_text_color()));
+            ui.add_space(15.0);
+
+            let pill_bg = ui.visuals().widgets.inactive.bg_fill;
+            let pill_stroke = ui.visuals().widgets.noninteractive.bg_stroke;
+
+            ui.horizontal(|ui| {
+                let pill_width = 213.0; 
+                ui.add_space((ui.available_width() - pill_width) / 2.0);
+
+                egui::Frame::NONE
+                    .fill(pill_bg)
+                    .corner_radius(20)
+                    .stroke(pill_stroke)
+                    .inner_margin(egui::Margin::symmetric(6, 4))
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.spacing_mut().item_spacing.x = 0.0; 
+
+                            let toggle_btn = |ui: &mut egui::Ui, text: &str, selected: bool| {
+                                let text_color = if selected {
+                                    ui.visuals().strong_text_color()
+                                } else {
+                                    ui.visuals().text_color().gamma_multiply(0.6)
+                                };
+                                let btn = egui::Button::new(egui::RichText::new(text).color(text_color).strong())
+                                    .frame(false)
+                                    .min_size(egui::vec2(100.0, 30.0));
+                                let response = ui.add(btn);
+                                if selected {
+                                    ui.painter().text(
+                                        response.rect.center(),
+                                        egui::Align2::CENTER_CENTER,
+                                        text,
+                                        egui::FontId::proportional(14.0),
+                                        text_color,
+                                    );
+                                }
+                                response
+                            };
+
+                            if toggle_btn(ui, &local.hiragana, !self.is_katakana).clicked() {
+                                self.is_katakana = false;
+                            }
+
+                            ui.allocate_ui(egui::vec2(1.0, 20.0), |ui| {
+                                ui.painter().line_segment(
+                                    [ui.min_rect().center_top(), ui.min_rect().center_bottom()],
+                                    ui.visuals().widgets.noninteractive.bg_stroke,
+                                );
+                            });
+
+                            if toggle_btn(ui, &local.katakana, self.is_katakana).clicked() {
+                                self.is_katakana = true;
+                            }
+                        });
+                    });
             });
         });
+        ui.add_space(20.0);
 
-        ui.separator();
-
-        let columns = 5;
-        let spacing = 10.0;
+        let max_width = 1200.0;
         let available_width = ui.available_width();
-
-        let card_width = (available_width - (spacing * (columns as f32 - 1.0))) / columns as f32;
+        
+        let content_width = if available_width > max_width { max_width } else { available_width - 20.0 };
+        let side_padding = (available_width - content_width) / 2.0;
+        
+        let columns = 5; 
+        let spacing = 15.0; 
+        
+        let card_width = (content_width - (spacing * (columns as f32 - 1.0))) / columns as f32;
         let card_height = card_width * 1.2;
 
         let total_rows = (current_list.len() + columns - 1) / columns;
         let row_height = card_height + spacing;
 
-        egui::ScrollArea::vertical().show_rows(ui, row_height, total_rows, |ui, row_range| {
+        egui::ScrollArea::vertical()
+            .auto_shrink([false, false])
+            .show_rows(ui, row_height, total_rows, |ui, row_range| {
+            
+            ui.spacing_mut().item_spacing.y = spacing;
+
             for row_index in row_range {
                 ui.horizontal(|ui| {
+                    ui.add_space(side_padding);
                     ui.spacing_mut().item_spacing.x = spacing;
 
                     let start_index = row_index * columns;
@@ -1091,52 +1151,61 @@ impl App {
                                 egui::Sense::hover(),
                             );
 
-                            // Card background
+                            let is_hovered = response.hovered();
+                            
+                            let bg_color = if is_hovered {
+                                ui.visuals().widgets.hovered.bg_fill
+                            } else {
+                                ui.visuals().faint_bg_color
+                            };
+                            
+                            let border_stroke = if is_hovered {
+                                ui.visuals().widgets.hovered.fg_stroke
+                            } else {
+                                egui::Stroke::new(1.0, ui.visuals().widgets.noninteractive.bg_stroke.color.gamma_multiply(0.5))
+                            };
+
                             ui.painter().rect(
                                 rect,
-                                8.0,
-                                ui.visuals().faint_bg_color,
-                                ui.visuals().window_stroke,
-                                egui::StrokeKind::Middle,
+                                egui::CornerRadius::same(12),
+                                bg_color,
+                                border_stroke,
+                                egui::StrokeKind::Outside,
                             );
 
-                            // Card content
                             ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
                                 ui.vertical_centered(|ui| {
-                                    // Calculate font sizes
-                                    let kana_size = self.settings.kanji_font_size * 0.8;
-                                    let romaji_size = self.settings.interface_font_size;
+                                    let kana_size = (card_width * 0.45).clamp(24.0, 64.0);
+                                    let romaji_size = (card_width * 0.15).clamp(14.0, 24.0);
                                     
-                                    // Simple calculation for vertical centering
-                                    let total_text_h = kana_size + romaji_size + 4.0;
-                                    ui.add_space((card_height - total_text_h) / 2.0);
+                                    let total_h = kana_size + romaji_size + 5.0;
+                                    ui.add_space((card_height - total_h) / 2.0);
 
-                                    // Kana
                                     ui.label(
                                         egui::RichText::new(item.kana)
                                             .size(kana_size)
                                             .strong()
+                                            .color(ui.visuals().strong_text_color())
                                     );
                                     
-                                    // Romaji
+                                    ui.add_space(2.0);
+
                                     ui.label(
                                         egui::RichText::new(item.romaji)
                                             .size(romaji_size)
-                                            .color(ui.visuals().text_color().gamma_multiply(0.7))
+                                            .color(ui.visuals().text_color().gamma_multiply(0.6))
                                     );
                                 });
                             });
 
-                            if response.hovered() {
+                            if is_hovered {
                                 ui.output_mut(|o| o.cursor_icon = egui::CursorIcon::PointingHand);
                             }
                         }
                     }
                 });
-                ui.add_space(spacing);
             }
         });
-        
     }
 
     // Romaji to Kana Screen
