@@ -6,7 +6,7 @@
 
 ## Documentation
 
-👉 **[Open Documentation](./book/README.md)**
+👉 **[Open Documentation](https://atxxxm.github.io/KANJI-MASTER/)**
 
 ---
 
