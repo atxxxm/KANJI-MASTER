@@ -7,6 +7,7 @@ pub struct Paths {
     pub path_to_db_core: String,
     pub path_to_localization: String,
     pub path_to_kanji_localization: String,
+    pub path_to_svg_images: String,
 }
 
 // Main Localization Struct

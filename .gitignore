@@ -1,6 +1,2 @@
 /target
-/db
-/localization
-/kanji-localization
-/kanji-svg
-config.toml
+/data

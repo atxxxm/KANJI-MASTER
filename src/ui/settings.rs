@@ -1,8 +1,9 @@
-use crate::back::config::Config;
+use crate::back::config::{Config, get_app_config_dir};
 use crate::back::localization::{Localization, Paths, save};
 use rfd::FileDialog;
 use eframe::egui;
 
+// Settings Struct
 pub struct Settings {
     localization: Localization,   // Localization Settings
     pub interface_font_size: f32, // Interface Font Size
@@ -13,6 +14,7 @@ pub struct Settings {
 }
 
 impl Settings {
+    // New Settings
     pub fn new(localization: Localization, config: &Config) -> Self {
         Self {
             localization,
@@ -24,6 +26,7 @@ impl Settings {
         }
     }
 
+    // Settings Panel
     pub fn setting(&mut self, is_open: &mut bool, paths: &mut Paths, ctx: &egui::Context) -> bool {
         let mut path_changed = false;
 
@@ -174,13 +177,13 @@ impl Settings {
             });
 
         if open_file_localization {
-            if self.open_localization_file(paths) {
+            if self.import_localization_file(paths, false) {
                 path_changed = true;
             }
         }
 
         if open_file_kanji_localization {
-            if self.open_kanji_localization_file(paths) {
+            if self.import_localization_file(paths, true) {
                 path_changed = true;
             }
         }
@@ -190,34 +193,6 @@ impl Settings {
         }
 
         path_changed
-    }
-
-    // Open Localization File
-    fn open_localization_file(&self, paths: &mut Paths) -> bool {
-        let file_path = FileDialog::new()
-            .add_filter("Localization File (*json)", &["json"])
-            .pick_file();
-
-        if let Some(path) = file_path {
-            paths.path_to_localization = path.display().to_string();
-            return true;
-        }
-
-        false
-    }
-
-    // Open Kanji Localization File
-    fn open_kanji_localization_file(&self, paths: &mut Paths) -> bool {
-        let file_path = FileDialog::new()
-            .add_filter("Kanji Localization File (*json)", &["json"])
-            .pick_file();
-
-        if let Some(path) = file_path {
-            paths.path_to_kanji_localization = path.display().to_string();
-            return true;
-        }
-
-        false
     }
 
     // Update Localization
@@ -245,5 +220,36 @@ impl Settings {
                 }
             }
         }
+    }
+
+    // Import Localization File
+    fn import_localization_file(&mut self, paths: &mut Paths, is_kanji: bool) -> bool {
+        let file_path_opt = FileDialog::new()
+            .add_filter("Localization File (*json)", &["json"])
+            .pick_file();
+
+        if let Some(original_path) = file_path_opt {
+            let config_dir = get_app_config_dir();
+            let file_name = original_path.file_name().unwrap_or_default();
+
+            let destination_path = config_dir.join(file_name);
+
+            match std::fs::copy(&original_path, &destination_path) {
+                Ok(_) => {
+                    let new_path_string = destination_path.display().to_string();
+
+                    if is_kanji {
+                        paths.path_to_kanji_localization = new_path_string;
+                    } else {
+                        paths.path_to_localization = new_path_string;
+                    }
+                    return true;
+                }
+
+                Err(_) => {}
+            }
+        }
+
+        false
     }
 }

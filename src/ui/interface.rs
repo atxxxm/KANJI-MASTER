@@ -1,5 +1,5 @@
 use crate::back::cards::*;
-use crate::back::config::{Config, save_config};
+use crate::back::config::{Config, save_config, get_config_path};
 use crate::back::core::{Database, Kanji};
 use crate::back::localization::*;
 use crate::back::romaji_kana::to_kana;
@@ -7,13 +7,14 @@ use crate::back::translation::*;
 use crate::ui::animator::KanjiAnimator;
 use crate::ui::settings::Settings;
 use eframe::egui;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 // Screens
 #[derive(PartialEq, Clone)]
 enum Screen {
     Home,
     Kanji(Kanji),
+    #[allow(dead_code)]
     Jlpt,
     All,
     Kana,
@@ -43,6 +44,7 @@ enum KanjiList {
 
 // JLPT Levels
 #[derive(Debug, PartialEq, Clone, Copy)]
+#[allow(dead_code)]
 enum JLPT {
     N5,
     N4,
@@ -105,12 +107,18 @@ struct App {
 
     // Selected Kanji List
     selected_kanji_list: KanjiList,
+
+    // Config Path
+    config_path: PathBuf,
 }
 
 impl App {
     fn new(cc: &eframe::CreationContext<'_>, config: Config) -> Self {
         // Set Font
         set_font(&cc.egui_ctx);
+
+        let config_path = get_config_path().expect("cannot get config path");
+
         // Load Base Localization
         let localization: Localization = load(&config.path_to_localization).expect("Erorr Load");
         // Load Kanji
@@ -122,6 +130,7 @@ impl App {
             path_to_db_core: config.path_to_db_core.clone(),
             path_to_localization: config.path_to_localization.clone(),
             path_to_kanji_localization: config.path_to_kanji_localization.clone(),
+            path_to_svg_images: config.path_to_svg_images.clone(),
         };
 
         let message_data = MessageTranslationData {
@@ -206,6 +215,7 @@ impl App {
             card_limit: 10,
             selected_deck_name: String::new(),
             selected_kanji_list: KanjiList::All,
+            config_path,
         }
     }
 
@@ -438,7 +448,7 @@ impl App {
                                 if response.clicked() {
                                     let selected = (*item).clone();
                                     let svg_path =
-                                        format!("kanji-svg/0{}.svg", item.unicode.to_lowercase());
+                                        format!("{}/0{}.svg", &self.paths.path_to_svg_images, item.unicode.to_lowercase());
                                     if Path::new(&svg_path).exists() {
                                         if let Err(_) = self.animator.load_svg(&svg_path) {
                                             self.animator.clear();
@@ -503,9 +513,10 @@ impl App {
             show_kanji_meaning: self.settings.show_kanji_meaning,
             focus_on_search: self.settings.focus_on_search,
             custom_decks: self.config.custom_decks.clone(),
+            path_to_svg_images: self.paths.path_to_svg_images.clone(),
         };
 
-        if let Err(e) = save_config("config.toml", &current_config) {
+        if let Err(e) = save_config(&self.config_path,&current_config) {
             eprintln!("Error saving config: {}", e.to_string());
         }
     }
@@ -924,7 +935,7 @@ impl App {
                                 if response.clicked() {
                                     let selected = (*item).clone();
                                     let svg_path =
-                                        format!("kanji-svg/0{}.svg", item.unicode.to_lowercase());
+                                        format!("{}/0{}.svg", &self.paths.path_to_svg_images, item.unicode.to_lowercase());
                                     if Path::new(&svg_path).exists() {
                                         if let Err(_) = self.animator.load_svg(&svg_path) {
                                             self.animator.clear();
