@@ -1,0 +1,142 @@
+{
+  "lang": "en",
+  "local": {
+    "home": {
+      "kanji_search_hint": "Type meanings, reading or kanji...",
+      "kanji_not_found": "No kanji found"
+    },
+    "top_bar": {
+      "kanji": {
+        "title": "Kanji",
+        "all": "All"
+      },
+      "cards": {
+        "title": "Cards",
+        "card_setup_title": "Card Setup",
+        "jlpt_level": "JLPT Levels",
+        "card_count": "Card count (0 = All)",
+        "card_setup_start": "Start",
+        "custom_deck_title": "Custom Decks",
+        "manage_decks": "Manage Decks (Create/Edit)",
+        "my_decks": "My Decks",
+        "no_custom_decks_created": "No custom decks created",
+        "delete_deck": "Delete Deck",
+        "edit_deck": "Edit Deck",
+        "play_deck": "Play Deck",
+        "session_complete": "Session Complete",
+        "return_to_menu": "Return to Menu",
+        "card": "Card",
+        "exit_training": "Exit Training",
+        "onyomi": "Onyomi",
+        "kunyomi": "Kunyomi",
+        "click_to_flip": "Click to Flip",
+        "next_card": "Next Card",
+        "back": "Back",
+        "deck_manager": "Deck Manager",
+        "deck_name": "Deck Name",
+        "update_deck": "Update Deck",
+        "save_deck": "Save Deck",
+        "avaliable_kanji": "Avaliable Kanji",
+        "search_kanji_hint": "Search Kanji...",
+        "add_kanji": "Add",
+        "type_search_hint": "Type to search...",
+        "deck_content": "Deck Content",
+        "my_new_decks": "My New Decks",
+        "no_matches": "No matches",
+        "added": "Added",
+        "decks_is_empty": "Decks is empty"
+
+      },
+      "kana": {
+        "title": "Kana",
+        "hiragana": "Hiragana",
+        "katakana": "Katakana"
+      },
+      "tools": {
+        "title": "Tools",
+        "romaji_to_kana": "Romaji to Kana",
+        "translate_kanji": "Translate Kanji",
+        "romaji_to_kana_locale": {
+          "title": "Romaji to Kana Converter",
+          "output_mode": "Output Mode",
+          "output_hiragana": "Hiragana",
+          "output_katakana": "Katakana",
+          "input": "Input (Romaji)",
+          "hint_input": "Type romaji here (e.g. konnichiwa)...",
+          "output": "Output (Kana)",
+          "copy_button": "Copy Result"
+        },
+        "translate_kanji_locale": {
+          "file_load_success": "File loaded successfully",
+          "file_not_found_or_invalid": "File not found or invalid",
+          "saved_at_id": "Saved at ID",
+          "error_searialize_json": "Error serializing JSON",
+          "error_create_file": "Error creating file",
+          "found": "Found!",
+          "not_found": "Not found!",
+          "title": "Kanji Translation Tool",
+          "jump_to": "Jump to",
+          "hint_kanji_input": "Type kanji here...",
+          "go_button": "Go",
+          "save_progress_button": "Save Progress",
+          "all_kanji_processed": "All Kanji Processed! (End of List)",
+          "meaning": "Meaning",
+          "hint_meaning_input": "Enter translation here...",
+          "examples": "Examples",
+          "hint_examples_input": "Enter examples here...",
+          "error_buffer_mismatch": "Error: Buffer mismatch",
+          "previous_button": "Previous",
+          "next_button": "Next",
+          "original": "Original",
+          "translation": "Translation"
+        }
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "files_and_data": "Files & Data",
+      "appearance": "Appearance",
+      "behavior": "Behavior",
+      "lang": "Language",
+      "kanji_localization": "Kanji Localization",
+      "lang_button": "Select",
+      "interface_font_size": "Interface font size",
+      "kanji_animation_speed": "Kanji animation speed",
+      "kanji_font_size": "Kanji font size",
+      "auto_save_progress": "Auto save progress",
+      "auto_save_frequency": "Auto save frequency",
+      "open_last_session_at_startup": "Open last session at startup",
+      "startup_screen": "Startup screen",
+      "confrim_card_delete": "Confrim card delete",
+      "confrim_progress_reset": "Confrim progress reset",
+      "show_kanji_meaning": "Show kanji meaning",
+      "tools": "Tools",
+      "create_default_localization_file": "Create default localization file",
+      "focus_on_search": "Focus on search when opennig"
+    },
+    "screens": {
+      "search": "Search Kanji...",
+      "current_kanji": {
+        "back_button": "Back",
+        "information": "Information",
+        "meaning": "Meaning",
+        "onyomi": "On",
+        "onyomi_romaji": "On Romaji",
+        "kunyomi": "Kun",
+        "kunyomi_romaji": "Kun Romaji",
+        "strokes": "Strokes",
+        "jlpt": "JLPT",
+        "grade": "Grade",
+        "frequency": "Frequency",
+        "examples": "Examples",
+        "click_to_replay": "Click to replay",
+        "no_examples_available": "No examples available"
+      }
+    },
+    "kana": {
+      "title": "Kana",
+      "hiragana": "Hiragana",
+      "katakana": "Katakana"
+    }
+  }
+}

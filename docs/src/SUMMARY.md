@@ -1,0 +1,17 @@
+# Table of Contents
+
+- [Introduction](./README.md)
+- [Installation and Setup](./installation.md)
+- [User Guide](./user_guide/README.md)
+    - [Dictionary and Search](./user_guide/dictionary.md)
+    - [Kana (Hiragana and Katakana)](./user_guide/kana.md)
+    - [Flashcards and Decks](./user_guide/cards.md)
+    - [Tools](./user_guide/tools.md)
+    - [Settings](./user_guide/settings.md)
+- [Localization](./localization/README.md)
+    - [Interface](./localization/interface.md)
+    - [Kanji](./localization/kanji.md)
+- [About and License](./about.md)
+- [FAQ and Troubleshooting](./faq.md)
+- [For Developers](./developer/architecture.md)
+     - [Code Internals](./developer/code_walkthrough.md)

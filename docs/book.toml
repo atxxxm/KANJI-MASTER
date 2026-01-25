@@ -1,0 +1,10 @@
+[book]
+authors = ["atxxxm"]
+language = "en"
+src = "src"
+title = "Kanji Master Documentation"
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/atxxxm/KANJI-MASTER"
