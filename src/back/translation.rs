@@ -44,7 +44,6 @@ pub struct TranslateState {
     pub current_index: usize,             // Current index at vector self.kanji
     pub meaning_buffer: String,           // Buffer for meaning
     pub examples_buffer: Vec<String>,     // Buffer for examples
-    pub jump_search_buffer: String,       // Buffer for jump search
     pub status_message: String,           // Status message
 }
 
@@ -57,7 +56,6 @@ impl Default for TranslateState {
             current_index: 0,
             meaning_buffer: String::new(),
             examples_buffer: Vec::new(),
-            jump_search_buffer: String::new(),
             status_message: String::new(),
         }
     }

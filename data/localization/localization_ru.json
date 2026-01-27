@@ -116,7 +116,6 @@
     "screens": {
       "search": "Поиск кандзи...",
       "current_kanji": {
-        "back_button": "Назад",
         "information": "Информация",
         "meaning": "Значение",
         "onyomi": "Онъёми",

@@ -186,7 +186,6 @@ pub struct Screens {
 // Current Kanji Struct
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct CurrentKanji {
-    pub back_button: String,
     pub information: String,
     pub meaning: String,
     pub onyomi: String,
