@@ -177,8 +177,12 @@ impl TabManager {
             ui.spacing_mut().item_spacing.x = 4.0;
             
             let mut action: Option<TabAction> = None;
+            
+            let mut dragged_index: Option<usize> = None;
+            let mut target_index: Option<usize> = None;
+            
+            let pointer_pos = ui.input(|i| i.pointer.hover_pos());
 
-            // ScrollArea for tabs, if there are many
             egui::ScrollArea::horizontal().show(ui, |ui| {
                 for (index, tab) in self.tabs.iter().enumerate() {
                     let is_active = index == self.active_tab_index;
@@ -196,24 +200,33 @@ impl TabManager {
                         ui.visuals().text_color()
                     };
 
-                    // Draw tab as a Frame
+                    let item_id = ui.id().with("tab").with(&tab.id);
+
                     let frame = egui::Frame::NONE
                         .fill(bg_color)
                         .corner_radius(egui::CornerRadius { nw: 8, ne: 8, sw: 0, se: 0 })
                         .inner_margin(egui::Margin::symmetric(10, 6))
                         .stroke(if is_active { egui::Stroke::new(1.0, ui.visuals().widgets.noninteractive.bg_stroke.color) } else { egui::Stroke::NONE });
 
-                    let response = frame.show(ui, |ui| {
+                    let frame_response = frame.show(ui, |ui| {
                         ui.horizontal(|ui| {
-                            let title_label = ui.add(
-                                egui::Label::new(egui::RichText::new(&title).color(fg_color))
-                                    .sense(egui::Sense::click())
-                            );
-                            
-                            if title_label.clicked() {
+                            let title_btn = egui::Button::new(egui::RichText::new(&title).color(fg_color))
+                                .frame(false)
+                                .sense(egui::Sense::click_and_drag()); 
+
+                            let title_response = ui.add(title_btn);
+
+                            let interact = ui.interact(title_response.rect, item_id, egui::Sense::click_and_drag());
+
+                            if interact.dragged() {
+                                dragged_index = Some(index);
+                                ui.output_mut(|o| o.cursor_icon = egui::CursorIcon::Grabbing);
+                            }
+
+                            if interact.clicked() && !interact.dragged() {
                                 action = Some(TabAction::Switch(index));
                             }
-                            if title_label.clicked_by(egui::PointerButton::Middle) {
+                            if interact.clicked_by(egui::PointerButton::Middle) {
                                 action = Some(TabAction::Close(index));
                             }
 
@@ -229,14 +242,13 @@ impl TabManager {
                                 action = Some(TabAction::Close(index));
                             }
                             
-                            // Подсветка кнопки при наведении
                             if close_btn.hovered() {
                                 ui.output_mut(|o| o.cursor_icon = egui::CursorIcon::PointingHand);
                             }
                         });
-                    }).response;
+                    });
 
-                    response.context_menu(|ui| {
+                    frame_response.response.context_menu(|ui| {
                         if ui.button("Close Tab").clicked() {
                             action = Some(TabAction::Close(index));
                             ui.close();
@@ -245,17 +257,29 @@ impl TabManager {
                             action = Some(TabAction::CloseOthers(index));
                             ui.close();
                         }
-                        // if ui.button("Duplicate").clicked() { ... }
                     });
 
-                    if response.clicked() {
-                        action = Some(TabAction::Switch(index));
-                    }
-                    if response.clicked_by(egui::PointerButton::Middle) {
-                        action = Some(TabAction::Close(index));
+                    if let Some(pos) = pointer_pos {
+                        if frame_response.response.rect.contains(pos) {
+                            target_index = Some(index);
+                        }
                     }
                 }
             });
+
+            if let (Some(from), Some(to)) = (dragged_index, target_index) {
+                if from != to {
+                    self.tabs.swap(from, to);
+                    
+                    if self.active_tab_index == from {
+                        self.active_tab_index = to;
+                    } else if self.active_tab_index == to {
+                        self.active_tab_index = from;
+                    }
+                    
+                    ui.ctx().request_repaint();
+                }
+            }
 
             match action {
                 Some(TabAction::Switch(index)) => {
@@ -275,13 +299,11 @@ impl TabManager {
                 None => {}
             }
 
-            // Button "+"
             let new_tab_btn = ui.add(egui::Button::new("+").frame(false));
             if new_tab_btn.clicked() {
                 self.add_tab(TabType::Home(String::new()), true);
             }
             
-            // Menu for "+" right click 
             new_tab_btn.context_menu(|ui| {
                 if ui.button("New Kanji List").clicked() {
                     self.add_tab(TabType::KanjiList(KanjiListState::default()), true);
@@ -293,5 +315,7 @@ impl TabManager {
                 }
             });
         });
+        
+        ui.separator();
     }
 }

@@ -2718,7 +2718,7 @@ impl eframe::App for App {
 
             let active_index = self.tab_manager.active_tab_index;
 
-            if let Some(tab) = self.tab_manager.tabs.get_mut(active_index) {
+            if let Some(content) = self.tab_manager.active_content_mut() {
                 let mut context = AppContext {
                     kanji: &self.kanji,
                     config: &mut self.config,
@@ -2728,7 +2728,7 @@ impl eframe::App for App {
                     translate_state: &mut self.translate_state,
                 };
 
-                match &mut tab.content {
+                match content {
                     TabType::Home(search_query) => {
                         action = Self::render_home(ui, search_query, &context);
                     },
