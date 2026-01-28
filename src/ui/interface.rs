@@ -912,7 +912,6 @@ impl App {
             columns[0].vertical_centered(|ui| {
                 ui.add_space(5.0);
 
-                // Card Frame
                 egui::Frame::canvas(ui.style())
                     .fill(ui.visuals().window_fill)
                     .stroke(egui::Stroke::new(
@@ -948,7 +947,30 @@ impl App {
                         .size(10.0)
                         .weak(),
                 );
-            });
+
+                ui.add_space(15.0);
+
+                let btn_bg = ui.visuals().widgets.inactive.bg_fill;
+                let btn_stroke = ui.visuals().widgets.noninteractive.bg_stroke;
+                
+                let btn_text = egui::RichText::new(format!("📋 {}", "Copy"))
+                    .size(12.0)
+                    .strong();
+
+                let copy_btn = egui::Button::new(btn_text)
+                    .fill(btn_bg)
+                    .stroke(btn_stroke)
+                    .corner_radius(12.0)
+                    .min_size(egui::vec2(100.0, 24.0));
+
+                if ui.add(copy_btn)
+                    .on_hover_cursor(egui::CursorIcon::PointingHand)
+                    .on_hover_text("Copy to clipboard") 
+                    .clicked() 
+                {
+                    ui.ctx().copy_text(kanji.kanji.clone());
+                }
+            }); 
 
             columns[1].vertical(|ui| {
                 ui.add_space(5.0);
@@ -1117,7 +1139,6 @@ impl App {
                     });
             });
         });
-
         None
     }
 
