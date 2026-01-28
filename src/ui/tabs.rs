@@ -13,6 +13,7 @@ pub struct KanjiListState {
     pub selected_list: KanjiList,
 }
 
+// Kanji List State Default
 impl Default for KanjiListState {
     fn default() -> Self {
         Self {
@@ -26,6 +27,7 @@ impl Default for KanjiListState {
 pub struct KanjiDetailState {
     pub kanji: Kanji,
     pub animator: KanjiAnimator,
+    pub last_copy_time: Option<f64>,
 }
 
 // State for tab Translate
@@ -34,6 +36,7 @@ pub struct TranslateTabState {
     pub jump_search_buffer: String
 }
 
+// Translate Tab State Default
 impl Default for TranslateTabState {
     fn default() -> Self {
         Self {
@@ -42,11 +45,13 @@ impl Default for TranslateTabState {
     }
 }
 
+// State for tab Cards Setup
 #[derive(Clone)]
 pub struct CardsSetupState {
     pub card_limit: usize,
 }
 
+// Cards Setup State Default
 impl Default for CardsSetupState {
     fn default() -> Self {
         Self {
@@ -62,6 +67,7 @@ pub struct RomajiKanaState {
     pub is_katakana: bool,
 }
 
+// Romaji Kana State Default
 impl Default for RomajiKanaState {
     fn default() -> Self {
         Self {
@@ -84,6 +90,7 @@ pub enum TabType {
     DeckManager(DeckBuilderState),
 }
 
+// Tab Type Partial Eq
 impl PartialEq for TabType {
     fn eq(&self, other: &Self) -> bool {
         std::mem::discriminant(self) == std::mem::discriminant(other)
@@ -119,6 +126,7 @@ impl Tab {
     }
 }
 
+// Tab Action Enum
 enum TabAction {
     Switch(usize),
     Close(usize),

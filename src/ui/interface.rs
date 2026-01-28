@@ -182,6 +182,7 @@ impl App {
         TabType::KanjiDetail(KanjiDetailState {
             kanji,
             animator,
+            last_copy_time: None,
         })
     }
 
@@ -950,10 +951,26 @@ impl App {
 
                 ui.add_space(15.0);
 
+                let current_time = ui.input(|i| i.time);
+                let mut show_checkmark = false;
+
+                if let Some(last_time) = state.last_copy_time {
+                    if current_time - last_time < 2.0 {
+                        show_checkmark = true;
+                        ui.ctx().request_repaint();
+                    }
+                }
+
                 let btn_bg = ui.visuals().widgets.inactive.bg_fill;
                 let btn_stroke = ui.visuals().widgets.noninteractive.bg_stroke;
+
+                let (icon, label_text) = if show_checkmark {
+                    ("✅", "Copied")
+                } else {
+                    ("📋", "Copy")
+                };
                 
-                let btn_text = egui::RichText::new(format!("📋 {}", "Copy"))
+                let btn_text = egui::RichText::new(format!("{} {}", icon, label_text))
                     .size(12.0)
                     .strong();
 
@@ -969,6 +986,7 @@ impl App {
                     .clicked() 
                 {
                     ui.ctx().copy_text(kanji.kanji.clone());
+                    state.last_copy_time = Some(current_time);
                 }
             }); 
 
