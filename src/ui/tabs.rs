@@ -64,7 +64,7 @@ impl Default for CardsSetupState {
 #[derive(Clone)]
 pub struct RomajiKanaState {
     pub input: String,
-    pub is_katakana: bool,
+    pub is_katakana: bool
 }
 
 // Romaji Kana State Default

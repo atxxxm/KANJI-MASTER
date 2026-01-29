@@ -1723,8 +1723,8 @@ impl App {
         None
     }
 
-    // Render Romaji to Kana
-    fn render_romaji_to_kana(ui: &mut egui::Ui, state: &mut RomajiKanaState, ctx: &AppContext) -> Option<(TabType, bool)> {
+    // Render Romaji To Kana
+    pub fn render_romaji_to_kana(ui: &mut egui::Ui, state: &mut RomajiKanaState, ctx: &AppContext) -> Option<(TabType, bool)> {
         let local = &ctx.localization.local.top_bar.tools.romaji_to_kana_locale;
 
         ui.add_space(10.0);
@@ -1738,6 +1738,7 @@ impl App {
         let pill_bg = ui.visuals().widgets.inactive.bg_fill;
         let pill_stroke = ui.visuals().widgets.noninteractive.bg_stroke;
         let pill_width = 213.0;
+
         ui.horizontal(|ui| {
             ui.add_space((ui.available_width() - pill_width) / 2.0);
             egui::Frame::NONE
@@ -1787,12 +1788,14 @@ impl App {
         ui.add_space(20.0);
 
         let panel_rounding = egui::CornerRadius::same(12);
-        let panel_bg = ui.visuals().faint_bg_color;
         let panel_stroke = ui.visuals().widgets.noninteractive.bg_stroke;
 
-        ui.columns(2, |columns| {
-            columns[0].vertical(|ui| {
-                ui.label(egui::RichText::new(&local.input).strong().size(16.0));
+        ui.horizontal(|ui| {
+            let width = 600.0; 
+            ui.add_space((ui.available_width() - width) / 2.0);
+            
+            ui.vertical(|ui| {
+                ui.set_width(width); 
                 ui.add_space(5.0);
 
                 egui::Frame::NONE
@@ -1801,52 +1804,31 @@ impl App {
                     .corner_radius(panel_rounding)
                     .inner_margin(10.0)
                     .show(ui, |ui| {
-                        ui.add(
-                            egui::TextEdit::multiline(&mut state.input)
-                                .hint_text(&local.hint_input)
-                                .desired_width(f32::INFINITY)
-                                .min_size(egui::vec2(0.0, 300.0))
-                                .frame(false),
-                        );
-                    });
-            });
+                        let output = egui::TextEdit::multiline(&mut state.input)
+                            .hint_text(&local.hint_input)
+                            .desired_width(width)
+                            .min_size(egui::vec2(0.0, 400.0))
+                            .font(egui::FontId::proportional(22.0))
+                            .frame(false)
+                            .show(ui);
 
-            columns[1].vertical(|ui| {
-                ui.label(egui::RichText::new(&local.output).strong().size(16.0));
-                ui.add_space(5.0);
-
-                let mut output_text = to_kana(&state.input, state.is_katakana);
-
-                egui::Frame::NONE
-                    .fill(panel_bg)
-                    .stroke(panel_stroke)
-                    .corner_radius(panel_rounding)
-                    .inner_margin(10.0)
-                    .show(ui, |ui| {
-                        egui::ScrollArea::vertical()
-                            .id_salt("output_scroll")
-                            .min_scrolled_height(300.0)
-                            .show(ui, |ui| {
-                                ui.add(
-                                    egui::TextEdit::multiline(&mut output_text)
-                                        .desired_width(f32::INFINITY)
-                                        .min_size(egui::vec2(0.0, 300.0))
-                                        .font(egui::FontId::proportional(28.0)) // Larger font for Kana
-                                        .frame(false),
-                                );
-                            });
+                        if output.response.changed() {
+                            let converted = to_kana(&state.input, state.is_katakana, true);
+                            state.input = converted;
+                        }
                     });
 
                 ui.add_space(10.0);
 
-                ui.vertical_centered_justified(|ui| {
+                ui.vertical_centered(|ui| {
                     let btn = egui::Button::new(
                         egui::RichText::new(format!("📋 {}", &local.copy_button)).size(16.0),
                     )
-                    .min_size(egui::vec2(0.0, 40.0));
+                    .min_size(egui::vec2(250.0, 45.0));
 
                     if ui.add(btn).clicked() {
-                        ui.ctx().copy_text(output_text);
+                        let final_text = to_kana(&state.input, state.is_katakana, false);
+                        ui.ctx().copy_text(final_text);
                     }
                 });
             });
