@@ -50,7 +50,7 @@ pub fn to_kana(input: &str, is_katakana: bool, live_input: bool) -> String {
         if i + 1 < chars.len()
             && chars[i] == chars[i + 1]
             && !is_vowel(chars[i])
-            && chars[i].is_alphabetic()
+            && chars[i].is_ascii_alphabetic()
         {
             results.push_str(if is_katakana { "ッ" } else { "っ" });
             i += 1;
@@ -97,7 +97,7 @@ pub fn to_kana(input: &str, is_katakana: bool, live_input: bool) -> String {
 
 // Helper functions
 fn is_vowel(c: char) -> bool {
-    matches!(c, 'a' | 'i' | 'u' | 'e' | 'o')
+    matches!(c.to_ascii_lowercase(), 'a' | 'i' | 'u' | 'e' | 'o')
 }
 
 // Database of syllables
