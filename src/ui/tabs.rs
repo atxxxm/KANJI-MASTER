@@ -77,6 +77,23 @@ impl Default for RomajiKanaState {
     }
 }
 
+#[derive(Clone)]
+pub struct DrawSearchState {
+    pub strokes: Vec<Vec<egui::Pos2>>, 
+    pub current_stroke: Vec<egui::Pos2>,
+    pub results: Vec<Kanji>,
+}
+
+impl Default for DrawSearchState {
+    fn default() -> Self {
+        Self {
+            strokes: Vec::new(),
+            current_stroke: Vec::new(),
+            results: Vec::new(),
+        }
+    }
+}
+
 // Main Tab Struct
 pub enum TabType {
     Home(String),
@@ -88,6 +105,7 @@ pub enum TabType {
     CardsSetup(CardsSetupState),
     CardsActive(CardsSession, String),
     DeckManager(DeckBuilderState),
+    DrawSearch(DrawSearchState),
 }
 
 // Tab Type Partial Eq
@@ -109,6 +127,7 @@ impl TabType {
             TabType::CardsSetup(_) => "🎴 Cards".to_owned(),
             TabType::CardsActive(_, name) => format!("▶ {}", name),
             TabType::DeckManager(_) => "🗂 Decks".to_owned(),
+            TabType::DrawSearch(_) => "🎨 Draw".to_owned(),
         }
     }
 }
