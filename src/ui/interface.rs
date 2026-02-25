@@ -29,6 +29,12 @@ struct KanaItem {
     romaji: &'static str,
 }
 
+pub enum TabOpenMode {
+    ReplaceCurrent, // Replace current tab
+    NewTabActive, // Open new tab and switch on it
+    NewTabBackground, // Open new tab, but stay on current
+}
+
 // Kanji List
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum KanjiList {
@@ -195,7 +201,7 @@ impl App {
     }
 
     // Render Home
-    fn render_home(ui: &mut egui::Ui, search_query: &mut String, ctx: &AppContext) -> Option<(TabType, bool)> {
+    fn render_home(ui: &mut egui::Ui, search_query: &mut String, ctx: &AppContext) -> Option<(TabType, TabOpenMode)> {
         let mut tab_action = None;
         let translations = &ctx.translate_state.data.entries;
         let search_text = search_query.trim().to_lowercase();
@@ -417,7 +423,12 @@ impl App {
 
                                 if response.clicked() {
                                     let new_content = Self::create_kanji_tab((*item).clone(), ctx.paths);
-                                    tab_action = Some((new_content, true));
+                                    tab_action = Some((new_content, TabOpenMode::NewTabActive));
+                                }
+
+                                if response.secondary_clicked() || response.middle_clicked() {
+                                    let new_content = Self::create_kanji_tab((*item).clone(), ctx.paths);
+                                    tab_action = Some((new_content, TabOpenMode::NewTabBackground));
                                 }
 
                                 if response.hovered() {
@@ -619,7 +630,7 @@ impl App {
     }
 
     // Render Kanji List
-    fn render_kanji_list(ui: &mut egui::Ui, state: &mut KanjiListState, ctx: &AppContext) -> Option<(TabType, bool)> {
+    fn render_kanji_list(ui: &mut egui::Ui, state: &mut KanjiListState, ctx: &AppContext) -> Option<(TabType, TabOpenMode)> {
         let mut tab_action = None;
         
         let kanji_set = state.selected_list;
@@ -878,12 +889,12 @@ impl App {
 
                                 if response.clicked() {
                                     let new_content = Self::create_kanji_tab((*item).clone(), ctx.paths);
-                                    tab_action = Some((new_content, false));
+                                    tab_action = Some((new_content, TabOpenMode::NewTabActive));
                                 }
 
-                                if response.secondary_clicked() {
+                                if response.secondary_clicked() || response.middle_clicked() {
                                     let new_content = Self::create_kanji_tab((*item).clone(), ctx.paths);
-                                    tab_action = Some((new_content, true));
+                                    tab_action = Some((new_content, TabOpenMode::NewTabBackground));
                                 }
 
                                 if response.hovered() {
@@ -901,7 +912,7 @@ impl App {
     }
 
     // Render Kanji Detail
-    fn render_kanji_detail(ui: &mut egui::Ui, state: &mut KanjiDetailState, ctx: &AppContext) -> Option<(TabType, bool)> {
+    fn render_kanji_detail(ui: &mut egui::Ui, state: &mut KanjiDetailState, ctx: &AppContext) -> Option<(TabType, TabOpenMode)> {
         let kanji = &state.kanji;
         let local = &ctx.localization.local.screens.current_kanji;
         let translation_entry = ctx.translate_state.data.entries.get(&kanji.kanji);
@@ -1174,7 +1185,7 @@ impl App {
     }
 
     // Render Kana
-    fn render_kana(ui: &mut egui::Ui, is_katakana: &mut bool, ctx: &AppContext) -> Option<(TabType, bool)> {
+    fn render_kana(ui: &mut egui::Ui, is_katakana: &mut bool, ctx: &AppContext) -> Option<(TabType, TabOpenMode)> {
         let hiragana_list: Vec<KanaItem> = vec![
             KanaItem {
                 kana: "あ",
@@ -1737,7 +1748,7 @@ impl App {
     }
 
     // Render Romaji To Kana
-    pub fn render_romaji_to_kana(ui: &mut egui::Ui, state: &mut RomajiKanaState, ctx: &AppContext) -> Option<(TabType, bool)> {
+    pub fn render_romaji_to_kana(ui: &mut egui::Ui, state: &mut RomajiKanaState, ctx: &AppContext) -> Option<(TabType, TabOpenMode)> {
         let local = &ctx.localization.local.top_bar.tools.romaji_to_kana_locale;
 
         ui.add_space(10.0);
@@ -1851,7 +1862,7 @@ impl App {
     }
 
     // Render Translate Kanji
-    fn render_translate_kanji(ui: &mut egui::Ui, state: &mut TranslateTabState, ctx: &mut AppContext) -> Option<(TabType, bool)>{
+    fn render_translate_kanji(ui: &mut egui::Ui, state: &mut TranslateTabState, ctx: &mut AppContext) -> Option<(TabType, TabOpenMode)>{
         let local = &ctx.localization.local.top_bar.tools.translate_kanji_locale;
         let input_rounding = egui::CornerRadius::same(12);
         let card_rounding = egui::CornerRadius::same(16);
@@ -2126,7 +2137,7 @@ impl App {
     }
     
     // Render Card Setup
-    fn render_card_setup(ui: &mut egui::Ui, state: &mut CardsSetupState, ctx: &mut AppContext) -> Option<(TabType, bool)> {
+    fn render_card_setup(ui: &mut egui::Ui, state: &mut CardsSetupState, ctx: &mut AppContext) -> Option<(TabType, TabOpenMode)> {
         let local = &ctx.localization.local.top_bar.cards;
         let panel_rounding = egui::CornerRadius::same(16);
         let item_rounding = egui::CornerRadius::same(12);
@@ -2306,11 +2317,11 @@ impl App {
             });
         });
 
-        next_tab.map(|tab| (tab, false))
+        next_tab.map(|tab| (tab, TabOpenMode::ReplaceCurrent))
     }
 
     // Render Card Session
-    fn render_card_session(ui: &mut egui::Ui, session: &mut CardsSession, deck_name: &String, ctx: &AppContext) -> Option<(TabType, bool)> {
+    fn render_card_session(ui: &mut egui::Ui, session: &mut CardsSession, deck_name: &String, ctx: &AppContext) -> Option<(TabType, TabOpenMode)> {
         let local = ctx.localization.local.top_bar.cards.clone();
         let local_common = &ctx.localization.local.screens.current_kanji;
 
@@ -2478,7 +2489,7 @@ impl App {
     }
 
     // Render Deck Manager
-    fn render_deck_manager(ui: &mut egui::Ui, state: &mut DeckBuilderState, ctx: &mut AppContext) -> Option<(TabType, bool)> {
+    fn render_deck_manager(ui: &mut egui::Ui, state: &mut DeckBuilderState, ctx: &mut AppContext) -> Option<(TabType, TabOpenMode)> {
         let local = ctx.localization.local.top_bar.cards.clone();
         
         let panel_rounding = egui::CornerRadius::same(12);
@@ -2715,13 +2726,13 @@ impl App {
         state: &mut crate::ui::tabs::DrawSearchState,
         ctx: &AppContext,
         recognition_system: &crate::back::recognition::RecognitionSystem,
-    ) -> Option<(TabType, bool)> {
+    ) -> Option<(TabType, TabOpenMode)> {
         let mut tab_action = None;
 
         // Header Section
         ui.vertical_centered(|ui| {
             ui.add_space(10.0);
-            ui.heading(egui::RichText::new("🎨 Draw Kanji").size(24.0).strong());
+            ui.heading(egui::RichText::new("Draw Kanji").size(24.0).strong());
             ui.label(
                 egui::RichText::new("Draw carefully in correct stroke order")
                     .size(12.0)
@@ -2928,8 +2939,14 @@ impl App {
 
                                         if response.clicked() {
                                             let new_content = App::create_kanji_tab(kanji.clone(), ctx.paths);
-                                            tab_action = Some((new_content, true));
+                                            tab_action = Some((new_content, TabOpenMode::NewTabActive));
                                         }
+
+                                        if response.secondary_clicked() || response.middle_clicked() {
+                                            let new_content = App::create_kanji_tab(kanji.clone(), ctx.paths);
+                                            tab_action = Some((new_content, TabOpenMode::NewTabBackground));
+                                        }
+
                                         
                                         if is_hovered {
                                             ui.output_mut(|o| o.cursor_icon = egui::CursorIcon::PointingHand);
@@ -3013,7 +3030,7 @@ impl eframe::App for App {
             self.tab_manager.ui(ui, ctx);
             ui.separator();
 
-            let mut action: Option<(TabType, bool)> = None;
+            let mut action: Option<(TabType, TabOpenMode)> = None;
 
             let active_index = self.tab_manager.active_tab_index;
 
@@ -3061,12 +3078,18 @@ impl eframe::App for App {
                 }
             }
 
-            if let Some((new_content, open_in_new)) = action {
-                if open_in_new {
-                    self.tab_manager.add_tab(new_content, true);
-                } else {
-                    if let Some(tab) = self.tab_manager.tabs.get_mut(active_index) {
-                        tab.content = new_content;
+            if let Some((new_content, mode)) = action {
+                match mode {
+                    TabOpenMode::NewTabActive => {
+                        self.tab_manager.add_tab(new_content, true); 
+                    }
+                    TabOpenMode::NewTabBackground => {
+                        self.tab_manager.add_tab(new_content, false);
+                    }
+                    TabOpenMode::ReplaceCurrent => {
+                        if let Some(tab) = self.tab_manager.tabs.get_mut(active_index) {
+                            tab.content = new_content;
+                        }
                     }
                 }
             }
