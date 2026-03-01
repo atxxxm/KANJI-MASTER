@@ -2,6 +2,7 @@ use crate::back::cards::CardsSession;
 use crate::back::cards::DeckBuilderState;
 use crate::back::core::Kanji;
 use crate::ui::animator::KanjiAnimator;
+use crate::back::localization::Localization;
 use eframe::egui;
 use crate::ui::interface::KanjiList;
 use rand;
@@ -116,18 +117,18 @@ impl PartialEq for TabType {
 }
 
 impl TabType {
-    pub fn title(&self) -> String {
+    pub fn title(&self, local: &Localization) -> String {
         match self {
-            TabType::Home(_) => "🏠 Home".to_owned(),
-            TabType::KanjiList(_) => "📃 List".to_owned(),
+            TabType::Home(_) => format!("🏠 {}", local.local.top_bar.tabs.home),
+            TabType::KanjiList(_) => format!("📃 {}", local.local.top_bar.tabs.kanji_list),
             TabType::KanjiDetail(state) => format!("字 {}", state.kanji.kanji),
-            TabType::Kana(_) => "あ Kana".to_owned(),
-            TabType::RomajiToKana(_) => "R->K Tool".to_owned(),
-            TabType::Translate(_) => "🌐 Translate".to_owned(),
-            TabType::CardsSetup(_) => "🎴 Cards".to_owned(),
+            TabType::Kana(_) => format!("あ {}", local.local.top_bar.tabs.kana),
+            TabType::RomajiToKana(_) => format!("{}", local.local.top_bar.tabs.romaji_to_kana),
+            TabType::Translate(_) => format!("🌐 {}", local.local.top_bar.tabs.translate_kanji),
+            TabType::CardsSetup(_) => format!("🎴 {}", local.local.top_bar.tabs.card_setup),
             TabType::CardsActive(_, name) => format!("▶ {}", name),
-            TabType::DeckManager(_) => "🗂 Decks".to_owned(),
-            TabType::DrawSearch(_) => "🎨 Draw".to_owned(),
+            TabType::DeckManager(_) => format!("🗂 {}", local.local.top_bar.tabs.desk_manager),
+            TabType::DrawSearch(_) => format!("🎨 {}", local.local.top_bar.tabs.draw_search),
         }
     }
 }
@@ -199,7 +200,7 @@ impl TabManager {
     }
 
     // Ui for tabs line
-    pub fn ui(&mut self, ui: &mut egui::Ui, _ctx: &egui::Context) {
+    pub fn ui(&mut self, ui: &mut egui::Ui, _ctx: &egui::Context, local: &Localization) {
         ui.horizontal(|ui| {
             ui.spacing_mut().item_spacing.x = 4.0;
             
@@ -213,7 +214,7 @@ impl TabManager {
             egui::ScrollArea::horizontal().show(ui, |ui| {
                 for (index, tab) in self.tabs.iter().enumerate() {
                     let is_active = index == self.active_tab_index;
-                    let title = tab.content.title();
+                    let title = tab.content.title(local);
                     
                     let bg_color = if is_active {
                         ui.visuals().widgets.active.bg_fill

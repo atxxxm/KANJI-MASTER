@@ -41,6 +41,7 @@ pub struct TopBar {
     pub cards: CardsTopBar,
     pub kana: KanaTopBar,
     pub tools: Tools,
+    pub tabs: Tabs,
 }
 
 // Kanji Top Bar Struct
@@ -106,6 +107,7 @@ pub struct Tools {
     pub translate_kanji: String,
     pub romaji_to_kana_locale: RomajiToKana,
     pub translate_kanji_locale: TranslateToKanji,
+    pub draw_and_search: DrawAndSearch,
 }
 
 // Romaji To Kana Struct
@@ -149,6 +151,22 @@ pub struct TranslateToKanji {
     pub next_button: String,
     pub original: String,
     pub translation: String,
+}
+
+
+// Draw And Search Struct
+#[derive(Serialize, Deserialize, Default, Clone)]
+pub struct DrawAndSearch {
+    pub title: String,
+    pub draw_kanji: String,
+    pub hint_text: String,
+    pub clear_button: String,
+    pub undo_button: String,
+    pub search_button: String,
+    pub best_matches: String,
+    pub draw_something: String,
+    pub not_match_yet: String,
+    
 }
 
 // Settings Struct
@@ -207,6 +225,18 @@ pub struct Kana {
     pub title: String,
     pub hiragana: String,
     pub katakana: String,
+}
+
+#[derive(Serialize, Deserialize, Default, Clone)]
+pub struct Tabs {
+    pub home: String,
+    pub kanji_list: String,
+    pub kana: String,
+    pub romaji_to_kana: String,
+    pub translate_kanji: String,
+    pub card_setup: String,
+    pub desk_manager: String,
+    pub draw_search: String,
 }
 
 // Save file (Serialize)

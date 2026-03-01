@@ -89,7 +89,28 @@
           "next_button": "Next",
           "original": "Original",
           "translation": "Translation"
+        },
+        "draw_and_search": {
+          "title": "Draw & Search",
+          "draw_kanji": "Draw Kanji",
+          "hint_text": "Draw carefully in correct stroke order",
+          "clear_button": "Clear Canvas",
+          "undo_button": "Undo Last Stroke",
+          "search_button": "Search",
+          "best_matches": "Best Matches",
+          "draw_something": "Draw something to start",
+          "not_match_yet": "No matches yet"
         }
+      },
+      "tabs": {
+        "home": "Home",
+        "kanji_list": "List",
+        "kana": "Kana",
+        "romaji_to_kana": "R->K Tool",
+        "translate_kanji": "Translate",
+        "card_setup": "Cards",
+        "desk_manager": "Decks",
+        "draw_search": "Draw"
       }
     },
     "settings": {

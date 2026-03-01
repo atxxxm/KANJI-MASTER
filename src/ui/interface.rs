@@ -579,7 +579,7 @@ impl App {
                                 ui.close();
                             }
 
-                            if ui.button("🎨 Draw & Search").clicked() {
+                            if ui.button(&local.tools.draw_and_search.title).clicked() {
                                 self.tab_manager.add_tab(TabType::DrawSearch(DrawSearchState::default()), true);
                                 ui.close();
                             }
@@ -2728,13 +2728,14 @@ impl App {
         recognition_system: &crate::back::recognition::RecognitionSystem,
     ) -> Option<(TabType, TabOpenMode)> {
         let mut tab_action = None;
+        let local = &ctx.localization.local.top_bar.tools.draw_and_search;
 
         // Header Section
         ui.vertical_centered(|ui| {
             ui.add_space(10.0);
-            ui.heading(egui::RichText::new("Draw Kanji").size(24.0).strong());
+            ui.heading(egui::RichText::new(&local.draw_kanji).size(24.0).strong());
             ui.label(
-                egui::RichText::new("Draw carefully in correct stroke order")
+                egui::RichText::new(&local.hint_text)
                     .size(12.0)
                     .weak(),
             );
@@ -2813,7 +2814,7 @@ impl App {
                         if ui.add(
                             egui::Button::new(egui::RichText::new("🗑").size(16.0))
                                 .min_size(egui::vec2(40.0, 40.0))
-                        ).on_hover_text("Clear Canvas").clicked() {
+                        ).on_hover_text(&local.clear_button).clicked() {
                             state.strokes.clear();
                             state.results.clear();
                         }
@@ -2822,13 +2823,13 @@ impl App {
                         if ui.add(
                             egui::Button::new(egui::RichText::new("⬅").size(16.0))
                                 .min_size(egui::vec2(40.0, 40.0))
-                        ).on_hover_text("Undo Last Stroke").clicked() {
+                        ).on_hover_text(&local.undo_button).clicked() {
                             state.strokes.pop();
                         }
 
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             let search_btn = egui::Button::new(
-                                egui::RichText::new("🔍 Search")
+                                egui::RichText::new(&format!("🔍 {}", &local.search_button))
                                     .strong()
                                     .size(16.0)
                             )
@@ -2866,7 +2867,7 @@ impl App {
                         ui.set_width(ui.available_width());
                     }
 
-                    ui.label(egui::RichText::new("Best Matches").strong().size(18.0));
+                    ui.label(egui::RichText::new(&local.best_matches).strong().size(18.0));
                     ui.add_space(10.0);
 
                     // Results Container
@@ -2880,9 +2881,9 @@ impl App {
                         if state.results.is_empty() {
                             ui.centered_and_justified(|ui| {
                                 let text = if state.strokes.is_empty() {
-                                    "Draw something to start"
+                                    &local.draw_something
                                 } else {
-                                    "No matches yet"
+                                    &local.not_match_yet
                                 };
                                 ui.label(egui::RichText::new(text).weak().italics());
                             });
@@ -2928,7 +2929,6 @@ impl App {
                                             ui.visuals().strong_text_color(),
                                         );
                                         
-                                        // Small Onyomi/Info text below (optional)
                                         ui.painter().text(
                                             rect.center() + egui::vec2(0.0, 20.0),
                                             egui::Align2::CENTER_CENTER,
@@ -3027,7 +3027,7 @@ impl eframe::App for App {
         self.top_bar(ctx);
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            self.tab_manager.ui(ui, ctx);
+            self.tab_manager.ui(ui, ctx, &self.localization);
             ui.separator();
 
             let mut action: Option<(TabType, TabOpenMode)> = None;
