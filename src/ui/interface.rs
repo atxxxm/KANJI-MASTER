@@ -1638,22 +1638,21 @@ impl App {
         });
         ui.add_space(20.0);
 
-        let max_width = 1200.0;
         let available_width = ui.available_width();
-
-        let content_width = if available_width > max_width {
-            max_width
-        } else {
-            available_width - 20.0
-        };
-        let side_padding = (available_width - content_width) / 2.0;
-
-        let columns = 5;
-        let spacing = 15.0;
+        
+        let target_card_width = 85.0; 
+        let spacing = 12.0;
+        
+        let max_content_width = 900.0;
+        let content_width = (available_width - 20.0).min(max_content_width);
+        
+        let mut columns = ((content_width + spacing) / (target_card_width + spacing)).floor() as usize;
+        columns = columns.clamp(4, 10); 
 
         let card_width = (content_width - (spacing * (columns as f32 - 1.0))) / columns as f32;
-        let card_height = card_width * 1.2;
-
+        let card_height = card_width * 1.15; 
+        
+        let side_padding = (available_width - content_width) / 2.0;
         let total_rows = (current_list.len() + columns - 1) / columns;
         let row_height = card_height + spacing;
 
@@ -1709,8 +1708,8 @@ impl App {
 
                                 ui.scope_builder(egui::UiBuilder::new().max_rect(rect), |ui| {
                                     ui.vertical_centered(|ui| {
-                                        let kana_size = (card_width * 0.45).clamp(24.0, 64.0);
-                                        let romaji_size = (card_width * 0.15).clamp(14.0, 24.0);
+                                        let kana_size = (card_width * 0.45).clamp(20.0, 42.0);
+                                        let romaji_size = (card_width * 0.22).clamp(12.0, 18.0); 
 
                                         let total_h = kana_size + romaji_size + 5.0;
                                         ui.add_space((card_height - total_h) / 2.0);
