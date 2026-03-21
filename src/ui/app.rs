@@ -40,18 +40,21 @@ struct App {
 }
 
 impl App {
-    fn new(cc: &eframe::CreationContext<'_>, config: Config) -> Self {
+    fn new(cc: &eframe::CreationContext<'_>, config: Config) -> anyhow::Result<Self> {
         // Set Font
         set_font(&cc.egui_ctx);
 
-        let config_path = get_config_path().expect("cannot get config path");
+        let config_path = get_config_path()
+            .ok_or_else(|| anyhow::anyhow!("Cannot get config path"))?;
 
         // Load Base Localization
-        let localization: Localization = load(&config.path_to_localization).expect("Erorr Load");
+        let localization: Localization = load(&config.path_to_localization)
+            .map_err(|e| anyhow::anyhow!("Failed to load localization: {}", e))?;
         // Load Kanji
+
         let kanji = Database::new(&config.path_to_db_core)
             .get_kanji()
-            .expect("Error Read");
+            .map_err(|e| anyhow::anyhow!("Failed to read database: {}", e))?;
 
         let paths = Paths {
             path_to_db_core: config.path_to_db_core.clone(),
@@ -127,7 +130,7 @@ impl App {
         let mut recognition = RecognitionSystem::new();
         recognition.load_cache(&kanji, &config.path_to_svg_images);
 
-        Self {
+        Ok(Self {
             tab_manager: TabManager::new(),
             kanji,
             settings: Settings::new(localization.clone(), &config),
@@ -138,7 +141,7 @@ impl App {
             translate_state,
             config_path,
             recognition,
-        }
+        })
     }
 
     // Name
@@ -452,6 +455,53 @@ impl eframe::App for App {
     }
 }
 
+
+pub struct AppWrapper {
+    state: Result<App, String>,
+}
+
+impl AppWrapper {
+    pub fn new(cc: &eframe::CreationContext<'_>, config: Config) -> Self {
+        match App::new(cc, config) {
+            Ok(app) => Self { state: Ok(app) },
+            Err(e) => Self { state: Err(e.to_string()) },
+        }
+    }
+}
+
+impl eframe::App for AppWrapper {
+    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+        match &mut self.state {
+            Ok(app) => {
+                app.update(ctx, frame);
+            }
+            Err(err_msg) => {
+                egui::CentralPanel::default().show(ctx, |ui| {
+                    ui.centered_and_justified(|ui| {
+                        ui.vertical_centered(|ui| {
+                            ui.label(egui::RichText::new("⚠️").size(60.0));
+                            ui.add_space(20.0);
+                            ui.heading(egui::RichText::new("Application Error").color(egui::Color32::RED));
+                            ui.add_space(10.0);
+                            ui.label(err_msg.clone());
+                            ui.add_space(30.0);
+                            if ui.button("Quit App").clicked() {
+                                ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                            }
+                        });
+                    });
+                });
+            }
+        }
+    }
+
+    fn on_exit(&mut self, gl: Option<&eframe::glow::Context>) {
+        if let Ok(app) = &mut self.state {
+            app.on_exit(gl);
+        }
+    }
+}
+
 // Run App
 pub fn run(config: Config) -> eframe::Result<()> {
     let native_options = eframe::NativeOptions {
@@ -460,9 +510,9 @@ pub fn run(config: Config) -> eframe::Result<()> {
     };
 
     eframe::run_native(
-        App::name(),
+        "Kanji Master",
         native_options,
-        Box::new(|cc| Ok(Box::new(App::new(cc, config)))),
+        Box::new(|cc| Ok(Box::new(AppWrapper::new(cc, config)))), 
     )
 }
 
