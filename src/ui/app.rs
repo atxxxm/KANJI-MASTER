@@ -4,8 +4,7 @@ use crate::back::localization::*;
 use crate::back::translation::*;
 use crate::back::recognition::RecognitionSystem;
 use crate::ui::settings::Settings;
-use crate::ui::tabs::{KanjiListState, RomajiKanaState, TabManager,
-    TabType, TranslateTabState, CardsSetupState, DrawSearchState};
+use crate::ui::tabs::{CardsSetupState, DrawSearchState, HomeState, KanjiListState, RomajiKanaState, TabManager, TabType, TranslateTabState};
 use crate::ui::context::{AppContext, TabOpenMode};
 use crate::ui::views;
 use eframe::egui;
@@ -231,7 +230,7 @@ impl App {
                         .add(egui::Label::new(logo_text).sense(egui::Sense::click()))
                         .clicked()
                     {
-                        self.tab_manager.add_tab(TabType::Home(String::new()), true);
+                        self.tab_manager.add_tab(TabType::Home(HomeState::default()), true);
                     }
 
                     ui.add_space(30.0);

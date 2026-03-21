@@ -16,12 +16,22 @@ pub enum KanjiList {
     Jlpt1,
 }
 
-// State for tab Kanji List
+#[derive(Clone, Default)]
+pub struct HomeState {
+    pub search_query: String,
+    pub last_search_query: Option<String>,
+    pub cached_results: Vec<usize>,
+}
+
 #[derive(Clone)]
 pub struct KanjiListState {
     pub search_query: String,
     pub selected_list: KanjiList,
+    pub last_search_query: Option<String>,
+    pub last_selected_list: Option<KanjiList>,
+    pub cached_results: Vec<usize>,
 }
+
 
 // Kanji List State Default
 impl Default for KanjiListState {
@@ -29,6 +39,9 @@ impl Default for KanjiListState {
         Self {
             search_query: String::new(),
             selected_list: KanjiList::All,
+            last_search_query: None,
+            last_selected_list: None,
+            cached_results: Vec::new(),
         }
     }
 }
@@ -106,7 +119,7 @@ impl Default for DrawSearchState {
 
 // Main Tab Struct
 pub enum TabType {
-    Home(String),
+    Home(HomeState),
     KanjiList(KanjiListState),
     KanjiDetail(KanjiDetailState),
     Kana(bool), 
@@ -171,7 +184,7 @@ pub struct TabManager {
 impl TabManager {
     pub fn new() -> Self {
         Self {
-            tabs: vec![Tab::new(TabType::Home(String::new()))],
+            tabs: vec![Tab::new(TabType::Home(HomeState::default()))],
             active_tab_index: 0,
         }
     }
@@ -197,7 +210,7 @@ impl TabManager {
 
             // If close tab is last, and tab is one, create Home tab
             if self.tabs.is_empty() {
-                self.tabs.push(Tab::new(TabType::Home(String::new())));
+                self.tabs.push(Tab::new(TabType::Home(HomeState::default())));
                 self.active_tab_index = 0;
             }
         }
@@ -338,7 +351,7 @@ impl TabManager {
 
             let new_tab_btn = ui.add(egui::Button::new("+").frame(false));
             if new_tab_btn.clicked() {
-                self.add_tab(TabType::Home(String::new()), true);
+                self.add_tab(TabType::Home(HomeState::default()), true);
             }
             
             new_tab_btn.context_menu(|ui| {
