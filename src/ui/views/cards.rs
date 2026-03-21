@@ -3,6 +3,7 @@ use crate::ui::context::{AppContext, TabOpenMode};
 use crate::ui::tabs::{TabType, CardsSetupState};
 use crate::back::cards::{CardsSession, DeckBuilderState};
 use crate::back::core::Kanji;
+use std::sync::Arc;
 
 pub fn render_setup(ui: &mut egui::Ui, state: &mut CardsSetupState, ctx: &mut AppContext) -> Option<(TabType, TabOpenMode)> {
     let local = &ctx.localization.local.top_bar.cards;
@@ -63,9 +64,9 @@ pub fn render_setup(ui: &mut egui::Ui, state: &mut CardsSetupState, ctx: &mut Ap
 
                         if ui.add(btn).clicked() {
                             let deck_name = format!("JLPT {}", level);
-                            let filtered: Vec<Kanji> = ctx.kanji.iter()
+                            let filtered: Vec<Arc<Kanji>> = ctx.kanji.iter()
                                 .filter(|k| k.jlpt == level)
-                                .cloned()
+                                .map(Arc::clone)
                                 .collect();
                             
                             if !filtered.is_empty() {
@@ -140,9 +141,9 @@ pub fn render_setup(ui: &mut egui::Ui, state: &mut CardsSetupState, ctx: &mut Ap
                                                     
                                                     if ui.add(play_btn).clicked() {
                                                         if let Some(ids) = ctx.config.custom_decks.get(&name) {
-                                                            let deck_kanji: Vec<Kanji> = ctx.kanji.iter()
+                                                            let deck_kanji: Vec<Arc<Kanji>> = ctx.kanji.iter()
                                                                 .filter(|k| ids.contains(&k.id))
-                                                                .cloned()
+                                                                .map(Arc::clone)
                                                                 .collect();
                                                             if !deck_kanji.is_empty() {
                                                                 let session = CardsSession::new(deck_kanji, 0);

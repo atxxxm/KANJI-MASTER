@@ -11,6 +11,7 @@ use eframe::egui;
 use std::path::PathBuf;
 use std::sync::OnceLock;
 use crate::back::svg_cache::SvgCache; 
+use std::sync::Arc;
 
 // JLPT Levels
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -26,7 +27,7 @@ enum JLPT {
 struct App {
     tab_manager: TabManager,
 
-    kanji: Vec<Kanji>,
+    kanji: Vec<Arc<Kanji>>, 
     config: Config,
     paths: Paths,
     settings: Settings,

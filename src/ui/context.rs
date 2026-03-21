@@ -4,9 +4,10 @@ use crate::back::localization::Localization;
 use crate::back::translation::TranslateState;
 use crate::ui::settings::Settings;
 use crate::back::svg_cache::SvgCache;
+use std::sync::Arc;
 
 pub struct AppContext<'a> {
-    pub kanji: &'a Vec<Kanji>,
+    pub kanji: &'a Vec<Arc<Kanji>>,
     pub config: &'a mut Config,
     pub settings: &'a Settings,
     pub localization: &'a Localization,

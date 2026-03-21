@@ -3,6 +3,7 @@ use crate::ui::context::{AppContext, TabOpenMode};
 use crate::ui::tabs::{TabType, CardsSetupState};
 use crate::back::cards::DeckBuilderState;
 use crate::back::core::Kanji;
+use std::sync::Arc;
 
 pub fn render(ui: &mut egui::Ui, state: &mut DeckBuilderState, ctx: &mut AppContext) -> Option<(TabType, TabOpenMode)> {
     let local = ctx.localization.local.top_bar.cards.clone();
@@ -122,7 +123,7 @@ pub fn render(ui: &mut egui::Ui, state: &mut DeckBuilderState, ctx: &mut AppCont
                         .show(ui, |ui| {
                             ui.set_width(ui.available_width());
                             
-                            let filtered: Vec<&Kanji> = ctx.kanji.iter()
+                            let filtered: Vec<&Arc<Kanji>> = ctx.kanji.iter()
                                 .filter(|k| {
                                     if search.is_empty() { return false; }
                                     k.kanji.contains(&search)

@@ -1,6 +1,8 @@
 use eframe::egui;
 use crate::ui::context::{AppContext, TabOpenMode};
 use crate::ui::tabs::TabType;
+use std::sync::Arc;
+use crate::ui::views::kanji_detail;
 
 pub fn render(ui: &mut egui::Ui, state: &mut crate::ui::tabs::DrawSearchState, ctx: &AppContext, recognition_system: &crate::back::recognition::RecognitionSystem) -> Option<(TabType, TabOpenMode)> {
     let mut tab_action = None;
@@ -123,10 +125,10 @@ pub fn render(ui: &mut egui::Ui, state: &mut crate::ui::tabs::DrawSearchState, c
                             let matches = recognition_system.search(&input_points, 20);
                             
                             state.results = matches.iter()
-                                .filter_map(|(id, _score)| {
-                                    ctx.kanji.iter().find(|k| k.id == *id).cloned()
-                                })
-                                .collect();
+                            .filter_map(|(id, _score)| {
+                                ctx.kanji.iter().find(|k| k.id == *id).map(Arc::clone)
+                            })
+                            .collect();
                         }
                     });
                 });
@@ -214,12 +216,12 @@ pub fn render(ui: &mut egui::Ui, state: &mut crate::ui::tabs::DrawSearchState, c
                                     );
 
                                     if response.clicked() {
-                                        let new_content = crate::ui::views::kanji_detail::create_tab(kanji.clone(), ctx.svg_cache);
+                                        let new_content = kanji_detail::create_tab(Arc::clone(kanji), ctx.svg_cache);
                                         tab_action = Some((new_content, TabOpenMode::NewTabActive));
                                     }
 
                                     if response.secondary_clicked() || response.middle_clicked() {
-                                        let new_content = crate::ui::views::kanji_detail::create_tab(kanji.clone(), ctx.svg_cache);
+                                        let new_content = kanji_detail::create_tab(Arc::clone(kanji), ctx.svg_cache);
                                         tab_action = Some((new_content, TabOpenMode::NewTabBackground));
                                     }
 

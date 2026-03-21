@@ -4,6 +4,7 @@ use crate::ui::tabs::TabType;
 use crate::back::core::Kanji;
 use crate::back::translation::KanjiTranslation;
 use crate::ui::tabs::TranslateTabState;
+use std::sync::Arc;
 
 pub fn render(ui: &mut egui::Ui, state: &mut TranslateTabState, ctx: &mut AppContext) -> Option<(TabType, TabOpenMode)>{
         let local = &ctx.localization.local.top_bar.tools.translate_kanji_locale;
@@ -41,7 +42,7 @@ pub fn render(ui: &mut egui::Ui, state: &mut TranslateTabState, ctx: &mut AppCon
                     if egui::Popup::is_id_open(ui.ctx(), popup_id) && !state.jump_search_buffer.is_empty() {
                         let search = state.jump_search_buffer.trim().to_lowercase();
 
-                        let matches: Vec<(usize, &Kanji)> = ctx.kanji.iter().enumerate()
+                        let matches: Vec<(usize, &Arc<Kanji>)> = ctx.kanji.iter().enumerate()
                             .filter(|(_, k)| {
                                 k.kanji.contains(&search) ||
                                 k.id.to_string() == search ||
@@ -127,7 +128,7 @@ pub fn render(ui: &mut egui::Ui, state: &mut TranslateTabState, ctx: &mut AppCon
             return None;
         }
 
-        let current_kanji = ctx.kanji[ctx.translate_state.current_index].clone();
+        let current_kanji = Arc::clone(&ctx.kanji[ctx.translate_state.current_index]);
 
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.add_space(20.0);

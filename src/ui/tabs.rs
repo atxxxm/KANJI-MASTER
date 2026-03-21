@@ -5,6 +5,7 @@ use crate::ui::animator::KanjiAnimator;
 use crate::back::localization::Localization;
 use eframe::egui;
 use rand;
+use std::sync::Arc;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum KanjiList {
@@ -48,7 +49,7 @@ impl Default for KanjiListState {
 
 // State for tab Current Kanji
 pub struct KanjiDetailState {
-    pub kanji: Kanji,
+    pub kanji: Arc<Kanji>,
     pub animator: KanjiAnimator,
     pub last_copy_time: Option<f64>,
 }
@@ -104,7 +105,7 @@ impl Default for RomajiKanaState {
 pub struct DrawSearchState {
     pub strokes: Vec<Vec<egui::Pos2>>, 
     pub current_stroke: Vec<egui::Pos2>,
-    pub results: Vec<Kanji>,
+    pub results: Vec<Arc<Kanji>>,
 }
 
 impl Default for DrawSearchState {

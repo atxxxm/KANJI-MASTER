@@ -1,6 +1,7 @@
 use anyhow;
 use rusqlite::Connection;
 use std::collections::HashMap;
+use std::sync::Arc;
 
 pub struct Database {
     path_to_db: String,
@@ -29,7 +30,7 @@ impl Database {
         }
     }
 
-    pub fn get_kanji(&self) -> anyhow::Result<Vec<Kanji>> {
+    pub fn get_kanji(&self) -> anyhow::Result<Vec<Arc<Kanji>>> {
         let conn = Connection::open(&self.path_to_db)?;
 
         let mut stmt = conn.prepare(
@@ -105,7 +106,7 @@ impl Database {
         let mut result: Vec<Kanji> = kanji_map.into_values().collect();
         result.sort_by(|a, b| a.kanji.cmp(&b.kanji));
 
-        Ok(result)
+        Ok(result.into_iter().map(Arc::new).collect())
     }
 
     fn split_on_or_kun(&self, text: &str) -> String {

@@ -4,8 +4,9 @@ use crate::ui::tabs::{TabType, KanjiDetailState};
 use crate::ui::animator::KanjiAnimator;
 use crate::back::core::Kanji;
 use crate::back::svg_cache::SvgCache;
+use std::sync::Arc;
 
-pub fn create_tab(kanji: Kanji, svg_cache: &SvgCache) -> TabType {
+pub fn create_tab(kanji: Arc<Kanji>, svg_cache: &SvgCache) -> TabType {
     let mut animator = KanjiAnimator::new();
 
     if let Some(strokes) = svg_cache.data.get(&kanji.id) {

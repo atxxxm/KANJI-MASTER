@@ -1,10 +1,11 @@
 use crate::back::core::Kanji;
 use rand::rng;
 use rand::seq::SliceRandom;
+use std::sync::Arc;
 
 // Active cards session status
 pub struct CardsSession {
-    pub queue: Vec<Kanji>,     // Queue of kanji
+    pub queue: Vec<Arc<Kanji>>,     // Queue of kanji
     pub current_index: usize,  // Current index of kanji in queue
     pub is_card_flipped: bool, // Is card flipped
     pub total_count: usize,    // Total count of kanji
@@ -12,7 +13,7 @@ pub struct CardsSession {
 }
 
 impl CardsSession {
-    pub fn new(mut kanji_list: Vec<Kanji>, limit: usize) -> Self {
+    pub fn new(mut kanji_list: Vec<Arc<Kanji>>, limit: usize) -> Self {
         let mut rng = rng();
         kanji_list.shuffle(&mut rng);
 

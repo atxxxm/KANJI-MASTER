@@ -2,6 +2,7 @@ use crate::back::core::Kanji;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use std::sync::Arc;
 
 pub struct MessageTranslationData {
     pub file_load_success: String,
@@ -105,7 +106,7 @@ impl TranslateState {
     }
 
     // Function for saving JSON
-    pub fn save_translations(&mut self, kanji: &Vec<Kanji>) {
+    pub fn save_translations(&mut self, kanji: &Vec<Arc<Kanji>>) {
         // Update current entry before saving
         if let Some(k) = kanji.get(self.current_index) {
             let entry = KanjiTranslation {

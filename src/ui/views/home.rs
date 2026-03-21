@@ -2,6 +2,7 @@ use eframe::egui;
 use crate::ui::context::{AppContext, TabOpenMode};
 use crate::ui::tabs::{TabType, HomeState};
 use crate::ui::views::kanji_detail;
+use std::sync::Arc;
 
 pub fn render(ui: &mut egui::Ui, state: &mut HomeState, ctx: &AppContext) -> Option<(TabType, TabOpenMode)> {
     let mut tab_action = None;
@@ -225,12 +226,12 @@ pub fn render(ui: &mut egui::Ui, state: &mut HomeState, ctx: &AppContext) -> Opt
                             });
 
                             if response.clicked() {
-                                let new_content = kanji_detail::create_tab((*item).clone(), ctx.svg_cache);
+                                let new_content = kanji_detail::create_tab(Arc::clone(item), ctx.svg_cache);
                                 tab_action = Some((new_content, TabOpenMode::NewTabActive));
                             }
 
                             if response.secondary_clicked() || response.middle_clicked() {
-                                let new_content = kanji_detail::create_tab((*item).clone(), ctx.svg_cache);
+                                let new_content = kanji_detail::create_tab(Arc::clone(item), ctx.svg_cache);
                                 tab_action = Some((new_content, TabOpenMode::NewTabBackground));
                             }
 

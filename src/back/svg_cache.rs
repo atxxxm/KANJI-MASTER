@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use svgtypes::{PathParser, PathSegment};
+use std::sync::Arc;
 
 #[derive(Clone, Debug)]
 pub struct StrokePoint {
@@ -29,7 +30,7 @@ impl SvgCache {
         }
     }
 
-    pub fn load_all(&mut self, kanji_db: &[Kanji], svg_path: &str) {
+    pub fn load_all(&mut self, kanji_db: &[Arc<Kanji>], svg_path: &str) {
         for k in kanji_db {
             let file_path = format!("{}/0{}.svg", svg_path, k.unicode.to_lowercase());
             if Path::new(&file_path).exists() {
