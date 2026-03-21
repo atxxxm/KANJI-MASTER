@@ -1,19 +1,15 @@
 use eframe::egui;
-use std::path::Path;
 use crate::ui::context::{AppContext, TabOpenMode};
 use crate::ui::tabs::{TabType, KanjiDetailState};
 use crate::ui::animator::KanjiAnimator;
 use crate::back::core::Kanji;
-use crate::back::localization::Paths;
+use crate::back::svg_cache::SvgCache;
 
-pub fn create_tab(kanji: Kanji, paths: &Paths) -> TabType {
+pub fn create_tab(kanji: Kanji, svg_cache: &SvgCache) -> TabType {
     let mut animator = KanjiAnimator::new();
-    let svg_path = format!("{}/0{}.svg", paths.path_to_svg_images, kanji.unicode.to_lowercase());
 
-    if Path::new(&svg_path).exists() {
-        if let Err(_) = animator.load_svg(&svg_path) {
-            animator.clear();
-        }
+    if let Some(strokes) = svg_cache.data.get(&kanji.id) {
+        animator.load_strokes(strokes.clone());
     } else {
         animator.clear();
     }

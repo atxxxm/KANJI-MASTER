@@ -214,12 +214,12 @@ pub fn render(ui: &mut egui::Ui, state: &mut crate::ui::tabs::DrawSearchState, c
                                     );
 
                                     if response.clicked() {
-                                        let new_content = crate::ui::views::kanji_detail::create_tab(kanji.clone(), ctx.paths);
+                                        let new_content = crate::ui::views::kanji_detail::create_tab(kanji.clone(), ctx.svg_cache);
                                         tab_action = Some((new_content, TabOpenMode::NewTabActive));
                                     }
 
                                     if response.secondary_clicked() || response.middle_clicked() {
-                                        let new_content = crate::ui::views::kanji_detail::create_tab(kanji.clone(), ctx.paths);
+                                        let new_content = crate::ui::views::kanji_detail::create_tab(kanji.clone(), ctx.svg_cache);
                                         tab_action = Some((new_content, TabOpenMode::NewTabBackground));
                                     }
 

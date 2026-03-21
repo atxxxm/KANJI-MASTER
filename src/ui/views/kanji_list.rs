@@ -266,12 +266,12 @@ pub fn render(ui: &mut egui::Ui, state: &mut KanjiListState, ctx: &AppContext) -
                             });
 
                             if response.clicked() {
-                                let new_content = kanji_detail::create_tab((*item).clone(), ctx.paths);
+                                let new_content = kanji_detail::create_tab((*item).clone(), ctx.svg_cache);
                                 tab_action = Some((new_content, TabOpenMode::NewTabActive));
                             }
 
                             if response.secondary_clicked() || response.middle_clicked() {
-                                let new_content = kanji_detail::create_tab((*item).clone(), ctx.paths);
+                                let new_content = kanji_detail::create_tab((*item).clone(), ctx.svg_cache);
                                 tab_action = Some((new_content, TabOpenMode::NewTabBackground));
                             }
 

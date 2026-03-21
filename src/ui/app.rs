@@ -10,6 +10,7 @@ use crate::ui::views;
 use eframe::egui;
 use std::path::PathBuf;
 use std::sync::OnceLock;
+use crate::back::svg_cache::SvgCache; 
 
 // JLPT Levels
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -38,6 +39,8 @@ struct App {
     recognition: RecognitionSystem,
 
     error_notification: Option<String>,
+
+    svg_cache: SvgCache,
 }
 
 impl App {
@@ -127,9 +130,12 @@ impl App {
         // If loading failed, reset the state
         let settings_window = !loaded_successfully;
 
+        let mut svg_cache = SvgCache::new();
+        svg_cache.load_all(&kanji, &config.path_to_svg_images);
+
         // Recognition initialization
         let mut recognition = RecognitionSystem::new();
-        recognition.load_cache(&kanji, &config.path_to_svg_images);
+        recognition.load_cache(&svg_cache.data);
 
         Ok(Self {
             tab_manager: TabManager::new(),
@@ -143,6 +149,7 @@ impl App {
             config_path,
             recognition,
             error_notification: None,
+            svg_cache,
         })
     }
 
@@ -379,10 +386,10 @@ impl eframe::App for App {
                 let mut context = AppContext {
                     kanji: &self.kanji,
                     config: &mut self.config,
-                    paths: &self.paths,
                     settings: &self.settings,
                     localization: &self.localization,
                     translate_state: &mut self.translate_state,
+                    svg_cache: &mut self.svg_cache,
                 };
 
                 match content {

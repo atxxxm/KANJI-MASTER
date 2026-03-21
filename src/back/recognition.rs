@@ -1,8 +1,5 @@
-use crate::back::core::Kanji;
-use kurbo::{BezPath, PathEl, Point};
-use svgtypes::{PathParser, PathSegment};
-use std::fs;
-use std::path::Path;
+use crate::back::svg_cache::Stroke;
+use std::collections::HashMap;
 
 // Number of points to which each stroke is reduced
 const POINTS_PER_STROKE: usize = 32;
@@ -25,25 +22,23 @@ impl RecognitionSystem {
         Self { cache: Vec::new() }
     }
 
-    // Load and process all SVGs on startup
-    pub fn load_cache(&mut self, kanji_db: &Vec<Kanji>, svg_path: &str) {
+    pub fn load_cache(&mut self, svg_data: &HashMap<i32, Vec<Stroke>>) {
         self.cache.clear();
         
-        for k in kanji_db {
-            let file_path = format!("{}/0{}.svg", svg_path, k.unicode.to_lowercase());
-            if Path::new(&file_path).exists() {
-                if let Ok(content) = fs::read_to_string(&file_path) {
-                    // Parsing SVG to strokes
-                    if let Some(strokes) = parse_svg_to_strokes(&content) {
-                        // Normalizing strokes (converting to square 0..1 and fixed number of points)
-                        let normalized = normalize_kanji(strokes);
-                        self.cache.push(SimplifiedKanji {
-                            id: k.id,
-                            strokes: normalized,
-                        });
-                    }
-                }
-            }
+        for (id, strokes) in svg_data {
+            let raw_strokes: Vec<Vec<(f32, f32)>> = strokes.iter()
+                .map(|stroke| {
+                    stroke.points.iter()
+                        .map(|sp| (sp.pos.x as f32, sp.pos.y as f32))
+                        .collect()
+                })
+                .collect();
+
+            let normalized = normalize_kanji(raw_strokes);
+            self.cache.push(SimplifiedKanji {
+                id: *id,
+                strokes: normalized,
+            });
         }
     }
 
@@ -76,63 +71,6 @@ impl RecognitionSystem {
 }
 
 // Support functions
-
-// Parsing SVG to strokes
-fn parse_svg_to_strokes(svg_content: &str) -> Option<Vec<Vec<(f32, f32)>>> {
-    let text = svg_content.replace("kvg:", "kvg_");
-    let opt = roxmltree::ParsingOptions { allow_dtd: true, ..Default::default() };
-    
-    let doc = roxmltree::Document::parse_with_options(&text, opt).ok()?;
-    let mut strokes = Vec::new();
-
-    for node in doc.descendants() {
-        if node.has_tag_name("path") {
-            if let Some(d) = node.attribute("d") {
-                let mut bez = BezPath::new();
-                let mut current = Point::ZERO;
-                
-                // Parse SVG
-                for seg in PathParser::from(d) {
-                    match seg.ok()? {
-                        PathSegment::MoveTo { abs, x, y } => {
-                            let p = if abs { Point::new(x, y) } else { current + (x, y) };
-                            bez.move_to(p);
-                            current = p;
-                        }
-                        PathSegment::LineTo { abs, x, y } => {
-                            let p = if abs { Point::new(x, y) } else { current + (x, y) };
-                            bez.line_to(p);
-                            current = p;
-                        }
-                        PathSegment::CurveTo { abs, x1, y1, x2, y2, x, y } => {
-                             let c1 = if abs { Point::new(x1, y1) } else { current + (x1, y1) };
-                             let c2 = if abs { Point::new(x2, y2) } else { current + (x2, y2) };
-                             let p = if abs { Point::new(x, y) } else { current + (x, y) };
-                             bez.curve_to(c1, c2, p);
-                             current = p;
-                        }
-                        _ => {}
-                    }
-                }
-
-                // Transform curves to points
-                let mut raw_points = Vec::new();
-                kurbo::flatten(bez.iter(), 0.5, |el| {
-                    match el {
-                        PathEl::MoveTo(p) | PathEl::LineTo(p) => raw_points.push((p.x as f32, p.y as f32)),
-                        _ => {}
-                    }
-                });
-                
-                if !raw_points.is_empty() {
-                    strokes.push(raw_points);
-                }
-            }
-        }
-    }
-    
-    if strokes.is_empty() { None } else { Some(strokes) }
-}
 
 // Resampling and normalization
 fn normalize_kanji(strokes: Vec<Vec<(f32, f32)>>) -> Vec<Vec<(f32, f32)>> {

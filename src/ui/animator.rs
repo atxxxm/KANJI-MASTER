@@ -1,22 +1,6 @@
 use eframe::egui;
-use kurbo::{BezPath, PathEl, Point};
-use roxmltree::{Document, ParsingOptions};
-use std::fs;
-use svgtypes::{PathParser, PathSegment};
-
-// Stroke Point Data
-#[derive(Clone, Debug)]
-struct StrokePoint {
-    pos: Point,
-    dist: f32,
-}
-
-// Stroke Data
-#[derive(Clone)]
-struct Stroke {
-    points: Vec<StrokePoint>,
-    total_length: f32,
-}
+use kurbo::Point;
+use crate::back::svg_cache::Stroke;
 
 // Kanji Animator
 pub struct KanjiAnimator {
@@ -38,124 +22,13 @@ impl KanjiAnimator {
         }
     }
 
-    // Load SVG
-    pub fn load_svg(&mut self, path: &str) -> anyhow::Result<()> {
-        self.strokes.clear();
-        self.is_playing = false;
+    // Load strokes
+    pub fn load_strokes(&mut self, strokes: Vec<Stroke>) {
+        self.strokes = strokes;
+        self.is_playing = true;
         self.stroke_progress = 0.0;
         self.current_stroke_index = 0;
         self.last_time = None;
-
-        let raw_text = fs::read_to_string(path)?;
-        let text = raw_text.replace("kvg:", "kvg_");
-
-        let opt = ParsingOptions {
-            allow_dtd: true,
-            ..ParsingOptions::default()
-        };
-        let doc = Document::parse_with_options(&text, opt)
-            .map_err(|e| anyhow::anyhow!("XML Error: {}", e))?;
-
-        self.is_playing = true;
-
-        for node in doc.descendants() {
-            if node.has_tag_name("path") {
-                if let Some(d) = node.attribute("d") {
-                    let mut bez_path = BezPath::new();
-                    let mut current = Point::ZERO;
-
-                    // Parse SVG
-                    for seg in PathParser::from(d) {
-                        match seg? {
-                            PathSegment::MoveTo { abs, x, y } => {
-                                let p = if abs {
-                                    Point::new(x, y)
-                                } else {
-                                    current + (x, y)
-                                };
-                                bez_path.move_to(p);
-                                current = p;
-                            }
-                            PathSegment::LineTo { abs, x, y } => {
-                                let p = if abs {
-                                    Point::new(x, y)
-                                } else {
-                                    current + (x, y)
-                                };
-                                bez_path.line_to(p);
-                                current = p;
-                            }
-                            PathSegment::CurveTo {
-                                abs,
-                                x1,
-                                y1,
-                                x2,
-                                y2,
-                                x,
-                                y,
-                            } => {
-                                let c1 = if abs {
-                                    Point::new(x1, y1)
-                                } else {
-                                    current + (x1, y1)
-                                };
-                                let c2 = if abs {
-                                    Point::new(x2, y2)
-                                } else {
-                                    current + (x2, y2)
-                                };
-                                let p = if abs {
-                                    Point::new(x, y)
-                                } else {
-                                    current + (x, y)
-                                };
-                                bez_path.curve_to(c1, c2, p);
-                                current = p;
-                            }
-                            _ => {}
-                        }
-                    }
-
-                    let mut points = Vec::new();
-                    let mut total_dist = 0.0;
-                    let mut is_first = true;
-                    let mut last_pos = Point::ZERO; // Save the last position
-
-                    kurbo::flatten(bez_path.iter(), 0.2, |el| {
-                        match el {
-                            // Start of a stroke
-                            PathEl::MoveTo(p) => {
-                                last_pos = p;
-                                if is_first {
-                                    points.push(StrokePoint { pos: p, dist: 0.0 });
-                                    is_first = false;
-                                }
-                            }
-                            // Continue of a stroke
-                            PathEl::LineTo(p) => {
-                                let dist = last_pos.distance(p);
-                                total_dist += dist;
-
-                                points.push(StrokePoint {
-                                    pos: p,
-                                    dist: total_dist as f32,
-                                });
-                                last_pos = p; // Update last position
-                            }
-                            _ => {}
-                        }
-                    });
-
-                    if !points.is_empty() {
-                        self.strokes.push(Stroke {
-                            points,
-                            total_length: total_dist as f32,
-                        });
-                    }
-                }
-            }
-        }
-        Ok(())
     }
 
     // Replay animation
