@@ -37,6 +37,8 @@ struct App {
     config_path: PathBuf,
 
     recognition: RecognitionSystem,
+
+    error_notification: Option<String>,
 }
 
 impl App {
@@ -141,12 +143,8 @@ impl App {
             translate_state,
             config_path,
             recognition,
+            error_notification: None,
         })
-    }
-
-    // Name
-    fn name() -> &'static str {
-        "Kanji Master"
     }
 
     // Auxiliary function for reloading localization UI
@@ -194,8 +192,8 @@ impl App {
             path_to_svg_images: self.paths.path_to_svg_images.clone(),
         };
 
-        if let Err(e) = save_config(&self.config_path,&current_config) {
-            eprintln!("Error saving config: {}", e.to_string());
+        if let Err(e) = save_config(&self.config_path, &current_config) {
+            self.error_notification = Some(format!("Failed to save config: {}", e));
         }
     }
 
@@ -447,6 +445,27 @@ impl eframe::App for App {
             self.reload_interface_localization();
             self.save();
         }
+
+        if let Some(err_msg) = self.error_notification.take() {
+        let mut is_open = true;
+        let mut dismiss_clicked = false;
+
+        egui::Window::new("Error")
+            .open(&mut is_open) 
+            .collapsible(false)
+            .resizable(false)
+            .anchor(egui::Align2::RIGHT_BOTTOM, egui::vec2(-10.0, -10.0))
+            .show(ctx, |ui| {
+                ui.label(egui::RichText::new(&err_msg).color(ui.visuals().error_fg_color));
+                if ui.button("Dismiss").clicked() {
+                    dismiss_clicked = true; 
+                }
+            });
+
+        if is_open && !dismiss_clicked {
+            self.error_notification = Some(err_msg);
+        }
+    }
     }
 
     // On Exit and Save Config
