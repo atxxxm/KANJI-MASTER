@@ -10,6 +10,7 @@ use crate::ui::context::{AppContext, TabOpenMode};
 use crate::ui::views;
 use eframe::egui;
 use std::path::PathBuf;
+use std::sync::OnceLock;
 
 // JLPT Levels
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -467,8 +468,9 @@ pub fn run(config: Config) -> eframe::Result<()> {
 
 // Set Font
 fn set_font(ctx: &egui::Context) {
-    static mut LOADED: bool = false;
-    if !unsafe { LOADED } {
+    static FONT_LOADED: OnceLock<()> = OnceLock::new();
+
+    FONT_LOADED.get_or_init(|| {
         let font_data = include_bytes!("../../font/NotoSansJP-VariableFont_wght.ttf");
         let font = egui::FontData::from_static(font_data).tweak(egui::FontTweak {
             scale: 1.0,
@@ -494,9 +496,5 @@ fn set_font(ctx: &egui::Context) {
             .push("noto_cjk".to_owned());
 
         ctx.set_fonts(fonts);
-
-        unsafe {
-            LOADED = true;
-        }
-    }
+    });
 }
