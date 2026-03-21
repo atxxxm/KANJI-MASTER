@@ -4,8 +4,17 @@ use crate::back::core::Kanji;
 use crate::ui::animator::KanjiAnimator;
 use crate::back::localization::Localization;
 use eframe::egui;
-use crate::ui::interface::KanjiList;
 use rand;
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum KanjiList {
+    All,
+    Jlpt5,
+    Jlpt4,
+    Jlpt3,
+    Jlpt2,
+    Jlpt1,
+}
 
 // State for tab Kanji List
 #[derive(Clone)]
