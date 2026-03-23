@@ -1,15 +1,16 @@
-# Kanji Localization
+# Kanji Localization (JSON)
 
-The **`kanji-localization.json`** file (or any other file selected in the settings) contains translations for **kanji meanings** and **usage examples**.
+The **`kanji-localization.json`** file contains your personal translations for **kanji meanings** and **usage examples**. 
+
+> 🛠 **Highly Recommended:** Instead of editing this raw JSON file manually, use the built-in **Translate Kanji Tool** (found in the Tools menu). The tool provides a clean UI for translating and automatically saves the JSON file with the correct formatting and IDs!
 
 ---
 
 ## File Structure
 
-The root object contains an `entries` field where:
-
+If you prefer to edit the file manually or write a script to generate it, the root object contains an `entries` dictionary where:
 *   **Key** – the kanji character itself (e.g., `"日"`).
-*   **Value** – an object with the translation and examples.
+*   **Value** – an object with the translation and an array of examples.
 
 Example structure:
 
@@ -34,16 +35,11 @@ Example structure:
     }
   }
 }
-```
 
----
+Field Descriptions
 
-### 🔹 Field Descriptions
+    last_id – Keeps track of the last kanji you translated using the built-in UI tool.
 
-*   **meaning** – the main meaning of the kanji (string).
-*   **translate_examples** – an array of strings containing translations for the usage examples.
+    meaning – The main meaning of the kanji (String).
 
-    *   The order of elements must match the order of the original Japanese examples from the `core.db` database.
-
-> 💡 Tip: For convenient editing, use the built-in **Translate Kanji Tool** within the application.
-> It automatically synchronizes example indexes and keeps the file structure correct.
+    translate_examples – An array of strings containing translations for the usage examples. The order of elements must exactly match the order of the original Japanese examples in the core.db database.

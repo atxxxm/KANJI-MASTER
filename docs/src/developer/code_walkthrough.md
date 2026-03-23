@@ -35,23 +35,21 @@ All application logic is managed through a **single state structure** `App` (`in
 ```rust
 struct App {
     // 1. Navigation
-    current_screen: Screen,
+    tab_manager: TabManager,
 
     // 2. "Cold" data (Read-only)
-    kanji: Vec<Kanji>,
+    kanji: Vec<Arc<Kanji>>,
 
     // 3. "Hot" data (Mutable)
     config: Config,
     settings: Settings,
     paths: Paths,
+    localization: Localization,
 
     // 4. Subsystems
     translate_state: TranslateState,
-    cards_session: Option<CardsSession>,
-    deck_builder: DeckBuilderState,
-    animator: KanjiAnimator,
-
-    // ... auxiliary fields (search, romaji_input, etc.)
+    recognition: RecognitionSystem,
+    svg_cache: SvgCache,
 }
 ```
 

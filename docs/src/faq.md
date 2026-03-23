@@ -6,19 +6,14 @@ This section contains answers to **frequently asked questions** and guidance for
 
 ## Where is my data stored?
 
-The application stores **configuration, the database, and user-created decks** in the user's system directory:
-
-*   **Windows:**
-    `C:\Users\<Username>\AppData\Roaming\KanjiMaster\`
-*   **Linux:**
-    `/home/<username>/.config/kanjimaster/`
-*   **macOS:**
-    `/Users/<Username>/Library/Application Support/KanjiMaster/`
+The application stores **configuration, the database, and localization files** in the user's system directory:
+*   **Windows:** `C:\Users\<Username>\AppData\Roaming\KanjiMaster\`
+*   **Linux:** `/home/<username>/.config/kanjimaster/`
+*   **macOS:** `/Users/<Username>/Library/Application Support/KanjiMaster/`
 
 > To transfer your progress to another computer:
->
-> 1.  Copy the **`config.toml`** file (contains your decks).
-> 2.  Copy the **`kanji-localization`** folder, if you have edited translations.
+> 1. Copy the **`config.toml`** file.
+> 2. Copy the **`kanji-localization.json`** file, if you have edited kanji translations.
 
 ---
 

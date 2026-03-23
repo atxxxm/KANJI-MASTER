@@ -1,35 +1,38 @@
-# Tools
+# Other Tools
 
-The **`Tools`** menu provides auxiliary utilities for working with text and localization.
+The **`Tools`** menu provides utility features for text manipulation and localization.
 
-## Romaji to Kana Converter
+## 1. Romaji to Kana Converter & Kanji Assistant
 
-Allows you to **convert text typed in Latin letters (Romaji) into Japanese syllabaries** in real time.
+This tool allows you to convert text typed in Latin letters (Romaji) into Japanese syllabaries in real time.
 
-*   **Input:** Type text, for example, `konnichiwa`.
-*   **Output:** Get `こんにちは` (or katakana, if the toggle is set accordingly).
-*   **Copying:** The **Copy** button copies the result to the clipboard.
+*   **Input Mode:** Type text in the large editor (e.g., `watashi wa mizu wo nomimasu`).
+*   **Output Mode:** Toggle between Hiragana and Katakana output.
+*   **Copying:** Use the **Copy Result** button to copy the converted text to your clipboard.
 
-The conversion logic accounts for:
+### 💡 The Kanji Assistant
+The true power of this tool lies in the **Kanji Assistant panel** on the right side. 
 
-*   Vowels and consonants.
-*   Double consonants via `っ` / `ッ`.
-*   Special combinations (yo-on), such as `kya`, `shu`.
-*   Punctuation: `.`, `,`, `-`.
+As you type kana, the Assistant continuously analyzes the last word you typed. It searches the database and instantly suggests kanji that match that reading.
+*   Typing `みず` will instantly show a card for **水**.
+*   Clicking the **水** card in the Assistant will automatically replace `みず` with `水` in your text editor.
+*   Cards are smartly sorted: exact matches appear first, followed by JLPT N5-N1 order.
 
-## Translate Kanji Tool
+This turns the converter into an interactive learning tool, helping you visually memorize kanji while typing!
 
-A built-in tool for **creating and editing kanji localization**.
+---
 
-1.  **Search**
-    Enter an **ID** or the character itself to navigate to it, or use the **Previous / Next** buttons.
+## 2. Translate Kanji Tool
 
-2.  **Editing**
+A built-in editor designed for translating kanji meanings and examples into your native language. 
+*(Note: these changes are saved to your local `kanji-localization.json` file).*
 
-    *   **Meaning** – a field for translating the kanji's meaning.
-    *   **Examples** – fields for translating usage examples.
-
-3.  **Saving**
-    Click **Save Progress** to write the changes to a local JSON file.
-
-> ⚠ **Important:** changes are saved only to your local file within the configuration folder.
+1.  **Search & Navigation:**
+    *   Type a kanji, romaji reading, or ID into the search box.
+    *   A dropdown will appear. Click on a result to jump directly to that kanji.
+    *   Alternatively, use the **Previous / Next** buttons to browse sequentially.
+2.  **Editing:**
+    *   **Meaning:** Type the primary translation of the kanji.
+    *   **Examples:** Translate the Japanese vocabulary words into your language. The original Japanese word is shown above the input box for reference.
+3.  **Saving:**
+    Click the **Save Progress** button at the top right to write all changes to disk.

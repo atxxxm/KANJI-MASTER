@@ -19,12 +19,13 @@
 ### `back` (Backend)
 
 Contains **business logic** independent of the GUI:
-
-*   **`core.rs`** — working with SQLite (`core.db`), `Kanji` structures, and data retrieval methods.
-*   **`config.rs`** — configuration management (`config.toml`): loading, saving, defining OS-dependent paths.
-*   **`localization.rs`** — structures and functions for JSON localization files.
-*   **`cards.rs`** — logic for practice sessions: card queue, shuffling, flip status.
-*   **`romaji_kana.rs`** — text conversion from Latin script to hiragana/katakana.
+*   **`core.rs`** — working with SQLite (`core.db`), `Kanji` structures.
+*   **`config.rs`** — configuration management (`config.toml`).
+*   **`localization.rs`** — handling TOML UI localization.
+*   **`translation.rs`** — handling JSON kanji translations and examples.
+*   **`recognition.rs`** — logic for the handwritten kanji recognition system.
+*   **`svg_cache.rs`** — parsing and caching SVG path data for stroke animations.
+*   **`romaji_kana.rs`** — text conversion from Latin script to kana.
 
 ### `ui` (Interface)
 
