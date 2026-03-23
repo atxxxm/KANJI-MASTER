@@ -224,10 +224,14 @@ impl Settings {
 
     // Import Localization File
     fn import_localization_file(&mut self, paths: &mut Paths, is_kanji: bool) -> bool {
-        let file_path_opt = FileDialog::new()
-            .add_filter("Localization File (*toml)", &["toml"])
-            .pick_file();
+        let dialog = FileDialog::new();
 
+        let file_path_opt = if is_kanji {
+            dialog.add_filter("Kanji Localization (*.json)", &["json"]).pick_file()
+        } else {
+            dialog.add_filter("UI Localization (*.toml)", &["toml"]).pick_file()
+        };
+        
         if let Some(original_path) = file_path_opt {
             let config_dir = get_app_config_dir();
             let file_name = original_path.file_name().unwrap_or_default();
