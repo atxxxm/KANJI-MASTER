@@ -4,6 +4,7 @@ use crate::back::localization::Localization;
 use eframe::egui;
 use rand;
 use std::sync::Arc;
+use std::collections::HashSet;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum KanjiList {
@@ -67,6 +68,65 @@ impl Default for TranslateTabState {
     }
 }
 
+#[derive(Clone, PartialEq)]
+pub enum ExportStep {
+    Selection,
+    Review,
+    Options,
+}
+
+#[derive(Clone)]
+pub struct ExportOptions {
+    pub kanji: bool,
+    pub meaning: bool,
+    pub onyomi: bool,
+    pub kunyomi: bool,
+    pub jlpt: bool,
+    pub examples: bool,
+}
+
+impl Default for ExportOptions {
+    fn default() -> Self {
+        Self {
+            kanji: true,
+            meaning: true,
+            onyomi: true,
+            kunyomi: true,
+            jlpt: true,
+            examples: true,
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct AnkiExportState {
+    pub step: ExportStep,
+    pub search_query: String,
+    pub selected_list: KanjiList,
+    pub last_search_query: Option<String>,
+    pub last_selected_list: Option<KanjiList>,
+    pub cached_results: Vec<usize>,
+    pub selected_kanji_ids: HashSet<i32>,
+    pub options: ExportOptions,
+    pub status_message: Option<String>,
+}
+
+impl Default for AnkiExportState {
+    fn default() -> Self {
+        Self {
+            step: ExportStep::Selection,
+            search_query: String::new(),
+            selected_list: KanjiList::All,
+            last_search_query: None,
+            last_selected_list: None,
+            cached_results: Vec::new(),
+            selected_kanji_ids: HashSet::new(),
+            options: ExportOptions::default(),
+            status_message: None,
+        }
+    }
+}
+
 // State for tab Romaji to Kana
 #[derive(Clone)]
 pub struct RomajiKanaState {
@@ -109,6 +169,7 @@ pub enum TabType {
     Kana(bool), 
     RomajiToKana(RomajiKanaState),
     Translate(TranslateTabState),
+    AnkiExport(AnkiExportState),
     DrawSearch(DrawSearchState),
 }
 
@@ -128,6 +189,7 @@ impl TabType {
             TabType::Kana(_) => format!("あ {}", local.local.top_bar.tabs.kana),
             TabType::RomajiToKana(_) => format!("{}", local.local.top_bar.tabs.romaji_to_kana),
             TabType::Translate(_) => format!("🌐 {}", local.local.top_bar.tabs.translate_kanji),
+            TabType::AnkiExport(_) => format!("📦 {}", local.local.top_bar.tabs.anki_export),
             TabType::DrawSearch(_) => format!("🎨 {}", local.local.top_bar.tabs.draw_search),
         }
     }

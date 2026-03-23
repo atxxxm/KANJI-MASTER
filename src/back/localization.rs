@@ -64,9 +64,11 @@ pub struct Tools {
     pub title: String,
     pub romaji_to_kana: String,
     pub translate_kanji: String,
+    pub anki_export: String,
     pub romaji_to_kana_locale: RomajiToKana,
     pub translate_kanji_locale: TranslateToKanji,
     pub draw_and_search: DrawAndSearch,
+    pub anki_export_locale: AnkiExportLocale,
 }
 
 // Romaji To Kana Struct
@@ -178,6 +180,29 @@ pub struct CurrentKanji {
     pub no_examples_available: String,
 }
 
+// Anki Export Struct
+#[derive(Serialize, Deserialize, Default, Clone)]
+pub struct AnkiExportLocale {
+    pub title: String,
+    pub step_selection: String,
+    pub step_review: String,
+    pub step_options: String,
+    pub selected_count: String,
+    pub next_button: String,
+    pub back_button: String,
+    pub export_button: String,
+    pub clear_all: String,
+    pub field_kanji: String,
+    pub field_meaning: String,
+    pub field_onyomi: String,
+    pub field_kunyomi: String,
+    pub field_jlpt: String,
+    pub field_examples: String,
+    pub success_message: String,
+    pub error_message: String,
+    pub no_kanji_selected: String,
+}
+
 // Kana Struct
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct Kana {
@@ -193,6 +218,7 @@ pub struct Tabs {
     pub kana: String,
     pub romaji_to_kana: String,
     pub translate_kanji: String,
+    pub anki_export: String,
     pub draw_search: String,
 }
 

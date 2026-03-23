@@ -4,7 +4,7 @@ use crate::back::localization::*;
 use crate::back::translation::*;
 use crate::back::recognition::RecognitionSystem;
 use crate::ui::settings::Settings;
-use crate::ui::tabs::{DrawSearchState, HomeState, KanjiListState, RomajiKanaState, TabManager, TabType, TranslateTabState};
+use crate::ui::tabs::{AnkiExportState, DrawSearchState, HomeState, KanjiListState, RomajiKanaState, TabManager, TabType, TranslateTabState};
 use crate::ui::context::{AppContext, TabOpenMode};
 use crate::ui::views;
 use eframe::egui;
@@ -281,6 +281,11 @@ impl App {
                                 ui.close();
                             }
 
+                            if ui.button(&local.tools.anki_export).clicked() {
+                                self.tab_manager.add_tab(TabType::AnkiExport(AnkiExportState::default()), true);
+                                ui.close();
+                            }
+
                             if ui.button(&local.tools.draw_and_search.title).clicked() {
                                 self.tab_manager.add_tab(TabType::DrawSearch(DrawSearchState::default()), true);
                                 ui.close();
@@ -404,6 +409,9 @@ impl eframe::App for App {
                     },
                     TabType::Translate(state) => {
                         action = views::translate::render(ui, state, &mut context);
+                    },
+                    TabType::AnkiExport(state) => { // НОВЫЙ РЕНДЕР
+                        action = views::anki_export::render(ui, state, &context);
                     },
                     TabType::DrawSearch(state) => {
                         action = views::draw_search::render(ui, state, &context, &self.recognition);

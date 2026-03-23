@@ -19,6 +19,7 @@
         "title": "Tools",
         "romaji_to_kana": "Romaji to Kana",
         "translate_kanji": "Translate Kanji",
+        "anki_export": "Export to Anki",
         "romaji_to_kana_locale": {
           "title": "Romaji to Kana Converter",
           "output_mode": "Output Mode",
@@ -63,6 +64,26 @@
           "best_matches": "Best Matches",
           "draw_something": "Draw something to start",
           "not_match_yet": "No matches yet"
+        },
+        "anki_export_locale": {
+          "title": "Anki Export",
+          "step_selection": "Select Kanji",
+          "step_review": "Review Selection",
+          "step_options": "Export Options",
+          "selected_count": "Selected",
+          "next_button": "Next",
+          "back_button": "Back",
+          "export_button": "Export to TSV",
+          "clear_all": "Clear All",
+          "field_kanji": "Kanji",
+          "field_meaning": "Meaning",
+          "field_onyomi": "Onyomi",
+          "field_kunyomi": "Kunyomi",
+          "field_jlpt": "JLPT Level",
+          "field_examples": "Examples (HTML)",
+          "success_message": "Exported successfully!",
+          "error_message": "Failed to export file.",
+          "no_kanji_selected": "No kanji selected."
         }
       },
       "tabs": {
@@ -71,6 +92,7 @@
         "kana": "Kana",
         "romaji_to_kana": "R->K Tool",
         "translate_kanji": "Translate",
+        "anki_export": "Anki",
         "draw_search": "Draw"
       }
     },
