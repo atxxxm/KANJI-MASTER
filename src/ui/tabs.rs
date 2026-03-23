@@ -1,5 +1,3 @@
-use crate::back::cards::CardsSession;
-use crate::back::cards::DeckBuilderState;
 use crate::back::core::Kanji;
 use crate::ui::animator::KanjiAnimator;
 use crate::back::localization::Localization;
@@ -69,21 +67,6 @@ impl Default for TranslateTabState {
     }
 }
 
-// State for tab Cards Setup
-#[derive(Clone)]
-pub struct CardsSetupState {
-    pub card_limit: usize,
-}
-
-// Cards Setup State Default
-impl Default for CardsSetupState {
-    fn default() -> Self {
-        Self {
-            card_limit: 10,
-        }
-    }
-}
-
 // State for tab Romaji to Kana
 #[derive(Clone)]
 pub struct RomajiKanaState {
@@ -126,9 +109,6 @@ pub enum TabType {
     Kana(bool), 
     RomajiToKana(RomajiKanaState),
     Translate(TranslateTabState),
-    CardsSetup(CardsSetupState),
-    CardsActive(CardsSession, String),
-    DeckManager(DeckBuilderState),
     DrawSearch(DrawSearchState),
 }
 
@@ -148,9 +128,6 @@ impl TabType {
             TabType::Kana(_) => format!("あ {}", local.local.top_bar.tabs.kana),
             TabType::RomajiToKana(_) => format!("{}", local.local.top_bar.tabs.romaji_to_kana),
             TabType::Translate(_) => format!("🌐 {}", local.local.top_bar.tabs.translate_kanji),
-            TabType::CardsSetup(_) => format!("🎴 {}", local.local.top_bar.tabs.card_setup),
-            TabType::CardsActive(_, name) => format!("▶ {}", name),
-            TabType::DeckManager(_) => format!("🗂 {}", local.local.top_bar.tabs.desk_manager),
             TabType::DrawSearch(_) => format!("🎨 {}", local.local.top_bar.tabs.draw_search),
         }
     }

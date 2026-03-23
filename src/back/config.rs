@@ -1,7 +1,6 @@
 use anyhow::{Context, Result};
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::PathBuf;
@@ -17,8 +16,6 @@ pub struct Config {
     pub path_to_svg_images: String,
     pub show_kanji_meaning: bool,
     pub focus_on_search: bool,
-    #[serde(default)]
-    pub custom_decks: HashMap<String, Vec<i32>>,
 }
 
 impl Config {
@@ -40,7 +37,6 @@ impl Config {
             path_to_svg_images: path_to_svg.to_string_lossy().to_string(),
             show_kanji_meaning: false,
             focus_on_search: true,
-            custom_decks: HashMap::new(),
         }
     }
 }

@@ -4,6 +4,4 @@ pub mod kanji_detail;
 pub mod kana;
 pub mod romaji_kana;
 pub mod translate;
-pub mod cards;
-pub mod deck_builder;
 pub mod draw_search;

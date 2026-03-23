@@ -38,7 +38,6 @@ pub struct Home {
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct TopBar {
     pub kanji: KanjiTopBar,
-    pub cards: CardsTopBar,
     pub kana: KanaTopBar,
     pub tools: Tools,
     pub tabs: Tabs,
@@ -49,46 +48,6 @@ pub struct TopBar {
 pub struct KanjiTopBar {
     pub title: String,
     pub all: String,
-}
-
-// Tranning Top Bar Struct
-#[derive(Serialize, Deserialize, Default, Clone)]
-pub struct CardsTopBar {
-    pub title: String,
-    pub card_setup_title: String,
-    pub jlpt_level: String,
-    pub card_count: String,
-    pub card_setup_start: String,
-    pub custom_deck_title: String,
-    pub manage_decks: String,
-    pub my_decks: String,
-    pub no_custom_decks_created: String,
-    pub delete_deck: String,
-    pub edit_deck: String,
-    pub play_deck: String,
-    pub session_complete: String,
-    pub return_to_menu: String,
-    pub card: String,
-    pub exit_training: String,
-    pub onyomi: String,
-    pub kunyomi: String,
-    pub click_to_flip: String,
-    pub next_card: String,
-    pub back: String,
-    pub deck_manager: String,
-    pub deck_name: String,
-    pub update_deck: String,
-    pub save_deck: String,
-    pub avaliable_kanji: String,
-    pub search_kanji_hint: String,
-    pub add_kanji: String,
-    pub type_search_hint: String,
-    pub deck_content: String,
-    pub my_new_decks: String,
-    pub no_matches: String,
-    pub added: String,
-    pub decks_is_empty: String,
-
 }
 
 // Kana Top Bar Struct
@@ -234,8 +193,6 @@ pub struct Tabs {
     pub kana: String,
     pub romaji_to_kana: String,
     pub translate_kanji: String,
-    pub card_setup: String,
-    pub desk_manager: String,
     pub draw_search: String,
 }
 

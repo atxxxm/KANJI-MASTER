@@ -4,7 +4,7 @@ use crate::back::localization::*;
 use crate::back::translation::*;
 use crate::back::recognition::RecognitionSystem;
 use crate::ui::settings::Settings;
-use crate::ui::tabs::{CardsSetupState, DrawSearchState, HomeState, KanjiListState, RomajiKanaState, TabManager, TabType, TranslateTabState};
+use crate::ui::tabs::{DrawSearchState, HomeState, KanjiListState, RomajiKanaState, TabManager, TabType, TranslateTabState};
 use crate::ui::context::{AppContext, TabOpenMode};
 use crate::ui::views;
 use eframe::egui;
@@ -195,7 +195,6 @@ impl App {
             path_to_kanji_localization: self.paths.path_to_kanji_localization.clone(),
             show_kanji_meaning: self.settings.show_kanji_meaning,
             focus_on_search: self.settings.focus_on_search,
-            custom_decks: self.config.custom_decks.clone(),
             path_to_svg_images: self.paths.path_to_svg_images.clone(),
         };
 
@@ -215,7 +214,6 @@ impl App {
 
         let is_kanji_active = matches!(active_tab_type, Some(TabType::KanjiList(_)));
         let is_kana_active = matches!(active_tab_type, Some(TabType::Kana(_)));
-        let is_cards_active = matches!(active_tab_type, Some(TabType::CardsSetup(_)) | Some(TabType::CardsActive(_, _)) | Some(TabType::DeckManager(_)));
 
         let panel_frame = egui::Frame::NONE
             .fill(ctx.style().visuals.window_fill)
@@ -253,11 +251,6 @@ impl App {
                     
                     self.nav_button(ui, &local.kana.title, is_kana_active, || {
                         TabType::Kana(false) 
-                    });
-
-                    
-                    self.nav_button(ui, &local.cards.title, is_cards_active, || {
-                        TabType::CardsSetup(CardsSetupState::default())
                     });
 
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
@@ -411,15 +404,6 @@ impl eframe::App for App {
                     },
                     TabType::Translate(state) => {
                         action = views::translate::render(ui, state, &mut context);
-                    },
-                    TabType::CardsSetup(state) => {
-                        action = views::cards::render_setup(ui, state, &mut context);
-                    },
-                    TabType::CardsActive(session, deck_name) => {
-                        action = views::cards::render_session(ui, session, deck_name, &context);
-                    },
-                    TabType::DeckManager(state) => {
-                        action = views::deck_builder::render(ui, state, &mut context);
                     },
                     TabType::DrawSearch(state) => {
                         action = views::draw_search::render(ui, state, &context, &self.recognition);
