@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 pub struct AppContext<'a> {
     pub kanji: &'a Vec<Arc<Kanji>>,
+    #[allow(dead_code)]
     pub config: &'a mut Config,
     pub settings: &'a Settings,
     pub localization: &'a Localization,
@@ -16,6 +17,7 @@ pub struct AppContext<'a> {
 }
 
 pub enum TabOpenMode {
+    #[allow(dead_code)]
     ReplaceCurrent,
     NewTabActive,
     NewTabBackground,
