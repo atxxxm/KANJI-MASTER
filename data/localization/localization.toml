@@ -28,6 +28,10 @@ input = "Input (Romaji)"
 hint_input = "Type romaji here (e.g. konnichiwa)..."
 output = "Output (Kana)"
 copy_button = "Copy Result"
+assistant_title = "💡 Kanji Assistant"
+assistant_hint = "Type kana to see suggestions..."
+assistant_suggestions_for = "Suggestions for:"
+assistant_no_kanji_found = "No kanji found."
 
 [local.top_bar.tools.translate_kanji_locale]
 file_load_success = "File loaded successfully"

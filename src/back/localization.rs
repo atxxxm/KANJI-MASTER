@@ -83,6 +83,10 @@ pub struct RomajiToKana {
     pub hint_input: String,
     pub output: String,
     pub copy_button: String,
+    pub assistant_title: String,
+    pub assistant_hint: String,
+    pub assistant_suggestions_for: String,
+    pub assistant_no_kanji_found: String,
 }
 
 // Translate To Kanji Struct
