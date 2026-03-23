@@ -204,8 +204,8 @@ impl Settings {
     fn create_default_localization_file(&self) {
         // Open save dialog
         let file_path = FileDialog::new()
-            .set_file_name("default_localization.json")
-            .add_filter("JSON", &["json"])
+            .set_file_name("default_localization.toml")
+            .add_filter("TOML", &["toml"])
             .save_file();
 
         if let Some(path) = file_path {
@@ -225,7 +225,7 @@ impl Settings {
     // Import Localization File
     fn import_localization_file(&mut self, paths: &mut Paths, is_kanji: bool) -> bool {
         let file_path_opt = FileDialog::new()
-            .add_filter("Localization File (*json)", &["json"])
+            .add_filter("Localization File (*toml)", &["toml"])
             .pick_file();
 
         if let Some(original_path) = file_path_opt {

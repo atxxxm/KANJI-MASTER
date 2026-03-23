@@ -23,7 +23,7 @@ impl Config {
         let config_dir = get_app_config_dir();
 
         let path_to_db = config_dir.join("db").join("core.db");
-        let path_to_loc = config_dir.join("localization").join("localization.json");
+        let path_to_loc = config_dir.join("localization").join("localization.toml");
         let path_to_kanji_loc = config_dir.join("kanji-localization").join("en.json");
         let path_to_svg = config_dir.join("kanji-svg");
 

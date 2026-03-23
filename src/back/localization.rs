@@ -1,6 +1,7 @@
 use anyhow;
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use std::fs::File;
+use std::io::{Read, Write};
 
 // Paths to files Struct
 pub struct Paths {
@@ -224,14 +225,18 @@ pub struct Tabs {
 
 // Save file (Serialize)
 pub fn save<T: Serialize>(path: &str, data: &T) -> anyhow::Result<()> {
-    let file = File::create(path)?;
-    serde_json::to_writer_pretty(file, data)?;
+    let toml_str = toml::to_string_pretty(data)?;
+    let mut file = File::create(path)?;
+    file.write_all(toml_str.as_bytes())?;
     Ok(())
 }
 
 // Load file (Deserialize)
 pub fn load<T: DeserializeOwned>(path: &str) -> anyhow::Result<T> {
-    let file = File::open(path)?;
-    let data: T = serde_json::from_reader(file)?;
+    let mut file = File::open(path)?;
+    let mut contents = String::new();
+    file.read_to_string(&mut contents)?;
+    
+    let data: T = toml::from_str(&contents)?;
     Ok(data)
 }
