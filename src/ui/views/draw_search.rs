@@ -1,6 +1,7 @@
 use eframe::egui;
 use crate::ui::context::{AppContext, TabOpenMode};
 use crate::ui::tabs::TabType;
+use crate::ui::theme;
 use std::sync::Arc;
 use crate::ui::views::kanji_detail;
 
@@ -110,6 +111,7 @@ pub fn render(ui: &mut egui::Ui, state: &mut crate::ui::tabs::DrawSearchState, c
                             egui::RichText::new(&format!("🔍 {}", &local.search_button))
                                 .strong()
                                 .size(16.0)
+                                .color(theme::ON_ACCENT)
                         )
                         .min_size(egui::vec2(120.0, 40.0))
                         .fill(ui.visuals().widgets.active.bg_fill)

@@ -52,6 +52,8 @@ impl KanjiAnimator {
 
     // Display animation
     pub fn ui(&mut self, ui: &mut egui::Ui, rect: egui::Rect, char_to_show: &str, speed: f32) {
+        // Theme-aware ink color so strokes stay visible in both light and dark.
+        let ink = ui.visuals().strong_text_color();
         let painter = ui.painter_at(rect);
 
         if self.strokes.is_empty() {
@@ -62,7 +64,7 @@ impl KanjiAnimator {
                 egui::Align2::CENTER_CENTER,
                 char_to_show,
                 egui::FontId::proportional(font_size),
-                egui::Color32::WHITE,
+                ink,
             );
 
             return;
@@ -111,7 +113,7 @@ impl KanjiAnimator {
 
         // Drawing
         for (i, stroke) in self.strokes.iter().enumerate() {
-            let color = egui::Color32::WHITE;
+            let color = ink;
 
             if i < self.current_stroke_index {
                 // Draw full stroke

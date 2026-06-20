@@ -4,6 +4,7 @@ use crate::ui::tabs::TabType;
 use crate::back::core::Kanji;
 use crate::back::translation::KanjiTranslation;
 use crate::ui::tabs::TranslateTabState;
+use crate::ui::theme;
 use std::sync::Arc;
 
 pub fn render(ui: &mut egui::Ui, state: &mut TranslateTabState, ctx: &mut AppContext) -> Option<(TabType, TabOpenMode)>{
@@ -103,7 +104,7 @@ pub fn render(ui: &mut egui::Ui, state: &mut TranslateTabState, ctx: &mut AppCon
                     let color = if ctx.translate_state.status_message == local.not_found {
                         ui.visuals().warn_fg_color
                     } else {
-                        egui::Color32::GREEN
+                        theme::SUCCESS
                     };
                     
                     ui.label(
@@ -253,9 +254,9 @@ pub fn render(ui: &mut egui::Ui, state: &mut TranslateTabState, ctx: &mut AppCon
                 });
 
                 columns[1].vertical_centered_justified(|ui| {
-                    let btn = egui::Button::new(egui::RichText::new(format!("{} ➡", &local.next_button)).strong().size(16.0))
+                    let btn = egui::Button::new(egui::RichText::new(format!("{} ➡", &local.next_button)).strong().size(16.0).color(theme::ON_ACCENT))
                         .min_size(egui::vec2(0.0, 45.0))
-                        .fill(ui.visuals().widgets.active.bg_fill); 
+                        .fill(ui.visuals().widgets.active.bg_fill);
 
                     if ui.add(btn).clicked() {
                         let entry = KanjiTranslation {

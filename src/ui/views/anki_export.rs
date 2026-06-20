@@ -1,6 +1,7 @@
 use eframe::egui;
 use crate::ui::context::{AppContext, TabOpenMode};
 use crate::ui::tabs::{TabType, AnkiExportState, ExportStep, KanjiList};
+use crate::ui::theme;
 use rfd::FileDialog;
 use std::fs::File;
 use std::io::Write;
@@ -101,7 +102,7 @@ fn render_selection(ui: &mut egui::Ui, state: &mut AnkiExportState, ctx: &AppCon
             });
 
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            let next_btn = egui::Button::new(egui::RichText::new(&local.next_button).strong())
+            let next_btn = egui::Button::new(egui::RichText::new(&local.next_button).strong().color(theme::ON_ACCENT))
                 .fill(ui.visuals().widgets.active.bg_fill);
             if ui.add_enabled(!state.selected_kanji_ids.is_empty(), next_btn).clicked() {
                 state.step = ExportStep::Review;
@@ -199,7 +200,7 @@ fn render_review(ui: &mut egui::Ui, state: &mut AnkiExportState, ctx: &AppContex
             state.step = ExportStep::Selection;
         }
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            let next_btn = egui::Button::new(egui::RichText::new(&local.next_button).strong())
+            let next_btn = egui::Button::new(egui::RichText::new(&local.next_button).strong().color(theme::ON_ACCENT))
                 .fill(ui.visuals().widgets.active.bg_fill);
             if ui.add(next_btn).clicked() {
                 state.step = ExportStep::Options;
@@ -254,8 +255,8 @@ fn render_options(ui: &mut egui::Ui, state: &mut AnkiExportState, ctx: &AppConte
             state.step = ExportStep::Review;
         }
         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-            let export_btn = egui::Button::new(egui::RichText::new(&local.export_button).strong())
-                .fill(egui::Color32::from_rgb(0, 150, 60)); // Green color for export
+            let export_btn = egui::Button::new(egui::RichText::new(&local.export_button).strong().color(theme::ON_ACCENT))
+                .fill(theme::SUCCESS); // Green confirms the final export action
             
             if ui.add(export_btn).clicked() {
                 export_to_tsv(state, ctx, local);
@@ -285,7 +286,7 @@ fn render_options(ui: &mut egui::Ui, state: &mut AnkiExportState, ctx: &AppConte
     ui.add_space(20.0);
     
     if let Some(msg) = &state.status_message {
-        ui.label(egui::RichText::new(msg).color(egui::Color32::GREEN).size(16.0).strong());
+        ui.label(egui::RichText::new(msg).color(theme::SUCCESS).size(16.0).strong());
     }
 }
 

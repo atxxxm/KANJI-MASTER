@@ -11,6 +11,7 @@ pub struct Settings {
     pub animation_speed: f32,     // Animation Speed
     pub show_kanji_meaning: bool, // Show Kanji Meaning
     pub focus_on_search: bool,    // Focus on search when opening the app
+    pub dark_mode: bool,          // Dark / light theme
 }
 
 impl Settings {
@@ -23,6 +24,7 @@ impl Settings {
             animation_speed: config.animation_speed,
             show_kanji_meaning: config.show_kanji_meaning,
             focus_on_search: config.focus_on_search,
+            dark_mode: config.dark_mode,
         }
     }
 
@@ -116,6 +118,21 @@ impl Settings {
                     .corner_radius(panel_rounding)
                     .inner_margin(12.0)
                     .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label("Theme");
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| {
+                                    ui.selectable_value(&mut self.dark_mode, false, "☀ Light");
+                                    ui.selectable_value(&mut self.dark_mode, true, "🌙 Dark");
+                                },
+                            );
+                        });
+
+                        ui.add_space(10.0);
+                        ui.separator();
+                        ui.add_space(10.0);
+
                         egui::Grid::new("settings_grid")
                             .num_columns(2)
                             .spacing([20.0, 15.0])

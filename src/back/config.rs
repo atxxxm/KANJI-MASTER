@@ -16,6 +16,12 @@ pub struct Config {
     pub path_to_svg_images: String,
     pub show_kanji_meaning: bool,
     pub focus_on_search: bool,
+    #[serde(default = "default_dark_mode")]
+    pub dark_mode: bool,
+}
+
+fn default_dark_mode() -> bool {
+    true
 }
 
 impl Default for Config {
@@ -37,6 +43,7 @@ impl Default for Config {
             path_to_svg_images: path_to_svg.to_string_lossy().to_string(),
             show_kanji_meaning: false,
             focus_on_search: true,
+            dark_mode: true,
         }
     }
 }

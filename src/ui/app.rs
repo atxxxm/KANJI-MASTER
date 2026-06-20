@@ -33,9 +33,9 @@ struct App {
 
     svg_cache: SvgCache,
 
-    // Tracks the font size currently applied to the egui style, so we only
-    // rebuild and set the style when the user actually changes it.
-    applied_font_size: Option<f32>,
+    // Tracks the style currently applied to egui (font size + theme), so we
+    // only rebuild and set the style when one of them actually changes.
+    applied_style_key: Option<(u32, bool)>,
 }
 
 impl App {
@@ -150,7 +150,7 @@ impl App {
             recognition,
             error_notification: None,
             svg_cache,
-            applied_font_size: None,
+            applied_style_key: None,
         })
     }
 
@@ -196,6 +196,7 @@ impl App {
             show_kanji_meaning: self.settings.show_kanji_meaning,
             focus_on_search: self.settings.focus_on_search,
             path_to_svg_images: self.paths.path_to_svg_images.clone(),
+            dark_mode: self.settings.dark_mode,
         };
 
         if let Err(e) = save_config(&self.config_path, &current_config) {
@@ -263,6 +264,23 @@ impl App {
                         }
 
                         if settings_btn.hovered() {
+                            ui.output_mut(|o| o.cursor_icon = egui::CursorIcon::PointingHand);
+                        }
+
+                        ui.add_space(12.0);
+
+                        // Theme toggle (icon shows the theme you switch TO)
+                        let theme_icon = if self.settings.dark_mode { "☀" } else { "🌙" };
+                        let theme_btn = ui.add(
+                            egui::Button::new(egui::RichText::new(theme_icon).size(18.0)).frame(false),
+                        );
+
+                        if theme_btn.clicked() {
+                            self.settings.dark_mode = !self.settings.dark_mode;
+                            self.save();
+                        }
+
+                        if theme_btn.hovered() {
                             ui.output_mut(|o| o.cursor_icon = egui::CursorIcon::PointingHand);
                         }
 
@@ -343,11 +361,15 @@ impl eframe::App for App {
     // Update App
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         let font_size = self.settings.interface_font_size;
+        let dark_mode = self.settings.dark_mode;
+        let style_key = (font_size.to_bits(), dark_mode);
 
-        // Only rebuild and apply the style when the font size actually changed,
-        // instead of allocating a new style map every frame.
-        if self.applied_font_size != Some(font_size) {
+        // Only rebuild and apply the style when the font size or theme actually
+        // changed, instead of allocating a new style/visuals every frame.
+        if self.applied_style_key != Some(style_key) {
             let mut style = (*ctx.style()).clone();
+
+            style.visuals = crate::ui::theme::visuals(dark_mode);
 
             style.text_styles = [
                 (
@@ -374,7 +396,7 @@ impl eframe::App for App {
             .into();
 
             ctx.set_style(style);
-            self.applied_font_size = Some(font_size);
+            self.applied_style_key = Some(style_key);
         }
 
         self.top_bar(ctx);
