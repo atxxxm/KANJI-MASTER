@@ -12,7 +12,7 @@ fn extract_trailing_kana(input: &str) -> Option<(usize, &str)> {
         if c.is_whitespace()
             || c.is_ascii_punctuation()
             || c == '。' || c == '、' || c == '？' || c == '！' || c == '・'
-            || (c >= '\u{4E00}' && c <= '\u{9FAF}') 
+            || ('\u{4E00}'..='\u{9FAF}').contains(&c) 
         {
             start_byte = i + c.len_utf8();
             break;

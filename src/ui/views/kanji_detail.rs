@@ -88,12 +88,11 @@ pub fn render(ui: &mut egui::Ui, state: &mut KanjiDetailState, ctx: &AppContext)
             let current_time = ui.input(|i| i.time);
             let mut show_checkmark = false;
 
-            if let Some(last_time) = state.last_copy_time {
-                if current_time - last_time < 2.0 {
+            if let Some(last_time) = state.last_copy_time
+                && current_time - last_time < 2.0 {
                     show_checkmark = true;
                     ui.ctx().request_repaint();
                 }
-            }
 
             let btn_bg = ui.visuals().widgets.inactive.bg_fill;
             let btn_stroke = ui.visuals().widgets.noninteractive.bg_stroke;

@@ -94,7 +94,7 @@ pub fn render(ui: &mut egui::Ui, state: &mut TranslateTabState, ctx: &mut AppCon
                     .min_size(egui::vec2(100.0, 30.0));
                 
                 if ui.add(save_btn).clicked() {
-                    ctx.translate_state.save_translations(&ctx.kanji);
+                    ctx.translate_state.save_translations(ctx.kanji);
                 }
 
                 ui.add_space(10.0);

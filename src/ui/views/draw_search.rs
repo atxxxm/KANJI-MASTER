@@ -126,7 +126,7 @@ pub fn render(ui: &mut egui::Ui, state: &mut crate::ui::tabs::DrawSearchState, c
                             
                             state.results = matches.iter()
                             .filter_map(|(id, _score)| {
-                                ctx.kanji.iter().find(|k| k.id == *id).map(Arc::clone)
+                                ctx.kanji_by_id.get(id).map(Arc::clone)
                             })
                             .collect();
                         }

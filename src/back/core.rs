@@ -66,16 +66,16 @@ impl Database {
                 unicode: row.get("unicode")?,
                 onyomi: row
                     .get::<_, Option<String>>("onyomi")?
-                    .map_or(String::new(), |s| self.split_on_or_kun(&s)),
+                    .map_or(String::new(), |s| split_on_or_kun(&s)),
                 onyomi_romaji: row
                     .get::<_, Option<String>>("onyomi_romaji")?
-                    .map_or(String::new(), |s| self.split_romaji(&s)),
+                    .map_or(String::new(), |s| split_romaji(&s)),
                 kunyomi: row
                     .get::<_, Option<String>>("kunyomi")?
-                    .map_or(String::new(), |s| self.split_on_or_kun(&s)),
+                    .map_or(String::new(), |s| split_on_or_kun(&s)),
                 kunyomi_romaji: row
                     .get::<_, Option<String>>("kunyomi_romaji")?
-                    .map_or(String::new(), |s| self.split_romaji(&s)),
+                    .map_or(String::new(), |s| split_romaji(&s)),
                 example: Vec::new(),
             };
             Ok((id, kanji))
@@ -109,17 +109,18 @@ impl Database {
         Ok(result.into_iter().map(Arc::new).collect())
     }
 
-    fn split_on_or_kun(&self, text: &str) -> String {
-        if text.trim().is_empty() {
-            return String::new();
-        }
-        text.split_whitespace().collect::<Vec<_>>().join("、")
-    }
+}
 
-    fn split_romaji(&self, text: &str) -> String {
-        if text.trim().is_empty() {
-            return String::new();
-        }
-        text.split_whitespace().collect::<Vec<_>>().join(", ")
+fn split_on_or_kun(text: &str) -> String {
+    if text.trim().is_empty() {
+        return String::new();
     }
+    text.split_whitespace().collect::<Vec<_>>().join("、")
+}
+
+fn split_romaji(text: &str) -> String {
+    if text.trim().is_empty() {
+        return String::new();
+    }
+    text.split_whitespace().collect::<Vec<_>>().join(", ")
 }

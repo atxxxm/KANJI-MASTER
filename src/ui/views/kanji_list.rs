@@ -184,7 +184,7 @@ pub fn render(ui: &mut egui::Ui, state: &mut KanjiListState, ctx: &AppContext) -
     let card_width = (content_width - (item_spacing * (columns as f32 - 1.0))) / columns as f32;
     let card_height = card_width * 1.1;
     let row_height = card_height + item_spacing;
-    let total_rows = (state.cached_results.len() + columns - 1) / columns;
+    let total_rows = state.cached_results.len().div_ceil(columns);
 
     egui::ScrollArea::vertical()
         .auto_shrink([false, false])
@@ -239,11 +239,13 @@ pub fn render(ui: &mut egui::Ui, state: &mut KanjiListState, ctx: &AppContext) -
                                             .color(ui.visuals().strong_text_color()),
                                     );
 
-                                    if ctx.settings.show_kanji_meaning {
-                                        if let Some(entry) = translations.get(&item.kanji) {
-                                            if !entry.meaning.is_empty() {
-                                                let meaning_text = if entry.meaning.len() > 18 {
-                                                    format!("{}...", &entry.meaning[0..16])
+                                    if ctx.settings.show_kanji_meaning
+                                        && let Some(entry) = translations.get(&item.kanji)
+                                            && !entry.meaning.is_empty() {
+                                                let meaning_text = if entry.meaning.chars().count() > 18 {
+                                                    let truncated: String =
+                                                        entry.meaning.chars().take(16).collect();
+                                                    format!("{}...", truncated)
                                                 } else {
                                                     entry.meaning.clone()
                                                 };
@@ -261,8 +263,6 @@ pub fn render(ui: &mut egui::Ui, state: &mut KanjiListState, ctx: &AppContext) -
                                                         ),
                                                 );
                                             }
-                                        }
-                                    }
                                 });
                             });
 

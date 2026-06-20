@@ -74,9 +74,9 @@ pub fn render(ui: &mut egui::Ui, state: &mut HomeState, ctx: &AppContext) -> Opt
         }
 
         let base_width = if is_search_empty {
-            500.0 as f32
+            500.0_f32
         } else {
-            600.0 as f32
+            600.0_f32
         };
         let search_bar_width = base_width.min(available_width - 40.0);
 
@@ -106,11 +106,10 @@ pub fn render(ui: &mut egui::Ui, state: &mut HomeState, ctx: &AppContext) -> Opt
 
                 let output = ui.add(text_edit);
 
-                if ctx.settings.focus_on_search {
-                    if state.search_query.is_empty() && !ui.memory(|m| m.has_focus(output.id)) {
+                if ctx.settings.focus_on_search
+                    && state.search_query.is_empty() && !ui.memory(|m| m.has_focus(output.id)) {
                         output.request_focus();
                     }
-                }
             });
         });
 
@@ -146,7 +145,7 @@ pub fn render(ui: &mut egui::Ui, state: &mut HomeState, ctx: &AppContext) -> Opt
     let card_width = (content_width - (item_spacing * (columns as f32 - 1.0))) / columns as f32;
     let card_height = card_width * 1.1;
     let row_height = card_height + item_spacing;
-    let total_rows = (state.cached_results.len() + columns - 1) / columns;
+    let total_rows = state.cached_results.len().div_ceil(columns);
 
     egui::ScrollArea::vertical()
         .auto_shrink([false, false])
@@ -201,11 +200,13 @@ pub fn render(ui: &mut egui::Ui, state: &mut HomeState, ctx: &AppContext) -> Opt
                                             .color(ui.visuals().strong_text_color()),
                                     );
 
-                                    if ctx.settings.show_kanji_meaning {
-                                        if let Some(entry) = translations.get(&item.kanji) {
-                                            if !entry.meaning.is_empty() {
-                                                let meaning = if entry.meaning.len() > 20 {
-                                                    format!("{}...", &entry.meaning[0..18])
+                                    if ctx.settings.show_kanji_meaning
+                                        && let Some(entry) = translations.get(&item.kanji)
+                                            && !entry.meaning.is_empty() {
+                                                let meaning = if entry.meaning.chars().count() > 20 {
+                                                    let truncated: String =
+                                                        entry.meaning.chars().take(18).collect();
+                                                    format!("{}...", truncated)
                                                 } else {
                                                     entry.meaning.clone()
                                                 };
@@ -220,8 +221,6 @@ pub fn render(ui: &mut egui::Ui, state: &mut HomeState, ctx: &AppContext) -> Opt
                                                         ),
                                                 );
                                             }
-                                        }
-                                    }
                                 });
                             });
 

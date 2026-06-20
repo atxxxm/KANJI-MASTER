@@ -119,7 +119,7 @@ fn render_selection(ui: &mut egui::Ui, state: &mut AnkiExportState, ctx: &AppCon
     let card_width = (available_width - (item_spacing * (columns as f32 - 1.0))) / columns as f32;
     let card_height = card_width * 1.2;
     let row_height = card_height + item_spacing;
-    let total_rows = (state.cached_results.len() + columns - 1) / columns;
+    let total_rows = state.cached_results.len().div_ceil(columns);
 
     egui::ScrollArea::vertical()
         .auto_shrink([false, false])
@@ -216,7 +216,7 @@ fn render_review(ui: &mut egui::Ui, state: &mut AnkiExportState, ctx: &AppContex
 
     egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
         for id in &state.selected_kanji_ids {
-            if let Some(item) = ctx.kanji.iter().find(|k| k.id == *id) {
+            if let Some(item) = ctx.kanji_by_id.get(id) {
                 egui::Frame::NONE
                     .fill(ui.visuals().faint_bg_color)
                     .corner_radius(8)
@@ -316,7 +316,7 @@ fn export_to_tsv(state: &mut AnkiExportState, ctx: &AppContext, local: &crate::b
 
         // Generate Data Rows
         for id in &state.selected_kanji_ids {
-            if let Some(kanji) = ctx.kanji.iter().find(|k| k.id == *id) {
+            if let Some(kanji) = ctx.kanji_by_id.get(id) {
                 let mut row = Vec::new();
                 let translation = ctx.translate_state.data.entries.get(&kanji.kanji);
 
@@ -348,7 +348,7 @@ fn export_to_tsv(state: &mut AnkiExportState, ctx: &AppContext, local: &crate::b
 
                 // Clean tabs and newlines from strings to prevent breaking TSV format
                 let clean_row: Vec<String> = row.into_iter()
-                    .map(|s| s.replace('\t', " ").replace('\n', " "))
+                    .map(|s| s.replace(['\t', '\n'], " "))
                     .collect();
 
                 lines.push(clean_row.join("\t"));

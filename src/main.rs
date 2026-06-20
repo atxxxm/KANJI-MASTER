@@ -1,7 +1,6 @@
 mod back;
 mod ui;
 use std::fs;
-use anyhow;
 use back::config::{Config, load_config, get_app_config_dir};
 use ui::app::run;
 use rust_embed::RustEmbed;

@@ -7,386 +7,43 @@ struct KanaItem {
     romaji: &'static str,
 }
 
+macro_rules! kana_item {
+    ($kana:expr, $romaji:expr) => {
+        KanaItem { kana: $kana, romaji: $romaji }
+    };
+}
+
+static HIRAGANA_LIST: &[KanaItem] = &[
+    kana_item!("あ", "a"), kana_item!("い", "i"), kana_item!("う", "u"), kana_item!("え", "e"), kana_item!("お", "o"),
+    kana_item!("か", "ka"), kana_item!("き", "ki"), kana_item!("く", "ku"), kana_item!("け", "ke"), kana_item!("こ", "ko"),
+    kana_item!("さ", "sa"), kana_item!("し", "shi"), kana_item!("す", "su"), kana_item!("せ", "se"), kana_item!("そ", "so"),
+    kana_item!("た", "ta"), kana_item!("ち", "chi"), kana_item!("つ", "tsu"), kana_item!("て", "te"), kana_item!("と", "to"),
+    kana_item!("な", "na"), kana_item!("に", "ni"), kana_item!("ぬ", "nu"), kana_item!("ね", "ne"), kana_item!("の", "no"),
+    kana_item!("は", "ha"), kana_item!("ひ", "hi"), kana_item!("ふ", "fu"), kana_item!("へ", "he"), kana_item!("ほ", "ho"),
+    kana_item!("ま", "ma"), kana_item!("み", "mi"), kana_item!("む", "mu"), kana_item!("め", "me"), kana_item!("も", "mo"),
+    kana_item!("や", "ya"), kana_item!("ゆ", "yu"), kana_item!("よ", "yo"),
+    kana_item!("ら", "ra"), kana_item!("り", "ri"), kana_item!("る", "ru"), kana_item!("れ", "re"), kana_item!("ろ", "ro"),
+    kana_item!("わ", "wa"), kana_item!("を", "wo"), kana_item!("ん", "n"),
+];
+
+static KATAKANA_LIST: &[KanaItem] = &[
+    kana_item!("ア", "a"), kana_item!("イ", "i"), kana_item!("ウ", "u"), kana_item!("エ", "e"), kana_item!("オ", "o"),
+    kana_item!("カ", "ka"), kana_item!("キ", "ki"), kana_item!("ク", "ku"), kana_item!("ケ", "ke"), kana_item!("コ", "ko"),
+    kana_item!("サ", "sa"), kana_item!("シ", "shi"), kana_item!("ス", "su"), kana_item!("セ", "se"), kana_item!("ソ", "so"),
+    kana_item!("タ", "ta"), kana_item!("チ", "chi"), kana_item!("ツ", "tsu"), kana_item!("テ", "te"), kana_item!("ト", "to"),
+    kana_item!("ナ", "na"), kana_item!("ニ", "ni"), kana_item!("ヌ", "nu"), kana_item!("ネ", "ne"), kana_item!("ノ", "no"),
+    kana_item!("ハ", "ha"), kana_item!("ヒ", "hi"), kana_item!("フ", "fu"), kana_item!("ヘ", "he"), kana_item!("ホ", "ho"),
+    kana_item!("マ", "ma"), kana_item!("ミ", "mi"), kana_item!("ム", "mu"), kana_item!("メ", "me"), kana_item!("モ", "mo"),
+    kana_item!("ヤ", "ya"), kana_item!("ユ", "yu"), kana_item!("ヨ", "yo"),
+    kana_item!("ラ", "ra"), kana_item!("リ", "ri"), kana_item!("ル", "ru"), kana_item!("レ", "re"), kana_item!("ロ", "ro"),
+    kana_item!("ワ", "wa"), kana_item!("ヲ", "wo"), kana_item!("ン", "n"),
+];
 
 pub fn render(ui: &mut egui::Ui, is_katakana: &mut bool, ctx: &AppContext) -> Option<(TabType, TabOpenMode)> {
-        let hiragana_list: Vec<KanaItem> = vec![
-            KanaItem {
-                kana: "あ",
-                romaji: "a",
-            },
-            KanaItem {
-                kana: "い",
-                romaji: "i",
-            },
-            KanaItem {
-                kana: "う",
-                romaji: "u",
-            },
-            KanaItem {
-                kana: "え",
-                romaji: "e",
-            },
-            KanaItem {
-                kana: "お",
-                romaji: "o",
-            },
-            KanaItem {
-                kana: "か",
-                romaji: "ka",
-            },
-            KanaItem {
-                kana: "き",
-                romaji: "ki",
-            },
-            KanaItem {
-                kana: "く",
-                romaji: "ku",
-            },
-            KanaItem {
-                kana: "け",
-                romaji: "ke",
-            },
-            KanaItem {
-                kana: "こ",
-                romaji: "ko",
-            },
-            KanaItem {
-                kana: "さ",
-                romaji: "sa",
-            },
-            KanaItem {
-                kana: "し",
-                romaji: "shi",
-            },
-            KanaItem {
-                kana: "す",
-                romaji: "su",
-            },
-            KanaItem {
-                kana: "せ",
-                romaji: "se",
-            },
-            KanaItem {
-                kana: "そ",
-                romaji: "so",
-            },
-            KanaItem {
-                kana: "た",
-                romaji: "ta",
-            },
-            KanaItem {
-                kana: "ち",
-                romaji: "chi",
-            },
-            KanaItem {
-                kana: "つ",
-                romaji: "tsu",
-            },
-            KanaItem {
-                kana: "て",
-                romaji: "te",
-            },
-            KanaItem {
-                kana: "と",
-                romaji: "to",
-            },
-            KanaItem {
-                kana: "な",
-                romaji: "na",
-            },
-            KanaItem {
-                kana: "に",
-                romaji: "ni",
-            },
-            KanaItem {
-                kana: "ぬ",
-                romaji: "nu",
-            },
-            KanaItem {
-                kana: "ね",
-                romaji: "ne",
-            },
-            KanaItem {
-                kana: "の",
-                romaji: "no",
-            },
-            KanaItem {
-                kana: "は",
-                romaji: "ha",
-            },
-            KanaItem {
-                kana: "ひ",
-                romaji: "hi",
-            },
-            KanaItem {
-                kana: "ふ",
-                romaji: "fu",
-            },
-            KanaItem {
-                kana: "へ",
-                romaji: "he",
-            },
-            KanaItem {
-                kana: "ほ",
-                romaji: "ho",
-            },
-            KanaItem {
-                kana: "ま",
-                romaji: "ma",
-            },
-            KanaItem {
-                kana: "み",
-                romaji: "mi",
-            },
-            KanaItem {
-                kana: "む",
-                romaji: "mu",
-            },
-            KanaItem {
-                kana: "め",
-                romaji: "me",
-            },
-            KanaItem {
-                kana: "も",
-                romaji: "mo",
-            },
-            KanaItem {
-                kana: "や",
-                romaji: "ya",
-            },
-            KanaItem {
-                kana: "ゆ",
-                romaji: "yu",
-            },
-            KanaItem {
-                kana: "よ",
-                romaji: "yo",
-            },
-            KanaItem {
-                kana: "ら",
-                romaji: "ra",
-            },
-            KanaItem {
-                kana: "り",
-                romaji: "ri",
-            },
-            KanaItem {
-                kana: "る",
-                romaji: "ru",
-            },
-            KanaItem {
-                kana: "れ",
-                romaji: "re",
-            },
-            KanaItem {
-                kana: "ろ",
-                romaji: "ro",
-            },
-            KanaItem {
-                kana: "わ",
-                romaji: "wa",
-            },
-            KanaItem {
-                kana: "を",
-                romaji: "wo",
-            },
-            KanaItem {
-                kana: "ん",
-                romaji: "n",
-            },
-        ];
-
-        let katakana_list: Vec<KanaItem> = vec![
-            KanaItem {
-                kana: "ア",
-                romaji: "a",
-            },
-            KanaItem {
-                kana: "イ",
-                romaji: "i",
-            },
-            KanaItem {
-                kana: "ウ",
-                romaji: "u",
-            },
-            KanaItem {
-                kana: "エ",
-                romaji: "e",
-            },
-            KanaItem {
-                kana: "オ",
-                romaji: "o",
-            },
-            KanaItem {
-                kana: "カ",
-                romaji: "ka",
-            },
-            KanaItem {
-                kana: "キ",
-                romaji: "ki",
-            },
-            KanaItem {
-                kana: "ク",
-                romaji: "ku",
-            },
-            KanaItem {
-                kana: "ケ",
-                romaji: "ke",
-            },
-            KanaItem {
-                kana: "コ",
-                romaji: "ko",
-            },
-            KanaItem {
-                kana: "サ",
-                romaji: "sa",
-            },
-            KanaItem {
-                kana: "シ",
-                romaji: "shi",
-            },
-            KanaItem {
-                kana: "ス",
-                romaji: "su",
-            },
-            KanaItem {
-                kana: "セ",
-                romaji: "se",
-            },
-            KanaItem {
-                kana: "ソ",
-                romaji: "so",
-            },
-            KanaItem {
-                kana: "タ",
-                romaji: "ta",
-            },
-            KanaItem {
-                kana: "チ",
-                romaji: "chi",
-            },
-            KanaItem {
-                kana: "ツ",
-                romaji: "tsu",
-            },
-            KanaItem {
-                kana: "テ",
-                romaji: "te",
-            },
-            KanaItem {
-                kana: "ト",
-                romaji: "to",
-            },
-            KanaItem {
-                kana: "ナ",
-                romaji: "na",
-            },
-            KanaItem {
-                kana: "ニ",
-                romaji: "ni",
-            },
-            KanaItem {
-                kana: "ヌ",
-                romaji: "nu",
-            },
-            KanaItem {
-                kana: "ネ",
-                romaji: "ne",
-            },
-            KanaItem {
-                kana: "ノ",
-                romaji: "no",
-            },
-            KanaItem {
-                kana: "ハ",
-                romaji: "ha",
-            },
-            KanaItem {
-                kana: "ヒ",
-                romaji: "hi",
-            },
-            KanaItem {
-                kana: "フ",
-                romaji: "fu",
-            },
-            KanaItem {
-                kana: "ヘ",
-                romaji: "he",
-            },
-            KanaItem {
-                kana: "ホ",
-                romaji: "ho",
-            },
-            KanaItem {
-                kana: "マ",
-                romaji: "ma",
-            },
-            KanaItem {
-                kana: "ミ",
-                romaji: "mi",
-            },
-            KanaItem {
-                kana: "ム",
-                romaji: "mu",
-            },
-            KanaItem {
-                kana: "メ",
-                romaji: "me",
-            },
-            KanaItem {
-                kana: "モ",
-                romaji: "mo",
-            },
-            KanaItem {
-                kana: "ヤ",
-                romaji: "ya",
-            },
-            KanaItem {
-                kana: "ユ",
-                romaji: "yu",
-            },
-            KanaItem {
-                kana: "ヨ",
-                romaji: "yo",
-            },
-            KanaItem {
-                kana: "ラ",
-                romaji: "ra",
-            },
-            KanaItem {
-                kana: "リ",
-                romaji: "ri",
-            },
-            KanaItem {
-                kana: "ル",
-                romaji: "ru",
-            },
-            KanaItem {
-                kana: "レ",
-                romaji: "re",
-            },
-            KanaItem {
-                kana: "ロ",
-                romaji: "ro",
-            },
-            KanaItem {
-                kana: "ワ",
-                romaji: "wa",
-            },
-            KanaItem {
-                kana: "ヲ",
-                romaji: "wo",
-            },
-            KanaItem {
-                kana: "ン",
-                romaji: "n",
-            },
-        ];
-
-        let current_list = if *is_katakana {
-            &katakana_list
+        let current_list: &[KanaItem] = if *is_katakana {
+            KATAKANA_LIST
         } else {
-            &hiragana_list
+            HIRAGANA_LIST
         };
         let local = &ctx.localization.local.kana;
 
@@ -476,7 +133,7 @@ pub fn render(ui: &mut egui::Ui, is_katakana: &mut bool, ctx: &AppContext) -> Op
         let card_height = card_width * 1.15; 
         
         let side_padding = (available_width - content_width) / 2.0;
-        let total_rows = (current_list.len() + columns - 1) / columns;
+        let total_rows = current_list.len().div_ceil(columns);
         let row_height = card_height + spacing;
 
         egui::ScrollArea::vertical()

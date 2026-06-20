@@ -33,13 +33,11 @@ impl SvgCache {
     pub fn load_all(&mut self, kanji_db: &[Arc<Kanji>], svg_path: &str) {
         for k in kanji_db {
             let file_path = format!("{}/0{}.svg", svg_path, k.unicode.to_lowercase());
-            if Path::new(&file_path).exists() {
-                if let Ok(content) = fs::read_to_string(&file_path) {
-                    if let Some(strokes) = parse_svg_content(&content) {
+            if Path::new(&file_path).exists()
+                && let Ok(content) = fs::read_to_string(&file_path)
+                    && let Some(strokes) = parse_svg_content(&content) {
                         self.data.insert(k.id, strokes);
                     }
-                }
-            }
         }
     }
 }
@@ -55,33 +53,31 @@ fn parse_svg_content(raw_text: &str) -> Option<Vec<Stroke>> {
     let mut strokes = Vec::new();
 
     for node in doc.descendants() {
-        if node.has_tag_name("path") {
-            if let Some(d) = node.attribute("d") {
+        if node.has_tag_name("path")
+            && let Some(d) = node.attribute("d") {
                 let mut bez_path = BezPath::new();
                 let mut current = Point::ZERO;
 
-                for seg in PathParser::from(d) {
-                    if let Ok(segment) = seg {
-                        match segment {
-                            PathSegment::MoveTo { abs, x, y } => {
-                                let p = if abs { Point::new(x, y) } else { current + (x, y) };
-                                bez_path.move_to(p);
-                                current = p;
-                            }
-                            PathSegment::LineTo { abs, x, y } => {
-                                let p = if abs { Point::new(x, y) } else { current + (x, y) };
-                                bez_path.line_to(p);
-                                current = p;
-                            }
-                            PathSegment::CurveTo { abs, x1, y1, x2, y2, x, y } => {
-                                let c1 = if abs { Point::new(x1, y1) } else { current + (x1, y1) };
-                                let c2 = if abs { Point::new(x2, y2) } else { current + (x2, y2) };
-                                let p = if abs { Point::new(x, y) } else { current + (x, y) };
-                                bez_path.curve_to(c1, c2, p);
-                                current = p;
-                            }
-                            _ => {}
+                for segment in PathParser::from(d).flatten() {
+                    match segment {
+                        PathSegment::MoveTo { abs, x, y } => {
+                            let p = if abs { Point::new(x, y) } else { current + (x, y) };
+                            bez_path.move_to(p);
+                            current = p;
                         }
+                        PathSegment::LineTo { abs, x, y } => {
+                            let p = if abs { Point::new(x, y) } else { current + (x, y) };
+                            bez_path.line_to(p);
+                            current = p;
+                        }
+                        PathSegment::CurveTo { abs, x1, y1, x2, y2, x, y } => {
+                            let c1 = if abs { Point::new(x1, y1) } else { current + (x1, y1) };
+                            let c2 = if abs { Point::new(x2, y2) } else { current + (x2, y2) };
+                            let p = if abs { Point::new(x, y) } else { current + (x, y) };
+                            bez_path.curve_to(c1, c2, p);
+                            current = p;
+                        }
+                        _ => {}
                     }
                 }
 
@@ -114,7 +110,6 @@ fn parse_svg_content(raw_text: &str) -> Option<Vec<Stroke>> {
                     });
                 }
             }
-        }
     }
     
     if strokes.is_empty() { None } else { Some(strokes) }

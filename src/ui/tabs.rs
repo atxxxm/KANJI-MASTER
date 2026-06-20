@@ -55,18 +55,12 @@ pub struct KanjiDetailState {
 
 // State for tab Translate
 #[derive(Clone)]
+#[derive(Default)]
 pub struct TranslateTabState {
     pub jump_search_buffer: String
 }
 
 // Translate Tab State Default
-impl Default for TranslateTabState {
-    fn default() -> Self {
-        Self {
-            jump_search_buffer: String::new(),
-        }
-    }
-}
 
 #[derive(Clone, PartialEq)]
 pub enum ExportStep {
@@ -129,37 +123,22 @@ impl Default for AnkiExportState {
 
 // State for tab Romaji to Kana
 #[derive(Clone)]
+#[derive(Default)]
 pub struct RomajiKanaState {
     pub input: String,
     pub is_katakana: bool
 }
 
 // Romaji Kana State Default
-impl Default for RomajiKanaState {
-    fn default() -> Self {
-        Self {
-            input: String::new(),
-            is_katakana: false,
-        }
-    }
-}
 
 #[derive(Clone)]
+#[derive(Default)]
 pub struct DrawSearchState {
     pub strokes: Vec<Vec<egui::Pos2>>, 
     pub current_stroke: Vec<egui::Pos2>,
     pub results: Vec<Arc<Kanji>>,
 }
 
-impl Default for DrawSearchState {
-    fn default() -> Self {
-        Self {
-            strokes: Vec::new(),
-            current_stroke: Vec::new(),
-            results: Vec::new(),
-        }
-    }
-}
 
 // Main Tab Struct
 pub enum TabType {
@@ -187,7 +166,7 @@ impl TabType {
             TabType::KanjiList(_) => format!("📃 {}", local.local.top_bar.tabs.kanji_list),
             TabType::KanjiDetail(state) => format!("字 {}", state.kanji.kanji),
             TabType::Kana(_) => format!("あ {}", local.local.top_bar.tabs.kana),
-            TabType::RomajiToKana(_) => format!("{}", local.local.top_bar.tabs.romaji_to_kana),
+            TabType::RomajiToKana(_) => local.local.top_bar.tabs.romaji_to_kana.to_string(),
             TabType::Translate(_) => format!("🌐 {}", local.local.top_bar.tabs.translate_kanji),
             TabType::AnkiExport(_) => format!("📦 {}", local.local.top_bar.tabs.anki_export),
             TabType::DrawSearch(_) => format!("🎨 {}", local.local.top_bar.tabs.draw_search),
@@ -349,16 +328,15 @@ impl TabManager {
                         }
                     });
 
-                    if let Some(pos) = pointer_pos {
-                        if frame_response.response.rect.contains(pos) {
+                    if let Some(pos) = pointer_pos
+                        && frame_response.response.rect.contains(pos) {
                             target_index = Some(index);
                         }
-                    }
                 }
             });
 
-            if let (Some(from), Some(to)) = (dragged_index, target_index) {
-                if from != to {
+            if let (Some(from), Some(to)) = (dragged_index, target_index)
+                && from != to {
                     self.tabs.swap(from, to);
                     
                     if self.active_tab_index == from {
@@ -369,24 +347,24 @@ impl TabManager {
                     
                     ui.ctx().request_repaint();
                 }
-            }
 
-            match action {
-                Some(TabAction::Switch(index)) => {
-                    self.active_tab_index = index;
-                }
-                Some(TabAction::Close(index)) => {
-                    self.close_tab(index);
-                }
-                Some(TabAction::CloseOthers(index)) => {
-                    if index < self.tabs.len() {
-                        let keep_tab = self.tabs.remove(index);
-                        self.tabs.clear();
-                        self.tabs.push(keep_tab);
-                        self.active_tab_index = 0;
+            if let Some(action) = action {
+                match action {
+                    TabAction::Switch(index) => {
+                        self.active_tab_index = index;
+                    }
+                    TabAction::Close(index) => {
+                        self.close_tab(index);
+                    }
+                    TabAction::CloseOthers(index) => {
+                        if index < self.tabs.len() {
+                            let keep_tab = self.tabs.remove(index);
+                            self.tabs.clear();
+                            self.tabs.push(keep_tab);
+                            self.active_tab_index = 0;
+                        }
                     }
                 }
-                None => {}
             }
 
             let new_tab_btn = ui.add(egui::Button::new("+").frame(false));

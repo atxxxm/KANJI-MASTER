@@ -176,17 +176,15 @@ impl Settings {
                 ui.add_space(10.0);
             });
 
-        if open_file_localization {
-            if self.import_localization_file(paths, false) {
+        if open_file_localization
+            && self.import_localization_file(paths, false) {
                 path_changed = true;
             }
-        }
 
-        if open_file_kanji_localization {
-            if self.import_localization_file(paths, true) {
+        if open_file_kanji_localization
+            && self.import_localization_file(paths, true) {
                 path_changed = true;
             }
-        }
 
         if create_default_localization_file {
             self.create_default_localization_file();
@@ -208,8 +206,8 @@ impl Settings {
             .add_filter("TOML", &["toml"])
             .save_file();
 
-        if let Some(path) = file_path {
-            if let Some(path_str) = path.to_str() {
+        if let Some(path) = file_path
+            && let Some(path_str) = path.to_str() {
                 // Create default structure
                 let default_loc = Localization::default();
 
@@ -219,7 +217,6 @@ impl Settings {
                     Err(e) => eprintln!("Error saving localization: {}", e),
                 }
             }
-        }
     }
 
     // Import Localization File
@@ -238,19 +235,15 @@ impl Settings {
 
             let destination_path = config_dir.join(file_name);
 
-            match std::fs::copy(&original_path, &destination_path) {
-                Ok(_) => {
-                    let new_path_string = destination_path.display().to_string();
+            if std::fs::copy(&original_path, &destination_path).is_ok() {
+                let new_path_string = destination_path.display().to_string();
 
-                    if is_kanji {
-                        paths.path_to_kanji_localization = new_path_string;
-                    } else {
-                        paths.path_to_localization = new_path_string;
-                    }
-                    return true;
+                if is_kanji {
+                    paths.path_to_kanji_localization = new_path_string;
+                } else {
+                    paths.path_to_localization = new_path_string;
                 }
-
-                Err(_) => {}
+                return true;
             }
         }
 

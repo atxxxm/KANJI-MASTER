@@ -38,6 +38,7 @@ pub struct TranslationFile {
     pub entries: HashMap<String, KanjiTranslation>,
 }
 
+#[derive(Default)]
 pub struct TranslateState {
     path_to_file: String,                 // Path to JSON file
     message_data: MessageTranslationData, // Messages
@@ -48,19 +49,6 @@ pub struct TranslateState {
     pub status_message: String,           // Status message
 }
 
-impl Default for TranslateState {
-    fn default() -> Self {
-        Self {
-            path_to_file: String::new(),
-            message_data: MessageTranslationData::default(),
-            data: TranslationFile::default(),
-            current_index: 0,
-            meaning_buffer: String::new(),
-            examples_buffer: Vec::new(),
-            status_message: String::new(),
-        }
-    }
-}
 
 impl TranslateState {
     pub fn new(path: &str, message_data: MessageTranslationData) -> Self {
@@ -75,13 +63,12 @@ impl TranslateState {
     pub fn load(&mut self, new_path: &str) -> bool {
         self.path_to_file = new_path.to_string();
 
-        if let Ok(content) = fs::read_to_string(&self.path_to_file) {
-            if let Ok(loaded_data) = serde_json::from_str::<TranslationFile>(&content) {
+        if let Ok(content) = fs::read_to_string(&self.path_to_file)
+            && let Ok(loaded_data) = serde_json::from_str::<TranslationFile>(&content) {
                 self.data = loaded_data;
                 self.status_message = self.message_data.file_load_success.clone();
                 return true;
             }
-        }
         // If file doesn't exist or error reading, data remains empty (or default)
         self.status_message = self.message_data.file_not_found_or_invalid.clone();
         false
@@ -106,7 +93,7 @@ impl TranslateState {
     }
 
     // Function for saving JSON
-    pub fn save_translations(&mut self, kanji: &Vec<Arc<Kanji>>) {
+    pub fn save_translations(&mut self, kanji: &[Arc<Kanji>]) {
         // Update current entry before saving
         if let Some(k) = kanji.get(self.current_index) {
             let entry = KanjiTranslation {

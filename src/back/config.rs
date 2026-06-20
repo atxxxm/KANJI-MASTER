@@ -5,7 +5,7 @@ use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::PathBuf;
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize)]
 pub struct Config {
     pub interface_font_size: f32,
     pub kanji_font_size: f32,
@@ -18,8 +18,8 @@ pub struct Config {
     pub focus_on_search: bool,
 }
 
-impl Config {
-    pub fn default() -> Self {
+impl Default for Config {
+    fn default() -> Self {
         let config_dir = get_app_config_dir();
 
         let path_to_db = config_dir.join("db").join("core.db");

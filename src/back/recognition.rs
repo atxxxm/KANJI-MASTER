@@ -43,12 +43,12 @@ impl RecognitionSystem {
     }
 
     // Search for similar kanji
-    pub fn search(&self, user_strokes: &Vec<Vec<(f32, f32)>>, limit: usize) -> Vec<(i32, f32)> {
+    pub fn search(&self, user_strokes: &[Vec<(f32, f32)>], limit: usize) -> Vec<(i32, f32)> {
         if user_strokes.is_empty() {
             return Vec::new();
         }
 
-        let user_normalized = normalize_kanji(user_strokes.clone());
+        let user_normalized = normalize_kanji(user_strokes.to_vec());
         let user_stroke_count = user_normalized.len();
         
         let mut scores: Vec<(i32, f32)> = self.cache.iter()
@@ -163,7 +163,7 @@ fn dist(p1: (f32, f32), p2: (f32, f32)) -> f32 {
 }
 
 // Algorithm for similarity calculation
-fn calculate_similarity(user: &Vec<Vec<(f32, f32)>>, template: &Vec<Vec<(f32, f32)>>) -> f32 {
+fn calculate_similarity(user: &[Vec<(f32, f32)>], template: &[Vec<(f32, f32)>]) -> f32 {
     let mut total_score = 0.0;
     
     // Compare the N-th stroke of the user with the N-th stroke of the template

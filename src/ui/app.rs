@@ -13,21 +13,11 @@ use std::sync::OnceLock;
 use crate::back::svg_cache::SvgCache; 
 use std::sync::Arc;
 
-// JLPT Levels
-#[derive(Debug, PartialEq, Clone, Copy)]
-#[allow(dead_code)]
-enum JLPT {
-    N5,
-    N4,
-    N3,
-    N2,
-    N1,
-}
-
 struct App {
     tab_manager: TabManager,
 
-    kanji: Vec<Arc<Kanji>>, 
+    kanji: Vec<Arc<Kanji>>,
+    kanji_by_id: std::collections::HashMap<i32, Arc<Kanji>>,
     config: Config,
     paths: Paths,
     settings: Settings,
@@ -42,6 +32,10 @@ struct App {
     error_notification: Option<String>,
 
     svg_cache: SvgCache,
+
+    // Tracks the font size currently applied to the egui style, so we only
+    // rebuild and set the style when the user actually changes it.
+    applied_font_size: Option<f32>,
 }
 
 impl App {
@@ -60,6 +54,10 @@ impl App {
         let kanji = Database::new(&config.path_to_db_core)
             .get_kanji()
             .map_err(|e| anyhow::anyhow!("Failed to read database: {}", e))?;
+
+        // Index by id for O(1) lookups (used by export / draw search)
+        let kanji_by_id: std::collections::HashMap<i32, Arc<Kanji>> =
+            kanji.iter().map(|k| (k.id, Arc::clone(k))).collect();
 
         let paths = Paths {
             path_to_db_core: config.path_to_db_core.clone(),
@@ -112,7 +110,7 @@ impl App {
         let loaded_successfully = translate_state.load(&config.path_to_kanji_localization);
 
         if let Some(first_kanji) = kanji.get(translate_state.current_index) {
-            translate_state.sync_translation_buffers(&first_kanji);
+            translate_state.sync_translation_buffers(first_kanji);
         }
 
         // If the load was successful, update the current index
@@ -124,7 +122,7 @@ impl App {
                 translate_state.current_index = pos;
             }
             if let Some(first_kanji) = kanji.get(translate_state.current_index) {
-                translate_state.sync_translation_buffers(&first_kanji);
+                translate_state.sync_translation_buffers(first_kanji);
             }
         }
 
@@ -141,6 +139,7 @@ impl App {
         Ok(Self {
             tab_manager: TabManager::new(),
             kanji,
+            kanji_by_id,
             settings: Settings::new(localization.clone(), &config),
             config,
             paths,
@@ -151,6 +150,7 @@ impl App {
             recognition,
             error_notification: None,
             svg_cache,
+            applied_font_size: None,
         })
     }
 
@@ -342,34 +342,40 @@ impl App {
 impl eframe::App for App {
     // Update App
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        let mut style = (*ctx.style()).clone();
         let font_size = self.settings.interface_font_size;
 
-        style.text_styles = [
-            (
-                egui::TextStyle::Small,
-                egui::FontId::new(font_size * 0.75, egui::FontFamily::Proportional),
-            ),
-            (
-                egui::TextStyle::Body,
-                egui::FontId::new(font_size, egui::FontFamily::Proportional),
-            ),
-            (
-                egui::TextStyle::Button,
-                egui::FontId::new(font_size, egui::FontFamily::Proportional),
-            ),
-            (
-                egui::TextStyle::Heading,
-                egui::FontId::new(font_size * 1.5, egui::FontFamily::Proportional),
-            ),
-            (
-                egui::TextStyle::Monospace,
-                egui::FontId::new(font_size, egui::FontFamily::Monospace),
-            ),
-        ]
-        .into();
+        // Only rebuild and apply the style when the font size actually changed,
+        // instead of allocating a new style map every frame.
+        if self.applied_font_size != Some(font_size) {
+            let mut style = (*ctx.style()).clone();
 
-        ctx.set_style(style);
+            style.text_styles = [
+                (
+                    egui::TextStyle::Small,
+                    egui::FontId::new(font_size * 0.75, egui::FontFamily::Proportional),
+                ),
+                (
+                    egui::TextStyle::Body,
+                    egui::FontId::new(font_size, egui::FontFamily::Proportional),
+                ),
+                (
+                    egui::TextStyle::Button,
+                    egui::FontId::new(font_size, egui::FontFamily::Proportional),
+                ),
+                (
+                    egui::TextStyle::Heading,
+                    egui::FontId::new(font_size * 1.5, egui::FontFamily::Proportional),
+                ),
+                (
+                    egui::TextStyle::Monospace,
+                    egui::FontId::new(font_size, egui::FontFamily::Monospace),
+                ),
+            ]
+            .into();
+
+            ctx.set_style(style);
+            self.applied_font_size = Some(font_size);
+        }
 
         self.top_bar(ctx);
 
@@ -384,6 +390,7 @@ impl eframe::App for App {
             if let Some(content) = self.tab_manager.active_content_mut() {
                 let mut context = AppContext {
                     kanji: &self.kanji,
+                    kanji_by_id: &self.kanji_by_id,
                     config: &mut self.config,
                     settings: &self.settings,
                     localization: &self.localization,
@@ -544,7 +551,6 @@ fn set_font(ctx: &egui::Context) {
             scale: 1.0,
             y_offset_factor: 0.0,
             y_offset: 0.0,
-            ..Default::default()
         });
 
         let mut fonts = egui::FontDefinitions::default();

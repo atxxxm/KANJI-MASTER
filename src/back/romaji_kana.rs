@@ -67,21 +67,21 @@ pub fn to_kana(input: &str, is_katakana: bool, live_input: bool) -> String {
 
         // Processing "ー"
         if chars[i] == '-' {
-            results.push_str("ー");
+            results.push('ー');
             i += 1;
             continue;
         }
 
         // Processing "。"
         if chars[i] == '.' {
-            results.push_str("。");
+            results.push('。');
             i += 1;
             continue;
         }
 
         // Processing "、"
         if chars[i] == ',' {
-            results.push_str("、");
+            results.push('、');
             i += 1;
             continue;
         }
