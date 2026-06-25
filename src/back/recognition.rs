@@ -159,31 +159,52 @@ fn dist(p1: (f32, f32), p2: (f32, f32)) -> f32 {
     ((p1.0 - p2.0).powi(2) + (p1.1 - p2.1).powi(2)).sqrt()
 }
 
-// Algorithm for similarity calculation
+// DTW distance between two strokes using two-row optimization (O(n*m) time, O(m) space).
+fn dtw_distance(s1: &[(f32, f32)], s2: &[(f32, f32)]) -> f32 {
+    let n = s1.len();
+    let m = s2.len();
+    let mut prev = vec![f32::INFINITY; m + 1];
+    let mut curr = vec![f32::INFINITY; m + 1];
+    prev[0] = 0.0;
+
+    for i in 1..=n {
+        curr[0] = f32::INFINITY;
+        for j in 1..=m {
+            let cost = dist(s1[i - 1], s2[j - 1]);
+            curr[j] = cost + prev[j].min(curr[j - 1]).min(prev[j - 1]);
+        }
+        std::mem::swap(&mut prev, &mut curr);
+    }
+    prev[m]
+}
+
+// Greedy best-match pairing: each user stroke is matched to the closest unmatched
+// template stroke. Order-independent — handles strokes drawn out of canonical sequence.
 fn calculate_similarity(user: &[Vec<(f32, f32)>], template: &[Vec<(f32, f32)>]) -> f32 {
-    let mut total_score = 0.0;
-    
-    // Compare the N-th stroke of the user with the N-th stroke of the template
-    // If the number of strokes is different, "extra" strokes give a large penalty
-    let count = std::cmp::max(user.len(), template.len());
-    
-    for i in 0..count {
-        if i < user.len() && i < template.len() {
-            // Compare points within each stroke
-            let u_stroke = &user[i];
-            let t_stroke = &template[i];
-            let points = std::cmp::min(u_stroke.len(), t_stroke.len());
-            
-            let mut stroke_score = 0.0;
-            for j in 0..points {
-                stroke_score += dist(u_stroke[j], t_stroke[j]);
+    let mut used = vec![false; template.len()];
+    let mut total = 0.0;
+
+    for u_stroke in user {
+        let mut best_dist = f32::INFINITY;
+        let mut best_j = 0;
+        for (j, t_stroke) in template.iter().enumerate() {
+            if !used[j] {
+                let d = dtw_distance(u_stroke, t_stroke);
+                if d < best_dist {
+                    best_dist = d;
+                    best_j = j;
+                }
             }
-            total_score += stroke_score;
-        } else {
-            // Penalty for missing/extra stroke 
-            total_score += 10.0; 
+        }
+        if best_dist < f32::INFINITY {
+            used[best_j] = true;
+            total += best_dist;
         }
     }
-    
-    total_score
+
+    // Penalty for each unmatched template stroke
+    let unmatched = used.iter().filter(|&&u| !u).count();
+    total += unmatched as f32 * 10.0;
+
+    total
 }
