@@ -72,90 +72,80 @@ impl RecognitionSystem {
 
 // Support functions
 
-// Resampling and normalization
+// Resample a stroke to exactly `n` evenly-spaced points by arc length.
+// Uses the "insert pivot" technique: after placing an interpolated point q,
+// q is inserted into the working list so the next pass continues from q
+// within the same segment instead of jumping to the next vertex.
+fn resample(stroke: &[(f32, f32)], n: usize) -> Vec<(f32, f32)> {
+    if stroke.len() < 2 {
+        let p = stroke.first().copied().unwrap_or((0.0, 0.0));
+        return vec![p; n];
+    }
+
+    let total: f32 = stroke.windows(2).map(|w| dist(w[0], w[1])).sum();
+    if total == 0.0 {
+        return vec![stroke[0]; n];
+    }
+
+    let step = total / (n - 1) as f32;
+    let mut result = vec![stroke[0]];
+    let mut accumulated = 0.0_f32;
+    let mut pts: Vec<(f32, f32)> = stroke.to_vec();
+    let mut i = 1;
+
+    while i < pts.len() && result.len() < n - 1 {
+        let seg_len = dist(pts[i - 1], pts[i]);
+        if accumulated + seg_len >= step {
+            let t = (step - accumulated) / seg_len;
+            let q = (
+                pts[i - 1].0 + t * (pts[i].0 - pts[i - 1].0),
+                pts[i - 1].1 + t * (pts[i].1 - pts[i - 1].1),
+            );
+            result.push(q);
+            pts.insert(i, q);
+            accumulated = 0.0;
+        } else {
+            accumulated += seg_len;
+        }
+        i += 1;
+    }
+
+    while result.len() < n {
+        result.push(*pts.last().unwrap());
+    }
+    result
+}
+
 fn normalize_kanji(strokes: Vec<Vec<(f32, f32)>>) -> Vec<Vec<(f32, f32)>> {
-    // Find bounding box
-    let mut min_x = f32::MAX; let mut max_x = f32::MIN;
-    let mut min_y = f32::MAX; let mut max_y = f32::MIN;
+    let mut min_x = f32::MAX;
+    let mut max_x = f32::MIN;
+    let mut min_y = f32::MAX;
+    let mut max_y = f32::MIN;
 
     for stroke in &strokes {
-        for p in stroke {
-            if p.0 < min_x { min_x = p.0; }
-            if p.0 > max_x { max_x = p.0; }
-            if p.1 < min_y { min_y = p.1; }
-            if p.1 > max_y { max_y = p.1; }
+        for &(x, y) in stroke {
+            if x < min_x { min_x = x; }
+            if x > max_x { max_x = x; }
+            if y < min_y { min_y = y; }
+            if y > max_y { max_y = y; }
         }
     }
 
-    let width = max_x - min_x;
-    let height = max_y - min_y;
-    let scale = if width > height { width } else { height }; // Save aspect ratio, fitting into square
-    
-    if scale == 0.0 { return strokes; }
-
-    // Resampling each stroke
-    let mut resampled_strokes = Vec::new();
-
-    for stroke in strokes {
-        if stroke.len() < 2 { continue; }
-        
-        let mut new_stroke = Vec::new();
-        
-        // Calculate total length of stroke
-        let mut total_len = 0.0;
-        for i in 0..stroke.len()-1 {
-            total_len += dist(stroke[i], stroke[i+1]);
-        }
-        
-        let step = total_len / (POINTS_PER_STROKE as f32 - 1.0);
-        
-        // Add points
-        let mut current_dist = 0.0;
-        new_stroke.push(stroke[0]); // First point
-        
-        let mut src_idx = 0;
-        // Simplified linear interpolation by length
-        while new_stroke.len() < POINTS_PER_STROKE {
-            if src_idx >= stroke.len() - 1 {
-                 new_stroke.push(*stroke.last().unwrap());
-                 continue;
-            }
-            
-            let p1 = stroke[src_idx];
-            let p2 = stroke[src_idx+1];
-            let d = dist(p1, p2);
-            
-            if current_dist + d >= step {
-                let remaining = step - current_dist;
-                let t = remaining / d;
-                let new_x = p1.0 + (p2.0 - p1.0) * t;
-                let new_y = p1.1 + (p2.1 - p1.1) * t;
-                let new_p = (new_x, new_y);
-                new_stroke.push(new_p);
-                
-                 current_dist = 0.0;
-            } else {
-                current_dist += d;
-            }
-            src_idx += 1;
-        }
-        
-        // Add the last point if needed
-        while new_stroke.len() < POINTS_PER_STROKE {
-            new_stroke.push(*stroke.last().unwrap());
-        }
-
-        // Normalize coordinates of each point in the stroke
-        let mut normalized_stroke = Vec::new();
-        for p in new_stroke {
-             let nx = (p.0 - min_x) / scale;
-             let ny = (p.1 - min_y) / scale;
-             normalized_stroke.push((nx, ny));
-        }
-        resampled_strokes.push(normalized_stroke);
+    let scale = (max_x - min_x).max(max_y - min_y);
+    if scale == 0.0 {
+        return strokes;
     }
-    
-    resampled_strokes
+
+    strokes
+        .into_iter()
+        .filter(|s| s.len() >= 2)
+        .map(|stroke| {
+            resample(&stroke, POINTS_PER_STROKE)
+                .into_iter()
+                .map(|(x, y)| ((x - min_x) / scale, (y - min_y) / scale))
+                .collect()
+        })
+        .collect()
 }
 
 fn dist(p1: (f32, f32), p2: (f32, f32)) -> f32 {
