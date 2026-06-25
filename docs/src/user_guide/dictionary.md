@@ -1,34 +1,79 @@
 # Dictionary and Search
 
-The **Home** screen and the **Kanji List** tab provide full access to the comprehensive kanji database.
+The **Home** screen and the **Kanji List** tab both provide access to the full kanji database.
+
+---
 
 ## Home Search
 
-The main search bar allows you to quickly filter and find kanji based on multiple criteria simultaneously:
-*   **Character (Kanji)** – paste or type the symbol itself.
-*   **Readings (On'yomi / Kun'yomi)** – supports both kana and romaji (e.g., `mizu` or `みず`).
-*   **Meaning** – search through your localized English/custom translations.
+The search bar on the Home screen filters kanji across multiple fields simultaneously:
 
-> ⚙ **Tip:** In the Settings, you can enable `Focus on search when opening`. This automatically places your typing cursor in the search field when you open a new Home tab, allowing for lightning-fast lookups.
+- **Character** — paste or type the kanji itself (e.g. `日`)
+- **Readings** — on'yomi or kun'yomi in kana or romaji (e.g. `mizu` or `みず`)
+- **Meaning** — searches through your loaded kanji localization file
 
-## Filter by JLPT (Kanji List Tab)
+Results appear as a card grid below the search bar. The grid adjusts to the window width automatically.
 
-If you open a **Kanji List** tab from the top menu, you get access to a dropdown filter. This allows you to narrow down the displayed kanji by their **JLPT (Japanese-Language Proficiency Test)** levels:
-*   **N5 (Beginner)** → **N1 (Advanced)**
-*   **All** – show all available kanji.
+> **Tip:** Enable **Focus on search when opening** in Settings to place the cursor in the search field automatically when you open a new Home tab.
 
-## Detailed Kanji View
+---
 
-Clicking on any kanji card opens its detailed view in a new tab.
+## Kanji List Tab
 
-1.  **Stroke Animation & Copying**
-    *   An animated stroke order diagram is displayed on the left.
-    *   Clicking on the animation area replays it.
-    *   Below the animation, there is a **📋 Copy** button to instantly copy the character to your clipboard.
-2.  **Kanji Information**
-    *   Primary Meaning.
-    *   Badges for JLPT level, School Grade, Stroke Count, and Frequency.
-    *   **Readings**: On'yomi and Kun'yomi displayed in both Kana and Romaji.
-3.  **Usage Examples**
-    *   A scrollable list of vocabulary words or phrases containing this kanji.
-    *   If your localization file contains translations for these examples, they are displayed in gray italics right below the original Japanese text.
+Opening the **Kanji** tab from the top bar shows the complete list with two filters:
+
+### JLPT Filter
+
+Narrows results by Japanese Language Proficiency Test level:
+
+| Value | Meaning |
+|---|---|
+| All | Show all kanji |
+| N5 | Beginner (~80 kanji) |
+| N4 | Elementary (~170 kanji) |
+| N3 | Intermediate (~370 kanji) |
+| N2 | Upper-intermediate (~370 kanji) |
+| N1 | Advanced (~2000 kanji) |
+
+### Stroke Count Filter
+
+Narrows results by the number of strokes:
+
+| Value | Range |
+|---|---|
+| Strokes | Any count |
+| 1–4 | Simple kanji |
+| 5–8 | Medium complexity |
+| 9–12 | Complex |
+| 13+ | Very complex |
+
+Both filters compose — for example, selecting **N5** and **1–4** narrows to the simplest beginner kanji.
+
+---
+
+## Kanji Detail View
+
+Clicking any kanji card opens a dedicated tab with full information.
+
+**Stroke Order Animation**
+- The animation plays automatically when the tab opens.
+- Click the animation area to replay it.
+- Use the **📋 Copy** button below to copy the character to the clipboard.
+
+**Information Panel**
+- Primary meaning (from your localization file)
+- Badges: JLPT level, school grade, stroke count, frequency rank
+- On'yomi and kun'yomi readings in both kana and romaji
+
+**Usage Examples**
+- Vocabulary words and phrases that use this kanji
+- If your localization file has translations for the examples, they appear below each entry in muted italics
+
+---
+
+## Opening Multiple Kanji at Once
+
+- **Left-click** a card — opens in a new foreground tab
+- **Middle-click** or **Right-click** a card — opens in a background tab
+
+This lets you queue up several kanji from search results without losing your place in the list.

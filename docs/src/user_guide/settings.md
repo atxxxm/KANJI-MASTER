@@ -1,44 +1,51 @@
 # Settings
 
-The **Settings** panel allows you to customize Kanji Master's appearance, behavior, and file paths. 
-> To open it, click the gear icon (**⚙**) on the far right of the top navigation bar.
+Open the Settings panel by clicking the **⚙** icon on the right side of the top bar.
+
+> All changes are saved to `config.toml` automatically when you close the window.
 
 ---
 
 ## Files & Data
 
-This section manages paths to external resource files. It is useful if you want to use custom community translations or switch between different language packs.
+Paths to external resource files. Change these to switch languages or use custom translations.
 
-*   **Language (TOML)** – Path to the UI translation file (`localization.toml`).
-*   **Kanji Localization (JSON)** – Path to the kanji meanings and examples file (`kanji-localization.json`).
+| Setting | File type | Description |
+|---|---|---|
+| Language (TOML) | `.toml` | UI localization — buttons, labels, menus |
+| Kanji Localization (JSON) | `.json` | Kanji meanings and example translations |
 
-**Managing files:**
-Click the **📂 Select** button next to a path to choose a different file via your system's file explorer. The application will instantly load the new file.
+Click the **📂** button next to a path to open a file picker. The selected file is copied into the config directory and loaded immediately — no restart needed.
 
 ---
 
 ## Appearance
 
-Customize the visual presentation of the application to suit your monitor size and reading preferences:
+**Theme**
+Toggle between **☀ Light** and **🌙 Dark** mode. You can also switch quickly using the theme button in the top bar without opening Settings.
 
-*   **Interface font size** – Adjusts the size of buttons, menus, and standard text. *(Range: 12px — 32px)*
-*   **Kanji font size** – Adjusts the size of kanji characters displayed inside lists and cards. *(Range: 20px — 120px)*
-*   **Kanji animation speed** – Controls how fast the strokes are drawn in the Kanji Detail tab. Moves on a logarithmic scale (from 0.1x to 5.0x).
+**Interface font size**
+Adjusts the size of all standard text: buttons, labels, menus. Range: 12–32 px.
+
+**Kanji font size**
+Adjusts the size of kanji characters in cards and lists. Range: 20–120 px.
+
+**Kanji animation speed**
+Controls how fast strokes are drawn in the Kanji Detail tab. Uses a logarithmic scale (0.1× to 5.0×).
 
 ---
 
 ## Behavior
 
-*   **Focus on search when opening**
-    If enabled, whenever you open a new Home tab, your cursor will be automatically placed in the search box. Highly recommended for keyboard-heavy users.
-*   **Show kanji meaning**
-    Toggles the display of kanji meanings underneath the characters in the search results and kanji lists. Turn this **off** if you want to use the lists for strict memory recall testing!
+**Focus on search when opening**
+When enabled, the cursor is automatically placed in the search field every time you open a new Home tab. Useful for keyboard-heavy workflows.
+
+**Show kanji meaning**
+Shows the meaning text underneath kanji characters in the search results and kanji list cards. Disable this if you want to use the lists for self-testing.
 
 ---
 
 ## Tools
 
-*   **Create default localization file**
-    Clicking this button opens a save dialog to generate a fresh, default `localization.toml` template. This is incredibly useful for translators who want to create a new UI language pack from scratch without guessing the required TOML keys.
-
-> **Note:** All changes made in the settings panel are automatically saved to your `config.toml` file the moment you close the window.
+**Create default localization file**
+Opens a save dialog to generate a fresh `localization.toml` template with all required keys and English default values. Use this as a starting point when creating a UI translation for a new language.

@@ -1,156 +1,190 @@
 # Code Internals
 
-This document is a technical guide for developers who want to modify the **Kanji Master** core.
-It covers architectural decisions, state management, data flow, and specifics of working with **Immediate Mode GUI** in Rust.
+A technical guide for developers who want to understand or modify Kanji Master. Covers state management, data flow, and egui patterns used throughout the codebase.
 
 ---
 
 ## 1. Application Lifecycle
 
-Kanji Master operates as a **hybrid of a utility and a game engine**, rather than a standard CRUD application.
-
 ### Initialization (`main.rs`)
 
-The entry point is the `main` function. It performs critical tasks before the interface is rendered:
+```
+main()
+  ├─ initialize_app_data()   — extract embedded files to config dir if missing
+  ├─ load_config()           — parse config.toml or write default
+  └─ eframe::run_native()    — start the OpenGL window, create App
+```
 
-1.  **Resource Extraction (`initialize_app_data`)**:
-    *   The application is compiled into a **single binary file**, including the SQLite database `core.db`, JSON localization files, and SVG resources using the `rust-embed` crate.
-    *   *Logic*: On startup, it checks for the existence of the system configuration folder (e.g., `%APPDATA%\KanjiMaster` on Windows or `/home/<user>/.config/kanjimaster/` on Linux). If the files are missing—they are extracted from the binary and written to disk.
-    *   *Why*: Guarantees the presence of valid data, and the user can reset settings by deleting the configs.
-
-2.  **Loading Configuration (`load_config`)**:
-    *   Attempts to read `config.toml`.
-    *   If the file is missing or corrupted, a default configuration is created (`Config::default()`).
-
-3.  **Launching the GUI (`eframe::run_native`)**:
-    *   Initializes the OpenGL/Vulkan/Metal context.
-    *   Creates the main state object — `App`.
+`initialize_app_data` iterates over all files embedded via `rust-embed` and writes them to the system config directory only if they don't already exist. This means user-modified files (translations, config) are never overwritten on update.
 
 ---
 
-## 2. Monolithic State (`App`)
+## 2. Application State (`app.rs`)
 
-All application logic is managed through a **single state structure** `App` (`interface.rs`), which is a standard pattern for `egui`.
+All runtime state lives in one struct:
 
 ```rust
 struct App {
-    // 1. Navigation
-    tab_manager: TabManager,
+    tab_manager: TabManager,       // open tabs and active index
 
-    // 2. "Cold" data (Read-only)
-    kanji: Vec<Arc<Kanji>>,
+    kanji: Vec<Arc<Kanji>>,        // full DB, loaded once at startup
+    kanji_by_id: HashMap<i32, Arc<Kanji>>,  // O(1) lookup by id
 
-    // 3. "Hot" data (Mutable)
     config: Config,
-    settings: Settings,
     paths: Paths,
+    settings: Settings,
     localization: Localization,
-
-    // 4. Subsystems
     translate_state: TranslateState,
+
     recognition: RecognitionSystem,
     svg_cache: SvgCache,
+
+    settings_window: bool,
+    kanji_loc_setup: bool,         // show first-run localization screen
+    error_notification: Option<String>,
+    applied_style_key: Option<(u32, bool)>,  // avoid rebuilding style every frame
 }
 ```
 
-### Key Points on Memory Management
-
-*   **In-Memory Database**: `self.kanji` is loaded once at startup. ~2-3 thousand objects take only a few megabytes of RAM — this speeds up searching and filtering without disk queries.
-*   **Cloning**: `kanji.clone()` is used instead of complex schemes with `Rc/RefCell` to simplify working with the Borrow Checker.
+`kanji` is loaded once and held in memory for the lifetime of the app. At ~2–3k entries it takes only a few MB. All search and filtering is a simple Vec iteration — no SQL at runtime.
 
 ---
 
-## 3. Immediate Mode GUI and the `update` Cycle
+## 3. Tab System (`tabs.rs`)
 
-Kanji Master uses **egui (Immediate Mode GUI)**. The interface is completely rebuilt every frame.
-
-### Core Principles
-
-1.  The `update(&mut self, ctx, frame)` method is called on each frame (e.g., on mouse movement or at 60 FPS for animations).
-2.  **No stored UI objects** — all buttons and windows are recreated each frame.
-3.  **Events** are checked immediately during rendering:
+Navigation is tab-based. Each tab carries its own state:
 
 ```rust
-if ui.button("Click me").clicked() {
-    self.counter += 1;
+enum TabType {
+    Home(HomeState),
+    KanjiList(KanjiListState),
+    KanjiDetail(KanjiDetailState),
+    Kana(bool),
+    RomajiToKana(RomajiKanaState),
+    Translate(TranslateTabState),
+    AnkiExport(AnkiExportState),
+    DrawSearch(DrawSearchState),
 }
 ```
 
-### UI Architecture (`interface.rs`)
+`TabManager` holds `Vec<Tab>` and the active index. Tabs can be:
+- Opened in the foreground (`add_tab(..., true)`)
+- Opened in the background (`add_tab(..., false)`) — useful for middle-click on kanji cards
+- Reordered by drag-and-drop
+- Closed via `×` button or middle-click
+
+---
+
+## 4. Rendering and Context (`app.rs`, `context.rs`)
+
+The `update()` method runs every frame:
 
 ```rust
-fn update(...) {
-    // 1. Global styles (fonts, sizes)
-    // 2. TopBar (always visible)
+fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+    // 1. Apply style only when font size or theme actually changed
+    if self.applied_style_key != Some(style_key) { ... }
+
+    // 2. Top bar (always visible)
     self.top_bar(ctx);
 
-    // 3. Central panel
+    // 3. Tab bar + active view
     egui::CentralPanel::default().show(ctx, |ui| {
-        match &self.current_screen {
-            Screen::Home => self.home_screen(ui),
-            Screen::Kanji(k) => self.kanji_screen(ui, k),
-            // ... routing for other screens
+        self.tab_manager.ui(ui, ctx, &self.localization);
+        // route to the correct view based on active tab
+        match content {
+            TabType::Home(state) => views::home::render(ui, state, &context),
+            TabType::KanjiList(state) => views::kanji_list::render(ui, state, &context),
+            // ...
         }
     });
 
-    // 4. Overlay windows (Settings)
-    if self.settings.setting(...) {
-        self.save();
-    }
+    // 4. Overlay windows
+    self.kanji_localization_setup(ctx);
+    self.settings.setting(&mut self.settings_window, &mut self.paths, ctx);
 }
 ```
 
----
+Each view receives an `AppContext` — a short-lived struct of references that avoids passing a dozen individual arguments:
 
-## 4. Data Subsystem (`back/core.rs`)
+```rust
+pub struct AppContext<'a> {
+    pub kanji: &'a Vec<Arc<Kanji>>,
+    pub kanji_by_id: &'a HashMap<i32, Arc<Kanji>>,
+    pub config: &'a mut Config,
+    pub settings: &'a Settings,
+    pub localization: &'a Localization,
+    pub translate_state: &'a mut TranslateState,
+    pub svg_cache: &'a mut SvgCache,   // mut for lazy SVG loading
+}
+```
 
-Working with SQLite (`rusqlite`) is encapsulated in the `Database` struct.
-
-*   **SQL Query**: One large JOIN is executed between the `kanji`, `read`, and `examples` tables.
-*   **NULL Handling**: Via `Option<String>`, mapped to empty strings for the UI.
-*   **Sorting**: Data is sorted at the Rust vector level for predictable display.
-
----
-
-## 5. Localization
-
-*   **Dynamic Switching**: `reload_interface_localization` replaces `self.localization`. The GUI updates instantly.
-*   **Two Layers**:
-    1.  `localization.json` — interface.
-    2.  `kanji-localization.json` — kanji and example translations.
+Views return `Option<(TabType, TabOpenMode)>` to request opening a new tab without holding a mutable reference to `TabManager` during rendering.
 
 ---
 
-## 6. Flashcard Subsystem (`back/cards.rs`)
+## 5. SVG Cache and Recognition (`svg_cache.rs`, `recognition.rs`)
 
-*   **Session State Machine**:
-    *   `queue`: A shuffled `Vec<Kanji>` for studying.
-    *   `current_index`: The current card.
-    *   `is_card_flipped`: The flipped state of the card.
-*   **Session Creation**: Filtering by JLPT/deck, shuffling, card limit.
-*   **Lifecycle**: Stored in `Option<CardsSession>` inside `App`.
+### Lazy SVG Cache
 
----
+`SvgCache` stores a `HashMap<i32, String>` (id → unicode) at startup. On first access for a given kanji, it reads and parses the SVG file, flattens bezier curves into point sequences, and stores the result. Subsequent accesses are instant.
 
-## 7. Practical Guide: Adding New Features
+### Recognition Pipeline
 
-### Example: Adding a "Dark Mode" Parameter
-
-1.  **Backend (`config.rs`)**: Add `pub dark_mode: bool` to `Config`.
-2.  **State (`settings.rs`)**: Add a field to `Settings`.
-3.  **UI**: Add a checkbox in the `setting(...)` method.
-4.  **Logic (`interface.rs`)**: Apply the value during `update` and save it to `config`.
-
-### Example: Adding a New Screen
-
-1.  Add a variant to the `enum Screen`.
-2.  Implement a rendering method in `App`.
-3.  Add handling in `update` for routing.
+1. At startup, `RecognitionSystem::load_from_svgs()` reads all SVGs, resamples each stroke to 32 uniformly-spaced points, and stores `SimplifiedKanji { id, strokes }`.
+2. When the user clicks Search in Draw & Search, their strokes are normalized the same way.
+3. Candidates are filtered by stroke count (±2 tolerance).
+4. Each candidate is scored via `calculate_similarity()`:
+   - **DTW (Dynamic Time Warping)** measures the distance between each pair of strokes, handling non-uniform drawing speed.
+   - **Greedy matching** pairs each user stroke to the closest unmatched template stroke — order-independent.
 
 ---
 
-## 8. Common Issues and Nuances
+## 6. Localization System
 
-1.  **Borrow Checker in UI**: Avoid mutating `self` inside `ui.show(|ui| { ... })`.
-2.  **Performance**: Execute heavy operations during initialization or in a separate thread, not in `update`.
-3.  **Input Focus**: Managed using `ui.memory(|m| m.request_focus(id))`.
+Two separate layers:
+
+| File | Controls |
+|---|---|
+| `localization.toml` | All UI strings (buttons, labels, tooltips) |
+| `en.json` / `ru.json` / custom | Kanji meanings and example translations |
+
+Switching the UI language calls `reload_interface_localization()`, which replaces `self.localization` and the interface updates on the next frame.
+
+The kanji translation file is loaded into `TranslateState.data` as a `HashMap<String, KanjiTranslation>` keyed by the kanji character.
+
+---
+
+## 7. Adding New Features
+
+### New config option
+
+1. Add field to `Config` in `config.rs` with a `#[serde(default = ...)]` fallback.
+2. Add field to `Settings` in `settings.rs`.
+3. Add UI control in `Settings::setting()`.
+4. Apply in `app.rs` `update()` and call `self.save()`.
+
+### New tab / screen
+
+1. Add a state struct (e.g. `MyFeatureState`) to `tabs.rs`.
+2. Add a variant to `TabType`.
+3. Add a title in `TabType::title()`.
+4. Create `src/ui/views/my_feature.rs` with a `render()` function.
+5. Add the arm to the `match content { ... }` block in `app.rs`.
+
+### New backend module
+
+1. Create `src/back/my_module.rs`.
+2. Add `pub mod my_module;` to `src/back/mod.rs`.
+3. Add the field to `App` and initialize in `App::new()`.
+
+---
+
+## 8. Common egui Patterns and Gotchas
+
+**Borrow checker in closures:** `ui.show(|ui| { ... })` borrows `ui` mutably. You cannot also borrow `self` mutably inside. Use the `AppContext` pattern or extract values before the closure.
+
+**Style rebuilding:** Calling `ctx.set_style()` every frame is expensive. Kanji Master tracks `applied_style_key: Option<(u32, bool)>` (font size bits + dark mode flag) and only rebuilds when it changes.
+
+**Tab actions:** Views cannot call `tab_manager.add_tab()` directly while `tab_manager` is borrowed for rendering. They return `Option<(TabType, TabOpenMode)>` and the parent handles it after the closure ends.
+
+**Focus management:** Use `ui.memory(|m| m.has_focus(id))` to check and `response.request_focus()` to set focus — for example, the home search bar auto-focuses when the tab opens.

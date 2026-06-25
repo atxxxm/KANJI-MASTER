@@ -1,22 +1,30 @@
 # Kanji Localization (JSON)
 
-The **`kanji-localization.json`** file contains your personal translations for **kanji meanings** and **usage examples**. 
+Kanji meanings and example translations are stored in a JSON file you choose. The app ships with `en.json` (English) and `ru.json` (Russian). You can create a file for any language by copying one and translating it.
 
-> 🛠 **Highly Recommended:** Instead of editing this raw JSON file manually, use the built-in **Translate Kanji Tool** (found in the Tools menu). The tool provides a clean UI for translating and automatically saves the JSON file with the correct formatting and IDs!
+> 🛠 **Recommended:** Use the built-in **Translate Kanji Tool** (Tools menu) instead of editing the JSON directly. It provides a clean UI and saves the file automatically with correct formatting.
 
 ---
 
-## File Structure
+## First Launch
 
-If you prefer to edit the file manually or write a script to generate it, the root object contains an `entries` dictionary where:
-*   **Key** – the kanji character itself (e.g., `"日"`).
-*   **Value** – an object with the translation and an array of examples.
+If no kanji localization file is found, a setup screen appears automatically:
 
-Example structure:
+- **Use English (built-in)** — loads the bundled `en.json` immediately.
+- **Browse for JSON file** — opens a file picker so you can load a custom file.
+- **Skip** — dismisses the screen; meanings will not be shown until a file is loaded.
+
+You can change the file at any time in **Settings (⚙) → Files & Data**.
+
+---
+
+## File Format
+
+The root object has two fields:
 
 ```json
 {
-  "last_id": 100,
+  "last_id": 42,
   "entries": {
     "日": {
       "meaning": "Day, sun, Japan",
@@ -35,11 +43,26 @@ Example structure:
     }
   }
 }
+```
 
-Field Descriptions
+### Field Reference
 
-    last_id – Keeps track of the last kanji you translated using the built-in UI tool.
+| Field | Type | Description |
+|---|---|---|
+| `last_id` | `i32` | ID of the last kanji saved by the Translate tool. Used to resume where you left off. |
+| `entries` | `object` | Keys are kanji characters (`"日"`), values are translation objects. |
+| `meaning` | `string` | Primary meaning of the kanji. |
+| `translate_examples` | `string[]` | Translations of the usage examples. Must be in the **same order** as the examples in `core.db`. |
 
-    meaning – The main meaning of the kanji (String).
+> ⚠️ The order of `translate_examples` matters. Each element corresponds to the example at the same index in the database. Using the Translate Kanji Tool handles this automatically.
 
-    translate_examples – An array of strings containing translations for the usage examples. The order of elements must exactly match the order of the original Japanese examples in the core.db database.
+---
+
+## Creating a New Language File
+
+1. Copy `en.json` from the config directory.
+2. Translate each `"meaning"` value and the strings in `"translate_examples"`.
+3. Keep all kanji keys (`"日"`, `"月"`, etc.) unchanged.
+4. Load your file in **Settings → Kanji Localization (JSON)**.
+
+The application will copy your file into the config directory and remember the path.

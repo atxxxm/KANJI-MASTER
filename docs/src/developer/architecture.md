@@ -1,61 +1,103 @@
 # Project Architecture
 
-**Kanji Master** is built on a modular architecture that clearly separates **data logic (Backend)** and **presentation (UI)**. This facilitates maintenance, feature expansion, and testing.
+**Kanji Master** is built on a modular architecture that clearly separates **data logic (backend)** and **presentation (UI)**. This makes it easy to add features, fix bugs, and reason about state.
 
 ---
 
 ## Tech Stack
 
-*   **Language**: Rust (Edition 2024)
-*   **Graphics Engine**: `eframe` (wrapper over `egui`) — Immediate Mode GUI.
-*   **Database**: SQLite (via the `rusqlite` crate).
-*   **Serialization**: `serde` + `serde_json` / `toml`.
-*   **Resource Embedding**: `rust-embed` (for DB, JSON, fonts, and SVG).
+| Component | Library |
+|---|---|
+| Language | Rust (Edition 2024) |
+| GUI | `eframe` / `egui` — Immediate Mode GUI |
+| Database | SQLite via `rusqlite` |
+| Serialization | `serde` + `serde_json` + `toml` |
+| Resource Embedding | `rust-embed` |
+| File Dialogs | `rfd` |
+| SVG Parsing | `roxmltree`, `svgtypes`, `kurbo` |
 
 ---
 
 ## Module Structure
 
-### `back` (Backend)
+### `back/` — Backend
 
-Contains **business logic** independent of the GUI:
-*   **`core.rs`** — working with SQLite (`core.db`), `Kanji` structures.
-*   **`config.rs`** — configuration management (`config.toml`).
-*   **`localization.rs`** — handling TOML UI localization.
-*   **`translation.rs`** — handling JSON kanji translations and examples.
-*   **`recognition.rs`** — logic for the handwritten kanji recognition system.
-*   **`svg_cache.rs`** — parsing and caching SVG path data for stroke animations.
-*   **`romaji_kana.rs`** — text conversion from Latin script to kana.
+Contains all business logic, independent of the GUI:
 
-### `ui` (Interface)
+| File | Responsibility |
+|---|---|
+| `core.rs` | `Database` struct, `Kanji` struct, SQLite queries |
+| `config.rs` | `Config` struct, `load_config`, `save_config`, system paths |
+| `localization.rs` | TOML UI localization loading and `Localization` struct |
+| `translation.rs` | JSON kanji translation loading, `TranslateState`, save/load |
+| `recognition.rs` | Handwritten kanji recognition (DTW + greedy stroke matching) |
+| `svg_cache.rs` | Lazy SVG parsing and caching for stroke order animations |
+| `romaji_kana.rs` | Romaji → Hiragana/Katakana conversion |
 
-Responsible for **rendering and handling user input**:
+### `ui/` — Interface
 
-*   **`interface.rs`** — the main application loop (`impl eframe::App`), screen routing (`enum Screen`), and layout of all panels.
-*   **`settings.rs`** — the settings window and management of user preferences.
-*   **`animator.rs`** — component for rendering SVG kanji stroke order animations.
+Responsible for rendering and handling user input:
 
----
-
-## Database (`core.db`)
-
-The application uses a **relational SQLite database**. Main tables:
-
-1.  **`kanji`** — core information (id, character, JLPT, grade, strokes).
-2.  **`read`** — kanji readings (on'yomi and kun'yomi).
-3.  **`examples`** — example words and phrases containing the kanji.
-
-> The data is joined in Rust via a single large JOIN query at startup and then held in memory for fast search and filtering.
+| File | Responsibility |
+|---|---|
+| `app.rs` | Main `App` struct, `eframe::App` impl, top bar, update loop |
+| `tabs.rs` | `TabManager`, `TabType` enum, all tab state structs |
+| `context.rs` | `AppContext` — short-lived bundle of references passed to views |
+| `settings.rs` | Settings window, file dialogs, localization import |
+| `animator.rs` | SVG stroke order animation component |
+| `theme.rs` | Color palette, `visuals()` for light/dark themes |
+| `views/` | One file per screen: `home`, `kanji_list`, `kanji_detail`, `kana`, `draw_search`, `anki_export`, `translate`, `romaji_kana` |
 
 ---
 
-## Resources and `Asset`
+## Database Schema (`core.db`)
 
-Using **`rust-embed`**, all static files (DB, JSON, fonts, SVG) are embedded into the binary.
+Three tables joined at startup into an in-memory `Vec<Arc<Kanji>>`:
 
-*   On the first launch (`main.rs -> initialize_app_data`), resources are **extracted to the user's system configuration folder**:
-    *   Windows: `C:\Users\<Username>\AppData\Roaming\KanjiMaster\`
-    *   Linux: `/home/<username>/.config/kanjimaster/`
-    *   macOS: `/Users/<Username>/Library/Application Support/KanjiMaster/`
+```
+kanji    — id, kanji, strokes, jlpt, grade, frequency, unicode
+read     — kanji_id, onyomi, onyomi_romaji, kunyomi, kunyomi_romaji
+examples — kanji_id, example
+```
 
-*   This ensures **application autonomy** and allows the user to easily reset settings or change localization.
+The full join is executed once at launch. All search and filtering operates on the in-memory vector — no runtime SQL queries.
+
+---
+
+## SVG Cache (Lazy Loading)
+
+Stroke order animations are stored as SVG files in `kanji-svg/`. The cache is **lazy**:
+
+- At startup, `SvgCache::prepare()` only stores a `kanji_id → unicode` mapping — no files are parsed.
+- When a kanji detail tab is first opened, `SvgCache::get_or_load()` parses the SVG on demand and caches the result.
+- `RecognitionSystem` loads its own simplified stroke data independently via `load_from_svgs()`, so draw-search works immediately without waiting for the UI cache.
+
+---
+
+## Data Flow on Startup
+
+```
+main()
+  └─ initialize_app_data()      — extract embedded assets to config dir
+  └─ load_config()              — read config.toml (or create default)
+  └─ eframe::run_native()
+       └─ App::new()
+            ├─ load Localization (TOML)
+            ├─ Database::get_kanji() → Vec<Arc<Kanji>>
+            ├─ SvgCache::prepare()   — build unicode map, no SVG parsing
+            └─ RecognitionSystem::load_from_svgs() — parse SVGs for recognition
+```
+
+---
+
+## Resources and Embedding
+
+All static assets (database, localization files, fonts, SVGs) are embedded into the binary via `rust-embed`.
+
+On first launch, `initialize_app_data()` extracts missing files to the system config directory:
+
+- **Windows:** `C:\Users\<Username>\AppData\Roaming\atom\kanjimaster\config\`
+- **Linux:** `/home/<username>/.config/atom/kanjimaster/`
+- **macOS:** `/Users/<Username>/Library/Application Support/atom.kanjimaster/`
+
+Existing files are never overwritten, so user edits (custom translations, config) are preserved across updates.
