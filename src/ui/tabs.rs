@@ -16,6 +16,15 @@ pub enum KanjiList {
     Jlpt1,
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum StrokeFilter {
+    Any,
+    S1to4,
+    S5to8,
+    S9to12,
+    S13plus,
+}
+
 #[derive(Clone, Default)]
 pub struct HomeState {
     pub search_query: String,
@@ -27,20 +36,22 @@ pub struct HomeState {
 pub struct KanjiListState {
     pub search_query: String,
     pub selected_list: KanjiList,
+    pub stroke_filter: StrokeFilter,
     pub last_search_query: Option<String>,
     pub last_selected_list: Option<KanjiList>,
+    pub last_stroke_filter: Option<StrokeFilter>,
     pub cached_results: Vec<usize>,
 }
 
-
-// Kanji List State Default
 impl Default for KanjiListState {
     fn default() -> Self {
         Self {
             search_query: String::new(),
             selected_list: KanjiList::All,
+            stroke_filter: StrokeFilter::Any,
             last_search_query: None,
             last_selected_list: None,
+            last_stroke_filter: None,
             cached_results: Vec::new(),
         }
     }

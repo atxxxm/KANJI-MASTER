@@ -1,8 +1,6 @@
-use crate::ui::tabs::KanjiListState;
-use crate::ui::context::AppContext;
+use crate::ui::tabs::{KanjiList, KanjiListState, StrokeFilter};
+use crate::ui::context::{AppContext, TabOpenMode};
 use crate::ui::tabs::TabType;
-use crate::ui::context::TabOpenMode;
-use crate::ui::tabs::KanjiList;
 use crate::ui::views::kanji_detail;
 use std::sync::Arc;
 
@@ -13,48 +11,61 @@ pub fn render(ui: &mut egui::Ui, state: &mut KanjiListState, ctx: &AppContext) -
     let current_search_trim = state.search_query.trim().to_lowercase();
     let is_search_empty = current_search_trim.is_empty();
     let query_changed = state.last_search_query.as_deref() != Some(current_search_trim.as_str());
-    let filter_changed = state.last_selected_list != Some(kanji_set);
+    let stroke_filter = state.stroke_filter;
+    let filter_changed = state.last_selected_list != Some(kanji_set)
+        || state.last_stroke_filter != Some(stroke_filter);
 
     if query_changed || filter_changed {
-    state.cached_results.clear();
-    
-    for (idx, item) in ctx.kanji.iter().enumerate() {
-        let matches_category = match kanji_set {
-            KanjiList::All => true,
-            KanjiList::Jlpt5 => item.jlpt == "N5",
-            KanjiList::Jlpt4 => item.jlpt == "N4",
-            KanjiList::Jlpt3 => item.jlpt == "N3",
-            KanjiList::Jlpt2 => item.jlpt == "N2",
-            KanjiList::Jlpt1 => item.jlpt == "N1",
-        };
+        state.cached_results.clear();
 
-        if !matches_category { continue; }
+        for (idx, item) in ctx.kanji.iter().enumerate() {
+            let matches_jlpt = match kanji_set {
+                KanjiList::All => true,
+                KanjiList::Jlpt5 => item.jlpt == "N5",
+                KanjiList::Jlpt4 => item.jlpt == "N4",
+                KanjiList::Jlpt3 => item.jlpt == "N3",
+                KanjiList::Jlpt2 => item.jlpt == "N2",
+                KanjiList::Jlpt1 => item.jlpt == "N1",
+            };
 
-        if is_search_empty {
-            state.cached_results.push(idx);
-            continue;
+            let matches_strokes = match stroke_filter {
+                StrokeFilter::Any => true,
+                StrokeFilter::S1to4 => item.strokes >= 1 && item.strokes <= 4,
+                StrokeFilter::S5to8 => item.strokes >= 5 && item.strokes <= 8,
+                StrokeFilter::S9to12 => item.strokes >= 9 && item.strokes <= 12,
+                StrokeFilter::S13plus => item.strokes >= 13,
+            };
+
+            if !matches_jlpt || !matches_strokes {
+                continue;
+            }
+
+            if is_search_empty {
+                state.cached_results.push(idx);
+                continue;
+            }
+
+            let matches_basic = item.kanji.contains(&current_search_trim)
+                || item.onyomi.contains(&current_search_trim)
+                || item.kunyomi.contains(&current_search_trim)
+                || item.onyomi_romaji.contains(&current_search_trim)
+                || item.kunyomi_romaji.contains(&current_search_trim);
+
+            let matches_meaning = if let Some(entry) = translations.get(&item.kanji) {
+                entry.meaning.to_lowercase().contains(&current_search_trim)
+            } else {
+                false
+            };
+
+            if matches_basic || matches_meaning {
+                state.cached_results.push(idx);
+            }
         }
 
-        let matches_basic = item.kanji.contains(&current_search_trim)
-            || item.onyomi.contains(&current_search_trim)
-            || item.kunyomi.contains(&current_search_trim)
-            || item.onyomi_romaji.contains(&current_search_trim)
-            || item.kunyomi_romaji.contains(&current_search_trim);
-
-        let matches_meaning = if let Some(entry) = translations.get(&item.kanji) {
-            entry.meaning.to_lowercase().contains(&current_search_trim)
-        } else {
-            false
-        };
-
-        if matches_basic || matches_meaning {
-            state.cached_results.push(idx);
-        }
+        state.last_search_query = Some(current_search_trim);
+        state.last_selected_list = Some(kanji_set);
+        state.last_stroke_filter = Some(stroke_filter);
     }
-    
-    state.last_search_query = Some(current_search_trim);
-    state.last_selected_list = Some(kanji_set);
-}
 
     ui.add_space(15.0);
 
@@ -76,11 +87,11 @@ pub fn render(ui: &mut egui::Ui, state: &mut KanjiListState, ctx: &AppContext) -
             .inner_margin(egui::Margin::symmetric(15, 8));
 
         ui.horizontal(|ui| {
-            let filter_width = 110.0;
+            let combo_width = 110.0;
             let spacing = 10.0;
-            let search_width = ui.available_width() - filter_width - spacing;
+            let search_width = ui.available_width() - (combo_width + spacing) * 2.0;
 
-            // === A. SEARCH BAR (Left Pill) ===
+            // Search bar
             pill_frame.show(ui, |ui| {
                 ui.set_width(search_width);
                 ui.horizontal(|ui| {
@@ -90,7 +101,6 @@ pub fn render(ui: &mut egui::Ui, state: &mut KanjiListState, ctx: &AppContext) -
                             .color(ui.visuals().text_color().gamma_multiply(0.5)),
                     );
                     ui.add_space(5.0);
-
                     let text_edit = egui::TextEdit::singleline(&mut state.search_query)
                         .id_source("list_search_field")
                         .hint_text(&ctx.localization.local.screens.search)
@@ -98,34 +108,29 @@ pub fn render(ui: &mut egui::Ui, state: &mut KanjiListState, ctx: &AppContext) -
                         .desired_width(f32::INFINITY)
                         .font(egui::FontId::proportional(18.0))
                         .margin(egui::vec2(0.0, 2.0));
-
                     ui.add(text_edit);
                 });
             });
 
             ui.add_space(spacing);
 
+            // JLPT filter
             pill_frame.show(ui, |ui| {
-                ui.set_width(filter_width);
+                ui.set_width(combo_width);
                 ui.set_min_height(28.0);
-
-                let combo_label = match state.selected_list {
-                    KanjiList::All => "All",
+                let jlpt_label = match state.selected_list {
+                    KanjiList::All => "JLPT",
                     KanjiList::Jlpt5 => "N5",
                     KanjiList::Jlpt4 => "N4",
                     KanjiList::Jlpt3 => "N3",
                     KanjiList::Jlpt2 => "N2",
                     KanjiList::Jlpt1 => "N1",
                 };
-
                 ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
                     ui.add_space(2.0);
-
                     egui::ComboBox::from_id_salt("kanji_filter_combo")
-                        .selected_text(
-                            egui::RichText::new(format!("⚡ {}", combo_label)).strong(),
-                        )
-                        .width(filter_width - 20.0)
+                        .selected_text(egui::RichText::new(format!("⚡ {}", jlpt_label)).strong())
+                        .width(combo_width - 20.0)
                         .show_ui(ui, |ui| {
                             ui.selectable_value(
                                 &mut state.selected_list,
@@ -133,31 +138,40 @@ pub fn render(ui: &mut egui::Ui, state: &mut KanjiListState, ctx: &AppContext) -
                                 &ctx.localization.local.top_bar.kanji.all,
                             );
                             ui.separator();
-                            ui.selectable_value(
-                                &mut state.selected_list,
-                                KanjiList::Jlpt5,
-                                "JLPT N5",
-                            );
-                            ui.selectable_value(
-                                &mut state.selected_list,
-                                KanjiList::Jlpt4,
-                                "JLPT N4",
-                            );
-                            ui.selectable_value(
-                                &mut state.selected_list,
-                                KanjiList::Jlpt3,
-                                "JLPT N3",
-                            );
-                            ui.selectable_value(
-                                &mut state.selected_list,
-                                KanjiList::Jlpt2,
-                                "JLPT N2",
-                            );
-                            ui.selectable_value(
-                                &mut state.selected_list,
-                                KanjiList::Jlpt1,
-                                "JLPT N1",
-                            );
+                            ui.selectable_value(&mut state.selected_list, KanjiList::Jlpt5, "JLPT N5");
+                            ui.selectable_value(&mut state.selected_list, KanjiList::Jlpt4, "JLPT N4");
+                            ui.selectable_value(&mut state.selected_list, KanjiList::Jlpt3, "JLPT N3");
+                            ui.selectable_value(&mut state.selected_list, KanjiList::Jlpt2, "JLPT N2");
+                            ui.selectable_value(&mut state.selected_list, KanjiList::Jlpt1, "JLPT N1");
+                        });
+                });
+            });
+
+            ui.add_space(spacing);
+
+            // Stroke count filter
+            pill_frame.show(ui, |ui| {
+                ui.set_width(combo_width);
+                ui.set_min_height(28.0);
+                let stroke_label = match state.stroke_filter {
+                    StrokeFilter::Any => "Strokes",
+                    StrokeFilter::S1to4 => "1–4",
+                    StrokeFilter::S5to8 => "5–8",
+                    StrokeFilter::S9to12 => "9–12",
+                    StrokeFilter::S13plus => "13+",
+                };
+                ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                    ui.add_space(2.0);
+                    egui::ComboBox::from_id_salt("stroke_filter_combo")
+                        .selected_text(egui::RichText::new(format!("✏ {}", stroke_label)).strong())
+                        .width(combo_width - 20.0)
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(&mut state.stroke_filter, StrokeFilter::Any, "Any");
+                            ui.separator();
+                            ui.selectable_value(&mut state.stroke_filter, StrokeFilter::S1to4, "1–4 strokes");
+                            ui.selectable_value(&mut state.stroke_filter, StrokeFilter::S5to8, "5–8 strokes");
+                            ui.selectable_value(&mut state.stroke_filter, StrokeFilter::S9to12, "9–12 strokes");
+                            ui.selectable_value(&mut state.stroke_filter, StrokeFilter::S13plus, "13+ strokes");
                         });
                 });
             });
