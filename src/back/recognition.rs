@@ -1,5 +1,7 @@
-use crate::back::svg_cache::Stroke;
-use std::collections::HashMap;
+use crate::back::core::Kanji;
+use crate::back::svg_cache::parse_svg_content;
+use std::fs;
+use std::sync::Arc;
 
 // Number of points to which each stroke is reduced
 const POINTS_PER_STROKE: usize = 32;
@@ -22,23 +24,18 @@ impl RecognitionSystem {
         Self { cache: Vec::new() }
     }
 
-    pub fn load_cache(&mut self, svg_data: &HashMap<i32, Vec<Stroke>>) {
+    pub fn load_from_svgs(&mut self, kanji_db: &[Arc<Kanji>], svg_path: &str) {
         self.cache.clear();
-        
-        for (id, strokes) in svg_data {
-            let raw_strokes: Vec<Vec<(f32, f32)>> = strokes.iter()
-                .map(|stroke| {
-                    stroke.points.iter()
-                        .map(|sp| (sp.pos.x as f32, sp.pos.y as f32))
-                        .collect()
-                })
+        for k in kanji_db {
+            let file_path = format!("{}/0{}.svg", svg_path, k.unicode.to_lowercase());
+            let Ok(content) = fs::read_to_string(&file_path) else { continue };
+            let Some(strokes) = parse_svg_content(&content) else { continue };
+            let raw_strokes: Vec<Vec<(f32, f32)>> = strokes
+                .iter()
+                .map(|s| s.points.iter().map(|sp| (sp.pos.x as f32, sp.pos.y as f32)).collect())
                 .collect();
-
             let normalized = normalize_kanji(raw_strokes);
-            self.cache.push(SimplifiedKanji {
-                id: *id,
-                strokes: normalized,
-            });
+            self.cache.push(SimplifiedKanji { id: k.id, strokes: normalized });
         }
     }
 

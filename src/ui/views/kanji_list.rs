@@ -6,7 +6,7 @@ use crate::ui::tabs::KanjiList;
 use crate::ui::views::kanji_detail;
 use std::sync::Arc;
 
-pub fn render(ui: &mut egui::Ui, state: &mut KanjiListState, ctx: &AppContext) -> Option<(TabType, TabOpenMode)> {
+pub fn render(ui: &mut egui::Ui, state: &mut KanjiListState, ctx: &mut AppContext) -> Option<(TabType, TabOpenMode)> {
     let mut tab_action = None;
     let kanji_set = state.selected_list;
     let translations = &ctx.translate_state.data.entries;

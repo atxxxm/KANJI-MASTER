@@ -6,10 +6,10 @@ use crate::back::core::Kanji;
 use crate::back::svg_cache::SvgCache;
 use std::sync::Arc;
 
-pub fn create_tab(kanji: Arc<Kanji>, svg_cache: &SvgCache) -> TabType {
+pub fn create_tab(kanji: Arc<Kanji>, svg_cache: &mut SvgCache) -> TabType {
     let mut animator = KanjiAnimator::new();
 
-    if let Some(strokes) = svg_cache.data.get(&kanji.id) {
+    if let Some(strokes) = svg_cache.get_or_load(kanji.id) {
         animator.load_strokes(strokes.clone());
     } else {
         animator.clear();

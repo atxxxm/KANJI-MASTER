@@ -4,7 +4,7 @@ use crate::ui::tabs::{TabType, HomeState};
 use crate::ui::views::kanji_detail;
 use std::sync::Arc;
 
-pub fn render(ui: &mut egui::Ui, state: &mut HomeState, ctx: &AppContext) -> Option<(TabType, TabOpenMode)> {
+pub fn render(ui: &mut egui::Ui, state: &mut HomeState, ctx: &mut AppContext) -> Option<(TabType, TabOpenMode)> {
     let mut tab_action = None;
     let translations = &ctx.translate_state.data.entries;
     let current_search_trim = state.search_query.trim().to_lowercase();

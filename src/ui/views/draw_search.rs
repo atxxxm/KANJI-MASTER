@@ -5,7 +5,7 @@ use crate::ui::theme;
 use std::sync::Arc;
 use crate::ui::views::kanji_detail;
 
-pub fn render(ui: &mut egui::Ui, state: &mut crate::ui::tabs::DrawSearchState, ctx: &AppContext, recognition_system: &crate::back::recognition::RecognitionSystem) -> Option<(TabType, TabOpenMode)> {
+pub fn render(ui: &mut egui::Ui, state: &mut crate::ui::tabs::DrawSearchState, ctx: &mut AppContext, recognition_system: &crate::back::recognition::RecognitionSystem) -> Option<(TabType, TabOpenMode)> {
     let mut tab_action = None;
     let local = &ctx.localization.local.top_bar.tools.draw_and_search;
 

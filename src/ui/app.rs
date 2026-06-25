@@ -130,11 +130,11 @@ impl App {
         let settings_window = !loaded_successfully;
 
         let mut svg_cache = SvgCache::new();
-        svg_cache.load_all(&kanji, &config.path_to_svg_images);
+        svg_cache.prepare(&kanji, &config.path_to_svg_images);
 
         // Recognition initialization
         let mut recognition = RecognitionSystem::new();
-        recognition.load_cache(&svg_cache.data);
+        recognition.load_from_svgs(&kanji, &config.path_to_svg_images);
 
         Ok(Self {
             tab_manager: TabManager::new(),
@@ -422,10 +422,10 @@ impl eframe::App for App {
 
                 match content {
                     TabType::Home(search_query) => {
-                        action = views::home::render(ui, search_query, &context);
+                        action = views::home::render(ui, search_query, &mut context);
                     },
                     TabType::KanjiList(state) => {
-                        action = views::kanji_list::render(ui, state, &context);
+                        action = views::kanji_list::render(ui, state, &mut context);
                     },
                     TabType::KanjiDetail(state) => {
                         action = views::kanji_detail::render(ui, state, &context);
@@ -439,11 +439,11 @@ impl eframe::App for App {
                     TabType::Translate(state) => {
                         action = views::translate::render(ui, state, &mut context);
                     },
-                    TabType::AnkiExport(state) => { // НОВЫЙ РЕНДЕР
+                    TabType::AnkiExport(state) => {
                         action = views::anki_export::render(ui, state, &context);
                     },
                     TabType::DrawSearch(state) => {
-                        action = views::draw_search::render(ui, state, &context, &self.recognition);
+                        action = views::draw_search::render(ui, state, &mut context, &self.recognition);
                     },
                 }
             }

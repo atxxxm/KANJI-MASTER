@@ -15,7 +15,7 @@ pub struct AppContext<'a> {
     pub settings: &'a Settings,
     pub localization: &'a Localization,
     pub translate_state: &'a mut TranslateState,
-    pub svg_cache: &'a SvgCache,
+    pub svg_cache: &'a mut SvgCache,
 }
 
 pub enum TabOpenMode {

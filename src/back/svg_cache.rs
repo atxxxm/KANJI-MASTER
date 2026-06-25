@@ -3,9 +3,8 @@ use kurbo::{BezPath, PathEl, Point};
 use roxmltree::{Document, ParsingOptions};
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
-use svgtypes::{PathParser, PathSegment};
 use std::sync::Arc;
+use svgtypes::{PathParser, PathSegment};
 
 #[derive(Clone, Debug)]
 pub struct StrokePoint {
@@ -20,29 +19,46 @@ pub struct Stroke {
 }
 
 pub struct SvgCache {
-    pub data: HashMap<i32, Vec<Stroke>>,
+    data: HashMap<i32, Vec<Stroke>>,
+    svg_path: String,
+    unicode_map: HashMap<i32, String>,
 }
 
 impl SvgCache {
     pub fn new() -> Self {
         Self {
             data: HashMap::new(),
+            svg_path: String::new(),
+            unicode_map: HashMap::new(),
         }
     }
 
-    pub fn load_all(&mut self, kanji_db: &[Arc<Kanji>], svg_path: &str) {
+    /// Stores the path and kanji→unicode mapping; does NOT parse any SVG files.
+    pub fn prepare(&mut self, kanji_db: &[Arc<Kanji>], svg_path: &str) {
+        self.svg_path = svg_path.to_string();
+        self.unicode_map.clear();
         for k in kanji_db {
-            let file_path = format!("{}/0{}.svg", svg_path, k.unicode.to_lowercase());
-            if Path::new(&file_path).exists()
-                && let Ok(content) = fs::read_to_string(&file_path)
-                    && let Some(strokes) = parse_svg_content(&content) {
-                        self.data.insert(k.id, strokes);
-                    }
+            self.unicode_map.insert(k.id, k.unicode.clone());
         }
+    }
+
+    /// Returns strokes for a kanji, parsing its SVG file on first access.
+    pub fn get_or_load(&mut self, kanji_id: i32) -> Option<&Vec<Stroke>> {
+        if !self.data.contains_key(&kanji_id) {
+            if let Some(unicode) = self.unicode_map.get(&kanji_id).cloned() {
+                let file_path = format!("{}/0{}.svg", self.svg_path, unicode.to_lowercase());
+                if let Ok(content) = fs::read_to_string(&file_path) {
+                    if let Some(strokes) = parse_svg_content(&content) {
+                        self.data.insert(kanji_id, strokes);
+                    }
+                }
+            }
+        }
+        self.data.get(&kanji_id)
     }
 }
 
-fn parse_svg_content(raw_text: &str) -> Option<Vec<Stroke>> {
+pub(crate) fn parse_svg_content(raw_text: &str) -> Option<Vec<Stroke>> {
     let text = raw_text.replace("kvg:", "kvg_");
     let opt = ParsingOptions {
         allow_dtd: true,
