@@ -10,7 +10,7 @@ use crate::ui::views;
 use eframe::egui;
 use std::path::PathBuf;
 use std::sync::OnceLock;
-use crate::back::svg_cache::SvgCache; 
+use crate::back::svg_cache::SvgCache;
 use std::sync::Arc;
 
 struct App {
@@ -25,6 +25,7 @@ struct App {
     translate_state: TranslateState,
     
     settings_window: bool,
+    kanji_loc_setup: bool,
     config_path: PathBuf,
 
     recognition: RecognitionSystem,
@@ -126,8 +127,9 @@ impl App {
             }
         }
 
-        // If loading failed, reset the state
-        let settings_window = !loaded_successfully;
+        // If loading failed, show the localization setup screen
+        let kanji_loc_setup = !loaded_successfully;
+        let settings_window = false;
 
         let mut svg_cache = SvgCache::new();
         svg_cache.load_all(&kanji, &config.path_to_svg_images);
@@ -145,6 +147,7 @@ impl App {
             paths,
             localization,
             settings_window,
+            kanji_loc_setup,
             translate_state,
             config_path,
             recognition,
@@ -201,6 +204,137 @@ impl App {
 
         if let Err(e) = save_config(&self.config_path, &current_config) {
             self.error_notification = Some(format!("Failed to save config: {}", e));
+        }
+    }
+
+    fn kanji_localization_setup(&mut self, ctx: &egui::Context) {
+        if !self.kanji_loc_setup {
+            return;
+        }
+
+        let mut pick_file = false;
+        let mut use_default = false;
+        let mut skip = false;
+
+        egui::Window::new("📖 Kanji Localization")
+            .collapsible(false)
+            .resizable(false)
+            .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
+            .default_width(440.0)
+            .show(ctx, |ui| {
+                ui.add_space(10.0);
+
+                ui.vertical_centered(|ui| {
+                    ui.label(egui::RichText::new("📂").size(44.0));
+                    ui.add_space(6.0);
+                    ui.label(
+                        egui::RichText::new("Kanji localization not found")
+                            .size(18.0)
+                            .strong(),
+                    );
+                    ui.add_space(6.0);
+                    ui.label(
+                        egui::RichText::new(
+                            "Kanji meanings and example translations could not be loaded.",
+                        )
+                        .weak()
+                        .size(13.0),
+                    );
+                });
+
+                ui.add_space(16.0);
+                ui.separator();
+                ui.add_space(12.0);
+
+                ui.label(egui::RichText::new("How it works:").strong());
+                ui.add_space(6.0);
+                ui.label("• Meanings are stored in a JSON file you choose");
+                ui.label("• English (en.json) is bundled with the app");
+                ui.label("• To add your language — copy en.json, translate it, and load it here");
+
+                ui.add_space(18.0);
+
+                let w = ui.available_width();
+
+                if ui
+                    .add(
+                        egui::Button::new(
+                            egui::RichText::new("✓  Use English (built-in)").strong(),
+                        )
+                        .min_size(egui::vec2(w, 38.0)),
+                    )
+                    .clicked()
+                {
+                    use_default = true;
+                }
+
+                ui.add_space(8.0);
+
+                if ui
+                    .add(
+                        egui::Button::new("📂  Browse for JSON file...")
+                            .min_size(egui::vec2(w, 38.0)),
+                    )
+                    .clicked()
+                {
+                    pick_file = true;
+                }
+
+                ui.add_space(12.0);
+                ui.separator();
+                ui.add_space(6.0);
+
+                ui.horizontal(|ui| {
+                    ui.label(
+                        egui::RichText::new("You can change this later in ⚙ Settings.")
+                            .weak()
+                            .size(11.0),
+                    );
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        if ui
+                            .add(egui::Button::new("Skip").frame(false))
+                            .clicked()
+                        {
+                            skip = true;
+                        }
+                    });
+                });
+
+                ui.add_space(4.0);
+            });
+
+        if use_default {
+            let default_path = crate::back::config::get_app_config_dir()
+                .join("kanji-localization")
+                .join("en.json");
+            self.paths.path_to_kanji_localization = default_path.display().to_string();
+            self.reload_translations();
+            self.save();
+            self.kanji_loc_setup = false;
+        }
+
+        if pick_file {
+            if let Some(path) = rfd::FileDialog::new()
+                .add_filter("Kanji Localization (*.json)", &["json"])
+                .pick_file()
+            {
+                let config_dir = crate::back::config::get_app_config_dir();
+                let file_name = path.file_name().unwrap_or_default();
+                let dest = config_dir.join("kanji-localization").join(file_name);
+                if let Some(parent) = dest.parent() {
+                    let _ = std::fs::create_dir_all(parent);
+                }
+                if std::fs::copy(&path, &dest).is_ok() {
+                    self.paths.path_to_kanji_localization = dest.display().to_string();
+                    self.reload_translations();
+                    self.save();
+                    self.kanji_loc_setup = false;
+                }
+            }
+        }
+
+        if skip {
+            self.kanji_loc_setup = false;
         }
     }
 
@@ -464,6 +598,8 @@ impl eframe::App for App {
                 }
             }
         });
+
+        self.kanji_localization_setup(ctx);
 
         if self
             .settings
