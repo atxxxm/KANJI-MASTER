@@ -9,6 +9,23 @@ pub fn render(ui: &mut egui::Ui, state: &mut crate::ui::tabs::DrawSearchState, c
     let mut tab_action = None;
     let local = &ctx.localization.local.top_bar.tools.draw_and_search;
 
+    // Ctrl+Z to undo last stroke
+    let undo_triggered = ui.input(|i| i.key_pressed(egui::Key::Z) && i.modifiers.ctrl);
+    if undo_triggered {
+        state.strokes.pop();
+        if state.strokes.is_empty() {
+            state.results.clear();
+        } else {
+            let input_points: Vec<Vec<(f32, f32)>> = state.strokes.iter()
+                .map(|s| s.iter().map(|p| (p.x, p.y)).collect())
+                .collect();
+            let matches = recognition_system.search(&input_points, 20);
+            state.results = matches.iter()
+                .filter_map(|(id, _)| ctx.kanji_by_id.get(id).map(Arc::clone))
+                .collect();
+        }
+    }
+
     // Header Section
     ui.vertical_centered(|ui| {
         ui.add_space(10.0);
@@ -98,12 +115,25 @@ pub fn render(ui: &mut egui::Ui, state: &mut crate::ui::tabs::DrawSearchState, c
                         state.results.clear();
                     }
 
-                    // Undo Button
-                    if ui.add(
+                    // Undo Button (Ctrl+Z)
+                    let has_strokes = !state.strokes.is_empty();
+                    if ui.add_enabled(
+                        has_strokes,
                         egui::Button::new(egui::RichText::new("⬅").size(16.0))
                             .min_size(egui::vec2(40.0, 40.0))
-                    ).on_hover_text(&local.undo_button).clicked() {
+                    ).on_hover_text(format!("{} (Ctrl+Z)", &local.undo_button)).clicked() {
                         state.strokes.pop();
+                        if state.strokes.is_empty() {
+                            state.results.clear();
+                        } else {
+                            let input_points: Vec<Vec<(f32, f32)>> = state.strokes.iter()
+                                .map(|s| s.iter().map(|p| (p.x, p.y)).collect())
+                                .collect();
+                            let matches = recognition_system.search(&input_points, 20);
+                            state.results = matches.iter()
+                                .filter_map(|(id, _)| ctx.kanji_by_id.get(id).map(Arc::clone))
+                                .collect();
+                        }
                     }
 
                     ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
