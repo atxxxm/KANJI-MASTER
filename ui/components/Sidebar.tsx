@@ -20,11 +20,13 @@ interface Props {
   onViewChange: (v: View) => void;
   theme: "dark" | "light";
   onToggleTheme: () => void;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
 }
 
 function NavButton({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
   return (
-    <button className={`nav-item${active ? " active" : ""}`} onClick={onClick}>
+    <button className={`nav-item${active ? " active" : ""}`} onClick={onClick} title={item.label}>
       {active && (
         <motion.div
           layoutId="nav-active-pill"
@@ -38,13 +40,13 @@ function NavButton({ item, active, onClick }: { item: NavItem; active: boolean; 
   );
 }
 
-export default function Sidebar({ activeView, onViewChange, theme, onToggleTheme }: Props) {
+export default function Sidebar({ activeView, onViewChange, theme, onToggleTheme, collapsed, onToggleCollapsed }: Props) {
   return (
-    <nav className="sidebar">
-      <div className="sidebar-brand">
+    <nav className={`sidebar${collapsed ? " collapsed" : ""}`}>
+      <button className="sidebar-brand" onClick={onToggleCollapsed} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
         <span className="sidebar-logo">漢</span>
         <span className="sidebar-title">Kanji Master</span>
-      </div>
+      </button>
 
       <div className="sidebar-nav">
         {TOP_NAV.map(item => (
@@ -66,7 +68,7 @@ export default function Sidebar({ activeView, onViewChange, theme, onToggleTheme
 
         <div className="nav-divider" />
 
-        <button className="nav-item" onClick={onToggleTheme}>
+        <button className="nav-item" onClick={onToggleTheme} title={theme === "dark" ? "Light mode" : "Dark mode"}>
           <span className="nav-icon">{theme === "dark" ? "☀" : "☾"}</span>
           <span className="nav-label">{theme === "dark" ? "Light mode" : "Dark mode"}</span>
         </button>

@@ -19,10 +19,18 @@
   flex: 1;
   overflow-y: auto;
   padding: 20px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .kana-section {
   margin-bottom: 28px;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .kana-section-title {

@@ -59,12 +59,11 @@
 .romaji-input::placeholder { color: var(--text-muted); }
 .romaji-input:focus { border-color: var(--accent); outline: none; }
 
-/* ── Arrow ───────────────────────────────────────────────── */
-.convert-arrow {
-  text-align: center;
-  font-size: 18px;
-  color: var(--text-muted);
-  flex-shrink: 0;
+.romaji-single {
+  flex: 1;
+  width: auto;
+  font-size: 22px;
+  min-height: 160px;
 }
 
 /* ── Output ──────────────────────────────────────────────── */

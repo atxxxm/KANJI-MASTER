@@ -81,14 +81,6 @@ export default function KanjiList() {
                 onClick={() => handleCardClick(k)}
               >
                 <span className="kanji-char">{k.kanji}</span>
-                <div className="kanji-card-meta">
-                  {k.jlpt && (
-                    <span className={`jlpt-badge ${k.jlpt}`}>{k.jlpt}</span>
-                  )}
-                  {k.strokes > 0 && (
-                    <span className="kanji-strokes-label">{k.strokes}</span>
-                  )}
-                </div>
               </button>
             ))}
           </div>

@@ -1,13 +1,7 @@
-# Rust build output
 /target
 src-tauri/target
-
-# Documentation build
 docs/book
-
-# Node / frontend
 node_modules
 dist
-
-# Tauri generated
 src-tauri/gen
+.claude

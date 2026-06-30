@@ -32,6 +32,7 @@ const VIEWS: Record<View, React.ComponentType<any>> = {
 export default function App() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [view, setView] = useState<View>("kanji");
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -50,6 +51,8 @@ export default function App() {
         onViewChange={setView}
         theme={theme}
         onToggleTheme={toggleTheme}
+        collapsed={collapsed}
+        onToggleCollapsed={() => setCollapsed(c => !c)}
       />
       <main className="app-content">
         <AnimatePresence mode="wait">

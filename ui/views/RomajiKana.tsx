@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useLayoutEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { AnimatePresence } from "framer-motion";
 import type { KanjiDto } from "../api/types";
@@ -64,33 +64,60 @@ function findMatches(allKanji: KanjiDto[], kana: string): Match[] {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function RomajiKana() {
-  const [input, setInput]         = useState("");
+  const [text, setText]             = useState("");
   const [isKatakana, setIsKatakana] = useState(false);
-  const [output, setOutput]       = useState("");
-  const [allKanji, setAllKanji]   = useState<KanjiDto[]>([]);
-  const [copied, setCopied]       = useState(false);
-  const [selected, setSelected]   = useState<KanjiDto | null>(null);
+  const [allKanji, setAllKanji]     = useState<KanjiDto[]>([]);
+  const [copied, setCopied]         = useState(false);
+  const [selected, setSelected]     = useState<KanjiDto | null>(null);
+
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const pendingCursor = useRef<number | null>(null);
 
   useEffect(() => {
     invoke<KanjiDto[]>("get_kanji_list").then(setAllKanji);
   }, []);
 
-  // Live conversion
-  useEffect(() => {
-    if (!input) { setOutput(""); return; }
-    invoke<string>("convert_romaji", { input, isKatakana, liveInput: true })
-      .then(setOutput);
-  }, [input, isKatakana]);
+  // Restore caret position after a programmatic value update
+  useLayoutEffect(() => {
+    if (pendingCursor.current !== null && textareaRef.current) {
+      const pos = pendingCursor.current;
+      textareaRef.current.setSelectionRange(pos, pos);
+      pendingCursor.current = null;
+    }
+  }, [text]);
 
-  const kanaQuery = useMemo(() => lastKanaWord(output), [output]);
+  // Convert only the segment before the caret on each keystroke, so kana
+  // already committed further in the text is left untouched.
+  const handleChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const raw = e.target.value;
+    const cursor = e.target.selectionStart;
+    const before = raw.slice(0, cursor);
+    const after = raw.slice(cursor);
+
+    const convertedBefore = await invoke<string>("convert_romaji", {
+      input: before,
+      isKatakana,
+      liveInput: true,
+    });
+
+    pendingCursor.current = convertedBefore.length;
+    setText(convertedBefore + after);
+  };
+
+  const toggleMode = (katakana: boolean) => {
+    setIsKatakana(katakana);
+    setText(prev => (katakana ? toKatakana(prev) : toHiragana(prev)));
+  };
+
+  const kanaQuery = useMemo(() => lastKanaWord(text), [text]);
   const matches   = useMemo(() => findMatches(allKanji, kanaQuery), [allKanji, kanaQuery]);
 
   const exactMatches   = matches.filter(m => m.exact);
   const partialMatches = matches.filter(m => !m.exact);
 
   const handleCopy = () => {
-    if (!output) return;
-    navigator.clipboard.writeText(output).then(() => {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
@@ -103,37 +130,32 @@ export default function RomajiKana() {
         <div className="mode-toggle">
           <button
             className={`mode-btn${!isKatakana ? " active" : ""}`}
-            onClick={() => setIsKatakana(false)}
+            onClick={() => toggleMode(false)}
           >
             Hiragana &nbsp;あ
           </button>
           <button
             className={`mode-btn${isKatakana ? " active" : ""}`}
-            onClick={() => setIsKatakana(true)}
+            onClick={() => toggleMode(true)}
           >
             Katakana &nbsp;ア
           </button>
         </div>
 
-        <textarea
-          className="romaji-input"
-          placeholder="Type romaji here… (e.g. kanji, nihongo)"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          autoFocus
-          spellCheck={false}
-        />
-
-        <div className="convert-arrow">↓</div>
-
         <div className="romaji-output-row">
-          <div className={`romaji-output${!output ? " empty" : ""}`}>
-            {output || "Kana will appear here"}
-          </div>
+          <textarea
+            ref={textareaRef}
+            className="romaji-input romaji-single"
+            placeholder="Type romaji here… (e.g. kanji, nihongo)"
+            value={text}
+            onChange={handleChange}
+            autoFocus
+            spellCheck={false}
+          />
           <button
             className={`copy-btn${copied ? " copied" : ""}`}
             onClick={handleCopy}
-            disabled={!output}
+            disabled={!text}
           >
             {copied ? "✓ Copied" : "Copy"}
           </button>

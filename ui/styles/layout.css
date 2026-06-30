@@ -13,6 +13,12 @@
   flex-direction: column;
   background: var(--surface);
   border-right: 1px solid var(--border);
+  transition: width var(--transition);
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 56px;
 }
 
 .sidebar-brand {
@@ -22,6 +28,15 @@
   padding: 18px 16px 14px;
   border-bottom: 1px solid var(--border);
   user-select: none;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.sidebar-brand:hover {
+  background: var(--surface-2);
+}
+.sidebar.collapsed .sidebar-brand {
+  padding-left: 17px;
+  padding-right: 17px;
 }
 
 .sidebar-logo {
@@ -35,6 +50,18 @@
   font-weight: 700;
   letter-spacing: 0.03em;
   color: var(--text);
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .sidebar-title,
+.sidebar.collapsed .nav-label {
+  display: none;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .sidebar-nav {
