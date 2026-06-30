@@ -9,6 +9,15 @@
   overflow-x: auto;
 }
 
+.tab-chip-item {
+  flex-shrink: 0;
+  list-style: none;
+  cursor: grab;
+}
+.tab-chip-item:active {
+  cursor: grabbing;
+}
+
 .tab-chip {
   position: relative;
   display: flex;

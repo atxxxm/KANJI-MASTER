@@ -129,6 +129,7 @@ export default function App() {
           activeTabId={activeTab.id}
           onSwitch={setActiveTabId}
           onClose={closeTab}
+          onReorder={setTabs}
         />
         <AnimatePresence mode="wait">
           <motion.div
