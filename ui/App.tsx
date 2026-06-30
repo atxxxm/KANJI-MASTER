@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import "./styles/globals.css";
 import "./styles/layout.css";
 import Sidebar from "./components/Sidebar";
+import Home from "./views/Home";
 import KanjiList from "./views/KanjiList";
 import KanaChart from "./views/KanaChart";
 import RomajiKana from "./views/RomajiKana";
@@ -10,7 +11,7 @@ import DrawSearch from "./views/DrawSearch";
 import AnkiExport from "./views/AnkiExport";
 import Settings from "./views/Settings";
 
-export type View = "kanji" | "kana" | "romaji" | "draw" | "anki" | "settings";
+export type View = "home" | "kanji" | "kana" | "romaji" | "draw" | "anki" | "settings";
 
 type Theme = "dark" | "light";
 
@@ -21,6 +22,7 @@ function getInitialTheme(): Theme {
 }
 
 const VIEWS: Record<View, React.ComponentType<any>> = {
+  home: Home,
   kanji: KanjiList,
   kana: KanaChart,
   romaji: RomajiKana,
@@ -31,7 +33,7 @@ const VIEWS: Record<View, React.ComponentType<any>> = {
 
 export default function App() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
-  const [view, setView] = useState<View>("kanji");
+  const [view, setView] = useState<View>("home");
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {

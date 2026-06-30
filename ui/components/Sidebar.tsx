@@ -8,6 +8,7 @@ interface NavItem {
 }
 
 const TOP_NAV: NavItem[] = [
+  { view: "home",    icon: "⌂", label: "Home" },
   { view: "kanji",   icon: "漢", label: "Kanji" },
   { view: "kana",    icon: "あ", label: "Kana" },
   { view: "romaji",  icon: "Aa", label: "Romaji → Kana" },
