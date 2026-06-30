@@ -102,7 +102,7 @@ pub fn render(ui: &mut egui::Ui, state: &mut KanjiListState, ctx: &AppContext) -
                     );
                     ui.add_space(5.0);
                     let text_edit = egui::TextEdit::singleline(&mut state.search_query)
-                        .id_source("list_search_field")
+                        .id(egui::Id::new("kanji_list_search"))
                         .hint_text(&ctx.localization.local.screens.search)
                         .frame(false)
                         .desired_width(f32::INFINITY)

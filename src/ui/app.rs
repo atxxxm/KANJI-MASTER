@@ -539,6 +539,37 @@ impl eframe::App for App {
             self.applied_style_key = Some(style_key);
         }
 
+        // Global keyboard shortcuts
+        let (ctrl_t, ctrl_w, ctrl_f, escape) = ctx.input(|i| (
+            i.key_pressed(egui::Key::T) && i.modifiers.ctrl,
+            i.key_pressed(egui::Key::W) && i.modifiers.ctrl,
+            i.key_pressed(egui::Key::F) && i.modifiers.ctrl,
+            i.key_pressed(egui::Key::Escape),
+        ));
+
+        if ctrl_t {
+            self.tab_manager.add_tab(TabType::Home(HomeState::default()), true);
+        }
+        if ctrl_w {
+            let idx = self.tab_manager.active_tab_index;
+            self.tab_manager.close_tab(idx);
+        }
+        if ctrl_f {
+            let is_kanji_list = matches!(
+                self.tab_manager.tabs.get(self.tab_manager.active_tab_index).map(|t| &t.content),
+                Some(TabType::KanjiList(_))
+            );
+            if !is_kanji_list {
+                self.tab_manager.add_tab(TabType::KanjiList(KanjiListState::default()), true);
+            }
+            ctx.memory_mut(|m| m.request_focus(egui::Id::new("kanji_list_search")));
+        }
+        if escape {
+            if let Some(TabType::KanjiList(state)) = self.tab_manager.active_content_mut() {
+                state.search_query.clear();
+            }
+        }
+
         self.top_bar(ctx);
 
         egui::CentralPanel::default().show(ctx, |ui| {
