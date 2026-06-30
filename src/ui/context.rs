@@ -10,6 +10,7 @@ use std::sync::Arc;
 pub struct AppContext<'a> {
     pub kanji: &'a Vec<Arc<Kanji>>,
     pub kanji_by_id: &'a HashMap<i32, Arc<Kanji>>,
+    pub kanji_by_char: &'a HashMap<String, Arc<Kanji>>,
     #[allow(dead_code)]
     pub config: &'a mut Config,
     pub settings: &'a Settings,

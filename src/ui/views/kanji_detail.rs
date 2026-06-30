@@ -5,6 +5,7 @@ use crate::ui::animator::KanjiAnimator;
 use crate::back::core::Kanji;
 use crate::back::svg_cache::SvgCache;
 use std::sync::Arc;
+use std::collections::HashMap;
 
 pub fn create_tab(kanji: Arc<Kanji>, svg_cache: &SvgCache) -> TabType {
     let mut animator = KanjiAnimator::new();
@@ -38,6 +39,8 @@ pub fn render(ui: &mut egui::Ui, state: &mut KanjiDetailState, ctx: &AppContext)
         .inner_margin(15.0);
 
     ui.add_space(25.0);
+
+    let mut example_tab_action: Option<(TabType, TabOpenMode)> = None;
 
     ui.columns(2, |columns| {
         let available_w = columns[0].available_width().min(340.0);
@@ -258,7 +261,10 @@ pub fn render(ui: &mut egui::Ui, state: &mut KanjiDetailState, ctx: &AppContext)
                                     );
 
                                     ui.vertical(|ui| {
-                                        ui.label(egui::RichText::new(example_jp).size(15.0));
+                                        if let Some(clicked) = render_clickable_text(ui, example_jp, ctx.kanji_by_char, 15.0) {
+                                            let new_tab = create_tab(clicked, ctx.svg_cache);
+                                            example_tab_action = Some((new_tab, TabOpenMode::NewTabActive));
+                                        }
 
                                         if !translation_text.is_empty() {
                                             ui.add_space(2.0);
@@ -288,7 +294,59 @@ pub fn render(ui: &mut egui::Ui, state: &mut KanjiDetailState, ctx: &AppContext)
                         );
                     }
                 });
+
         });
     });
-    None
+
+    example_tab_action
+}
+
+fn render_clickable_text(
+    ui: &mut egui::Ui,
+    text: &str,
+    kanji_by_char: &HashMap<String, Arc<Kanji>>,
+    font_size: f32,
+) -> Option<Arc<Kanji>> {
+    let mut clicked = None;
+
+    ui.horizontal_wrapped(|ui| {
+        ui.spacing_mut().item_spacing.x = 0.0;
+
+        let mut buffer = String::new();
+
+        for ch in text.chars() {
+            let ch_str = ch.to_string();
+            let is_db_kanji = ('\u{4E00}'..='\u{9FAF}').contains(&ch)
+                && kanji_by_char.contains_key(&ch_str);
+
+            if is_db_kanji {
+                if !buffer.is_empty() {
+                    ui.label(egui::RichText::new(&buffer).size(font_size));
+                    buffer.clear();
+                }
+                let link_color = ui.visuals().hyperlink_color;
+                let resp = ui.add(
+                    egui::Label::new(
+                        egui::RichText::new(&ch_str).size(font_size).color(link_color)
+                    ).sense(egui::Sense::click())
+                );
+                if resp.hovered() {
+                    ui.output_mut(|o| o.cursor_icon = egui::CursorIcon::PointingHand);
+                }
+                if resp.clicked() {
+                    if let Some(k) = kanji_by_char.get(&ch_str) {
+                        clicked = Some(Arc::clone(k));
+                    }
+                }
+            } else {
+                buffer.push(ch);
+            }
+        }
+
+        if !buffer.is_empty() {
+            ui.label(egui::RichText::new(&buffer).size(font_size));
+        }
+    });
+
+    clicked
 }

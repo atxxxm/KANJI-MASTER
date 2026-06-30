@@ -18,6 +18,7 @@ struct App {
 
     kanji: Vec<Arc<Kanji>>,
     kanji_by_id: std::collections::HashMap<i32, Arc<Kanji>>,
+    kanji_by_char: std::collections::HashMap<String, Arc<Kanji>>,
     config: Config,
     paths: Paths,
     settings: Settings,
@@ -59,6 +60,10 @@ impl App {
         // Index by id for O(1) lookups (used by export / draw search)
         let kanji_by_id: std::collections::HashMap<i32, Arc<Kanji>> =
             kanji.iter().map(|k| (k.id, Arc::clone(k))).collect();
+
+        // Index by character for O(1) lookups (used by clickable kanji in examples)
+        let kanji_by_char: std::collections::HashMap<String, Arc<Kanji>> =
+            kanji.iter().map(|k| (k.kanji.clone(), Arc::clone(k))).collect();
 
         let paths = Paths {
             path_to_db_core: config.path_to_db_core.clone(),
@@ -142,6 +147,7 @@ impl App {
             tab_manager: TabManager::new(),
             kanji,
             kanji_by_id,
+            kanji_by_char,
             settings: Settings::new(localization.clone(), &config),
             config,
             paths,
@@ -547,6 +553,7 @@ impl eframe::App for App {
                 let mut context = AppContext {
                     kanji: &self.kanji,
                     kanji_by_id: &self.kanji_by_id,
+                    kanji_by_char: &self.kanji_by_char,
                     config: &mut self.config,
                     settings: &self.settings,
                     localization: &self.localization,
