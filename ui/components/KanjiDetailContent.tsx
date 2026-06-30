@@ -1,12 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
-import { motion } from "framer-motion";
 import type { KanjiDto } from "../api/types";
 import AnimatedKanji from "./AnimatedKanji";
 
 interface Props {
   kanji: KanjiDto;
-  onClose: () => void;
-  onKanjiClick?: (k: KanjiDto) => void;
+  onKanjiClick: (k: KanjiDto) => void;
 }
 
 // CJK Unified Ideographs range
@@ -15,9 +13,8 @@ const isCjk = (ch: string) => {
   return c >= 0x4e00 && c <= 0x9faf;
 };
 
-function ExampleText({ text, onKanjiClick }: { text: string; onKanjiClick?: (k: KanjiDto) => void }) {
+function ExampleText({ text, onKanjiClick }: { text: string; onKanjiClick: (k: KanjiDto) => void }) {
   const handleClick = async (ch: string) => {
-    if (!onKanjiClick) return;
     const k = await invoke<KanjiDto | null>("get_kanji_by_char", { ch });
     if (k) onKanjiClick(k);
   };
@@ -41,15 +38,9 @@ function ExampleText({ text, onKanjiClick }: { text: string; onKanjiClick?: (k: 
   );
 }
 
-export default function KanjiDetailPanel({ kanji, onClose, onKanjiClick }: Props) {
+export default function KanjiDetailContent({ kanji, onKanjiClick }: Props) {
   return (
-    <motion.aside
-      className="kanji-detail-panel"
-      initial={{ opacity: 0, x: 24 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 24 }}
-      transition={{ duration: 0.18, ease: "easeOut" }}
-    >
+    <>
       {/* Stroke animation */}
       <AnimatedKanji kanjiId={kanji.id} />
 
@@ -57,7 +48,6 @@ export default function KanjiDetailPanel({ kanji, onClose, onKanjiClick }: Props
       <div className="detail-header">
         <span className="detail-kanji">{kanji.kanji}</span>
         <div className="detail-header-right">
-          <button className="detail-close" onClick={onClose}>✕</button>
           <div className="detail-meta-badges">
             {kanji.jlpt && (
               <span className={`detail-badge jlpt-${kanji.jlpt}`}>{kanji.jlpt}</span>
@@ -114,6 +104,6 @@ export default function KanjiDetailPanel({ kanji, onClose, onKanjiClick }: Props
           </div>
         </div>
       )}
-    </motion.aside>
+    </>
   );
 }

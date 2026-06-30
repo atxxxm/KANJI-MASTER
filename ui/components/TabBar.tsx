@@ -13,7 +13,8 @@ export default function TabBar({ tabs, activeTabId, onSwitch, onClose }: Props) 
   return (
     <div className="tab-bar">
       {tabs.map(tab => {
-        const meta = NAV_BY_VIEW[tab.kind];
+        const isKanjiTab = tab.kind === "kanji-detail";
+        const meta = isKanjiTab ? null : NAV_BY_VIEW[tab.kind];
         const active = tab.id === activeTabId;
         return (
           <button
@@ -27,7 +28,7 @@ export default function TabBar({ tabs, activeTabId, onSwitch, onClose }: Props) 
                 onClose(tab.id);
               }
             }}
-            title={meta.label}
+            title={isKanjiTab ? tab.kanjiChar : meta!.label}
           >
             {active && (
               <motion.div
@@ -36,8 +37,14 @@ export default function TabBar({ tabs, activeTabId, onSwitch, onClose }: Props) 
                 transition={{ type: "spring", stiffness: 500, damping: 38 }}
               />
             )}
-            <span className="tab-chip-icon">{meta.icon}</span>
-            <span className="tab-chip-label">{meta.label}</span>
+            {isKanjiTab ? (
+              <span className="tab-chip-kanji">{tab.kanjiChar}</span>
+            ) : (
+              <>
+                <span className="tab-chip-icon">{meta!.icon}</span>
+                <span className="tab-chip-label">{meta!.label}</span>
+              </>
+            )}
             {tabs.length > 1 && (
               <span
                 className="tab-chip-close"

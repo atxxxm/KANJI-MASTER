@@ -1,8 +1,6 @@
 import { useState, useEffect, useMemo, useRef, useLayoutEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { AnimatePresence } from "framer-motion";
 import type { KanjiDto } from "../api/types";
-import KanjiDetailPanel from "../components/KanjiDetailPanel";
 import "../styles/kanji-list.css";
 import "../styles/romaji-kana.css";
 
@@ -63,12 +61,15 @@ function findMatches(allKanji: KanjiDto[], kana: string): Match[] {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function RomajiKana() {
+interface Props {
+  onOpenKanji: (k: KanjiDto) => void;
+}
+
+export default function RomajiKana({ onOpenKanji }: Props) {
   const [text, setText]             = useState("");
   const [isKatakana, setIsKatakana] = useState(false);
   const [allKanji, setAllKanji]     = useState<KanjiDto[]>([]);
   const [copied, setCopied]         = useState(false);
-  const [selected, setSelected]     = useState<KanjiDto | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const pendingCursor = useRef<number | null>(null);
@@ -193,8 +194,7 @@ export default function RomajiKana() {
                   <AssistantCard
                     key={m.kanji.id}
                     match={m}
-                    selected={selected?.id === m.kanji.id}
-                    onClick={() => setSelected(s => s?.id === m.kanji.id ? null : m.kanji)}
+                    onClick={() => onOpenKanji(m.kanji)}
                   />
                 ))}
               </>
@@ -206,8 +206,7 @@ export default function RomajiKana() {
                   <AssistantCard
                     key={m.kanji.id}
                     match={m}
-                    selected={selected?.id === m.kanji.id}
-                    onClick={() => setSelected(s => s?.id === m.kanji.id ? null : m.kanji)}
+                    onClick={() => onOpenKanji(m.kanji)}
                   />
                 ))}
               </>
@@ -215,32 +214,20 @@ export default function RomajiKana() {
           </div>
         )}
       </aside>
-
-      {/* ── Detail panel ── */}
-      <AnimatePresence>
-        {selected && (
-          <KanjiDetailPanel
-            kanji={selected}
-            onClose={() => setSelected(null)}
-            onKanjiClick={setSelected}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }
 
 // ── Assistant card ────────────────────────────────────────────────────────────
 
-function AssistantCard({ match, selected, onClick }: {
+function AssistantCard({ match, onClick }: {
   match: Match;
-  selected: boolean;
   onClick: () => void;
 }) {
   const { kanji, reading, exact } = match;
   return (
     <button
-      className={`assistant-card${selected ? " selected" : ""}`}
+      className="assistant-card"
       onClick={onClick}
     >
       <span className="assistant-kanji">{kanji.kanji}</span>

@@ -55,6 +55,12 @@
   flex-shrink: 0;
 }
 
+.tab-chip-kanji {
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
 .tab-chip-label {
   overflow: hidden;
   text-overflow: ellipsis;

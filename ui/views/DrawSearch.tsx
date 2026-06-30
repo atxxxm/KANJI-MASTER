@@ -1,8 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { AnimatePresence } from "framer-motion";
 import type { KanjiDto } from "../api/types";
-import KanjiDetailPanel from "../components/KanjiDetailPanel";
 import "../styles/kanji-list.css";
 import "../styles/draw-search.css";
 
@@ -10,7 +8,11 @@ const CANVAS_SIZE = 340;
 
 type Point = [number, number];
 
-export default function DrawSearch() {
+interface Props {
+  onOpenKanji: (k: KanjiDto) => void;
+}
+
+export default function DrawSearch({ onOpenKanji }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const strokesRef = useRef<Point[][]>([]);
   const drawingRef = useRef<Point[] | null>(null);
@@ -18,7 +20,6 @@ export default function DrawSearch() {
   const [strokeCount, setStrokeCount] = useState(0);
   const [results, setResults] = useState<KanjiDto[]>([]);
   const [searching, setSearching] = useState(false);
-  const [selected, setSelected] = useState<KanjiDto | null>(null);
 
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -125,7 +126,6 @@ export default function DrawSearch() {
     drawingRef.current = null;
     setStrokeCount(0);
     setResults([]);
-    setSelected(null);
     redraw();
   };
 
@@ -149,7 +149,6 @@ export default function DrawSearch() {
   }, [handleUndo]);
 
   return (
-    <div className="draw-layout">
       <div className="draw-main">
         <div className="draw-canvas-wrapper">
           <canvas
@@ -190,8 +189,8 @@ export default function DrawSearch() {
               {results.map((k, i) => (
                 <button
                   key={k.id}
-                  className={`draw-result-card${selected?.id === k.id ? " selected" : ""}`}
-                  onClick={() => setSelected(s => s?.id === k.id ? null : k)}
+                  className="draw-result-card"
+                  onClick={() => onOpenKanji(k)}
                 >
                   <span className="draw-result-rank">#{i + 1}</span>
                   <span className="draw-result-char">{k.kanji}</span>
@@ -201,16 +200,5 @@ export default function DrawSearch() {
           )}
         </div>
       </div>
-
-      <AnimatePresence>
-        {selected && (
-          <KanjiDetailPanel
-            kanji={selected}
-            onClose={() => setSelected(null)}
-            onKanjiClick={setSelected}
-          />
-        )}
-      </AnimatePresence>
-    </div>
   );
 }

@@ -1,18 +1,19 @@
 import { useState, useEffect, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { AnimatePresence } from "framer-motion";
 import type { KanjiDto } from "../api/types";
-import KanjiDetailPanel from "../components/KanjiDetailPanel";
 import "../styles/kanji-list.css";
 import "../styles/home.css";
 
 const RANDOM_KANJI_KEY = "home_random_kanji_id";
 
-export default function Home() {
+interface Props {
+  onOpenKanji: (k: KanjiDto) => void;
+}
+
+export default function Home({ onOpenKanji }: Props) {
   const [allKanji, setAllKanji] = useState<KanjiDto[]>([]);
   const [randomKanji, setRandomKanji] = useState<KanjiDto | null>(null);
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<KanjiDto | null>(null);
 
   useEffect(() => {
     invoke<KanjiDto[]>("get_kanji_list").then(list => {
@@ -47,69 +48,57 @@ export default function Home() {
   }, [allKanji, query, hasQuery]);
 
   return (
-    <div className="home-layout">
-      <div className="home-view">
-        <div className={`home-hero ${hasQuery ? "has-query" : "empty-query"}`}>
-          <div className="home-title">KANJI MASTER</div>
+    <div className="home-view">
+      <div className={`home-hero ${hasQuery ? "has-query" : "empty-query"}`}>
+        <div className="home-title">KANJI MASTER</div>
 
-          {!hasQuery && (
-            <>
-              <div className="home-subtitle">Learn, search, and review Japanese kanji</div>
+        {!hasQuery && (
+          <>
+            <div className="home-subtitle">Learn, search, and review Japanese kanji</div>
 
-              {randomKanji && (
-                <button className="home-random" onClick={() => setSelected(randomKanji)}>
-                  <span className="home-random-label">Kanji of the session</span>
-                  <span className="home-random-char">{randomKanji.kanji}</span>
-                  <span className="home-random-reading">
-                    {[randomKanji.onyomi, randomKanji.kunyomi].filter(Boolean).join(" · ") || randomKanji.meaning}
-                  </span>
-                </button>
-              )}
-            </>
-          )}
-
-          <div className="home-search-bar" style={!hasQuery ? { marginTop: 6 } : undefined}>
-            <span className="home-search-icon">🔍</span>
-            <input
-              className="home-search-input"
-              placeholder="Search kanji, readings, meaning…"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              autoFocus
-            />
-          </div>
-        </div>
-
-        {hasQuery && (
-          <div className="home-results">
-            {results.length === 0 ? (
-              <div className="home-results-empty">No kanji found for "{search.trim()}"</div>
-            ) : (
-              <div className="kanji-grid" style={{ padding: 0 }}>
-                {results.map(k => (
-                  <button
-                    key={k.id}
-                    className={`kanji-card${selected?.id === k.id ? " selected" : ""}`}
-                    onClick={() => setSelected(s => s?.id === k.id ? null : k)}
-                  >
-                    <span className="kanji-char">{k.kanji}</span>
-                  </button>
-                ))}
-              </div>
+            {randomKanji && (
+              <button className="home-random" onClick={() => onOpenKanji(randomKanji)}>
+                <span className="home-random-label">Kanji of the session</span>
+                <span className="home-random-char">{randomKanji.kanji}</span>
+                <span className="home-random-reading">
+                  {[randomKanji.onyomi, randomKanji.kunyomi].filter(Boolean).join(" · ") || randomKanji.meaning}
+                </span>
+              </button>
             )}
-          </div>
+          </>
         )}
+
+        <div className="home-search-bar" style={!hasQuery ? { marginTop: 6 } : undefined}>
+          <span className="home-search-icon">🔍</span>
+          <input
+            className="home-search-input"
+            placeholder="Search kanji, readings, meaning…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            autoFocus
+          />
+        </div>
       </div>
 
-      <AnimatePresence>
-        {selected && (
-          <KanjiDetailPanel
-            kanji={selected}
-            onClose={() => setSelected(null)}
-            onKanjiClick={setSelected}
-          />
-        )}
-      </AnimatePresence>
+      {hasQuery && (
+        <div className="home-results">
+          {results.length === 0 ? (
+            <div className="home-results-empty">No kanji found for "{search.trim()}"</div>
+          ) : (
+            <div className="kanji-grid" style={{ padding: 0 }}>
+              {results.map(k => (
+                <button
+                  key={k.id}
+                  className="kanji-card"
+                  onClick={() => onOpenKanji(k)}
+                >
+                  <span className="kanji-char">{k.kanji}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

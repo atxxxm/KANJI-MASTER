@@ -12,9 +12,11 @@ import RomajiKana from "./views/RomajiKana";
 import DrawSearch from "./views/DrawSearch";
 import AnkiExport from "./views/AnkiExport";
 import Settings from "./views/Settings";
-import { type Tab, createTab } from "./api/tabs";
+import KanjiDetailView from "./views/KanjiDetailView";
+import { type Tab, createTab, createKanjiTab } from "./api/tabs";
+import type { KanjiDto } from "./api/types";
 
-export type View = "home" | "kanji" | "kana" | "romaji" | "draw" | "anki" | "settings";
+export type View = "home" | "kanji" | "kana" | "romaji" | "draw" | "anki" | "settings" | "kanji-detail";
 
 type Theme = "dark" | "light";
 
@@ -32,6 +34,7 @@ const VIEWS: Record<View, React.ComponentType<any>> = {
   draw: DrawSearch,
   anki: AnkiExport,
   settings: Settings,
+  "kanji-detail": KanjiDetailView,
 };
 
 // Views that should never have more than one open tab at a time —
@@ -68,6 +71,17 @@ export default function App() {
     setActiveTabId(tab.id);
   };
 
+  const openKanjiTab = (kanji: KanjiDto) => {
+    const existing = tabs.find(t => t.kind === "kanji-detail" && t.kanjiId === kanji.id);
+    if (existing) {
+      setActiveTabId(existing.id);
+      return;
+    }
+    const tab = createKanjiTab(kanji.id, kanji.kanji);
+    setTabs(prev => [...prev, tab]);
+    setActiveTabId(tab.id);
+  };
+
   const closeTab = (id: string) => {
     setTabs(prev => {
       const idx = prev.findIndex(t => t.id === id);
@@ -89,7 +103,15 @@ export default function App() {
 
   const activeTab = tabs.find(t => t.id === activeTabId) ?? tabs[0];
   const ActiveView = VIEWS[activeTab.kind];
-  const extraProps = activeTab.kind === "settings" ? { theme, onThemeChange: setTheme } : {};
+
+  const extraProps: Record<string, unknown> = { onOpenKanji: openKanjiTab };
+  if (activeTab.kind === "settings") {
+    extraProps.theme = theme;
+    extraProps.onThemeChange = setTheme;
+  }
+  if (activeTab.kind === "kanji-detail") {
+    extraProps.kanjiChar = activeTab.kanjiChar;
+  }
 
   return (
     <div className="app-layout">
