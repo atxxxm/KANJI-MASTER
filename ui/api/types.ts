@@ -14,6 +14,16 @@ export interface KanjiDto {
   meaning: string | null;
 }
 
+export interface KanjiTranslation {
+  meaning: string;
+  translate_examples: string[];
+}
+
+export interface TranslationFile {
+  last_id: number;
+  entries: Record<string, KanjiTranslation>;
+}
+
 export interface Config {
   interface_font_size: number;
   kanji_font_size: number;

@@ -154,6 +154,39 @@ fn reload_meanings(state: State<AppStateHandle>, path: String) -> Result<usize, 
     Ok(count)
 }
 
+/// Loads the full translation file (meaning + examples per kanji) for the
+/// Translate Kanji editor. Returns an empty file if it doesn't exist yet.
+#[tauri::command]
+fn get_translations(path: String) -> TranslationFile {
+    std::fs::read_to_string(&path)
+        .ok()
+        .and_then(|c| serde_json::from_str::<TranslationFile>(&c).ok())
+        .unwrap_or_default()
+}
+
+/// Writes the full translation file to disk and refreshes the in-memory
+/// meanings cache so get_kanji_list/get_kanji_by_char reflect the edit.
+#[tauri::command]
+fn save_translations(
+    state: State<AppStateHandle>,
+    path: String,
+    data: TranslationFile,
+) -> Result<(), String> {
+    if let Some(parent) = std::path::Path::new(&path).parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let json = serde_json::to_string_pretty(&data).map_err(|e| e.to_string())?;
+    std::fs::write(&path, json).map_err(|e| e.to_string())?;
+
+    let meanings: HashMap<String, String> = data
+        .entries
+        .into_iter()
+        .map(|(k, v)| (k, v.meaning))
+        .collect();
+    state.lock().unwrap().kanji_meanings = meanings;
+    Ok(())
+}
+
 // ── Startup ──────────────────────────────────────────────────────────────────
 
 fn build_app_state() -> AppState {
@@ -232,6 +265,8 @@ pub fn run() {
             get_settings,
             save_settings,
             reload_meanings,
+            get_translations,
+            save_translations,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
