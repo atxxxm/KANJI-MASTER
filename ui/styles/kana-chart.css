@@ -25,33 +25,34 @@
 }
 
 .kana-section {
-  margin-bottom: 28px;
+  margin-bottom: 36px;
   width: 100%;
-  max-width: 520px;
+  max-width: 720px;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 .kana-section-title {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.08em;
   color: var(--text-muted);
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .kana-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  max-width: 520px;
+  gap: 12px;
+  width: 100%;
+  max-width: 720px;
 }
 
 .kana-grid.yoon {
   grid-template-columns: repeat(3, 1fr);
-  max-width: 320px;
+  max-width: 440px;
 }
 
 .kana-cell {
@@ -60,8 +61,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
-  border-radius: var(--radius-md);
+  gap: 4px;
+  border-radius: var(--radius-lg);
   background: var(--surface);
   border: 1px solid var(--border);
   cursor: pointer;
@@ -81,12 +82,12 @@
 }
 
 .kana-cell-char {
-  font-size: 22px;
+  font-size: 34px;
   color: var(--text);
   line-height: 1;
 }
 
 .kana-cell-romaji {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--text-muted);
 }
