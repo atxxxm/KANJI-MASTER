@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto } from "../api/types";
 import "../styles/kanji-list.css";
@@ -8,13 +8,18 @@ const JLPT_LEVELS: JlptFilter[] = ["all", "N5", "N4", "N3", "N2", "N1"];
 
 interface Props {
   onOpenKanji: (k: KanjiDto) => void;
+  active?: boolean;
+  /** Bumped (to a new timestamp) by App when Ctrl+F focuses this tab. */
+  focusSearchAt?: number;
 }
 
-export default function KanjiList({ onOpenKanji }: Props) {
+export default function KanjiList({ onOpenKanji, active, focusSearchAt }: Props) {
   const [kanji, setKanji]     = useState<KanjiDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState("");
   const [jlpt, setJlpt]       = useState<JlptFilter>("all");
+
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     invoke<KanjiDto[]>("get_kanji_list").then(data => {
@@ -22,6 +27,20 @@ export default function KanjiList({ onOpenKanji }: Props) {
       setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    if (focusSearchAt) searchRef.current?.focus();
+  }, [focusSearchAt]);
+
+  // Escape clears the search field, but only while this tab is the visible one.
+  useEffect(() => {
+    if (!active) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSearch("");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [active]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -43,6 +62,7 @@ export default function KanjiList({ onOpenKanji }: Props) {
     <div className="kanji-list-main">
       <div className="kanji-list-toolbar">
         <input
+          ref={searchRef}
           className="search-input"
           placeholder="Search kanji, readings, meaning…"
           value={search}

@@ -56,6 +56,7 @@ export default function App() {
     return [home];
   });
   const [activeTabId, setActiveTabId] = useState<string>(() => tabs[0].id);
+  const [focusKanjiSearchAt, setFocusKanjiSearchAt] = useState(0);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -124,16 +125,49 @@ export default function App() {
     });
   };
 
+  // Global shortcuts: Ctrl+T new tab, Ctrl+W close active tab, Ctrl+F
+  // open/focus the Kanji tab's search field. Escape (clear search) is
+  // handled per-view via the `active` prop instead, since only that view
+  // knows what "clear" means for it.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!e.ctrlKey) return;
+      const key = e.key.toLowerCase();
+
+      if (key === "t") {
+        e.preventDefault();
+        const tab = createTab("home");
+        setTabs(prev => [...prev, tab]);
+        setActiveTabId(tab.id);
+      } else if (key === "w") {
+        e.preventDefault();
+        closeTab(activeTabId);
+      } else if (key === "f") {
+        e.preventDefault();
+        openOrFocusTab("kanji");
+        setFocusKanjiSearchAt(Date.now());
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [tabs, activeTabId]);
+
   // Per-tab props: a function of the tab itself, not of which tab is active —
   // every open tab stays mounted (see render below), so each needs its own props.
   const buildProps = (tab: Tab): Record<string, unknown> => {
-    const props: Record<string, unknown> = { onOpenKanji: openKanjiTab };
+    const props: Record<string, unknown> = {
+      onOpenKanji: openKanjiTab,
+      active: tab.id === activeTabId,
+    };
     if (tab.kind === "settings") {
       props.theme = theme;
       props.onThemeChange = setTheme;
     }
     if (tab.kind === "kanji-detail") {
       props.kanjiChar = tab.kanjiChar;
+    }
+    if (tab.kind === "kanji") {
+      props.focusSearchAt = focusKanjiSearchAt;
     }
     return props;
   };

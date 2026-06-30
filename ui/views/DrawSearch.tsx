@@ -10,9 +10,10 @@ type Point = [number, number];
 
 interface Props {
   onOpenKanji: (k: KanjiDto) => void;
+  active?: boolean;
 }
 
-export default function DrawSearch({ onOpenKanji }: Props) {
+export default function DrawSearch({ onOpenKanji, active }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const strokesRef = useRef<Point[][]>([]);
   const drawingRef = useRef<Point[] | null>(null);
@@ -138,6 +139,7 @@ export default function DrawSearch({ onOpenKanji }: Props) {
   }, [redraw, runSearch]);
 
   useEffect(() => {
+    if (!active) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.key.toLowerCase() === "z") {
         e.preventDefault();
@@ -146,7 +148,7 @@ export default function DrawSearch({ onOpenKanji }: Props) {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [handleUndo]);
+  }, [handleUndo, active]);
 
   return (
       <div className="draw-main">
