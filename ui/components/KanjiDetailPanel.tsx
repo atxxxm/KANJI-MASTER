@@ -1,13 +1,52 @@
+import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto } from "../api/types";
+import AnimatedKanji from "./AnimatedKanji";
 
 interface Props {
   kanji: KanjiDto;
   onClose: () => void;
+  onKanjiClick?: (k: KanjiDto) => void;
 }
 
-export default function KanjiDetailPanel({ kanji, onClose }: Props) {
+// CJK Unified Ideographs range
+const isCjk = (ch: string) => {
+  const c = ch.charCodeAt(0);
+  return c >= 0x4e00 && c <= 0x9faf;
+};
+
+function ExampleText({ text, onKanjiClick }: { text: string; onKanjiClick?: (k: KanjiDto) => void }) {
+  const handleClick = async (ch: string) => {
+    if (!onKanjiClick) return;
+    const k = await invoke<KanjiDto | null>("get_kanji_by_char", { ch });
+    if (k) onKanjiClick(k);
+  };
+
+  return (
+    <>
+      {[...text].map((ch, i) =>
+        isCjk(ch) ? (
+          <span
+            key={i}
+            className="example-kanji-link"
+            onClick={() => handleClick(ch)}
+          >
+            {ch}
+          </span>
+        ) : (
+          <span key={i}>{ch}</span>
+        )
+      )}
+    </>
+  );
+}
+
+export default function KanjiDetailPanel({ kanji, onClose, onKanjiClick }: Props) {
   return (
     <aside className="kanji-detail-panel">
+      {/* Stroke animation */}
+      <AnimatedKanji kanjiId={kanji.id} />
+
+      {/* Header */}
       <div className="detail-header">
         <span className="detail-kanji">{kanji.kanji}</span>
         <div className="detail-header-right">
@@ -61,7 +100,9 @@ export default function KanjiDetailPanel({ kanji, onClose }: Props) {
           <div className="detail-label">Examples</div>
           <div className="detail-examples">
             {kanji.examples.map((ex, i) => (
-              <div key={i} className="detail-example">{ex}</div>
+              <div key={i} className="detail-example">
+                <ExampleText text={ex} onKanjiClick={onKanjiClick} />
+              </div>
             ))}
           </div>
         </div>

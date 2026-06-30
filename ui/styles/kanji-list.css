@@ -258,3 +258,48 @@
   border-radius: var(--radius-sm);
   user-select: text;
 }
+
+/* ── Stroke animation ────────────────────────────────────── */
+.anim-kanji-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.anim-kanji-wrapper canvas {
+  border-radius: var(--radius-sm);
+  display: block;
+}
+
+.replay-btn {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font);
+  padding: 4px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: none;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.replay-btn:hover {
+  color: var(--text);
+  border-color: var(--border-hover);
+  background: var(--surface-3);
+}
+
+/* ── Clickable kanji in examples ─────────────────────────── */
+.example-kanji-link {
+  color: var(--accent);
+  cursor: pointer;
+  border-radius: 2px;
+  padding: 0 1px;
+  transition: background var(--transition);
+}
+.example-kanji-link:hover {
+  background: var(--accent-dim);
+}

@@ -95,7 +95,11 @@ export default function KanjiList() {
       </div>
 
       {selected && (
-        <KanjiDetailPanel kanji={selected} onClose={() => setSelected(null)} />
+        <KanjiDetailPanel
+          kanji={selected}
+          onClose={() => setSelected(null)}
+          onKanjiClick={setSelected}
+        />
       )}
     </div>
   );
