@@ -163,9 +163,6 @@ pub fn render(ui: &mut egui::Ui, state: &mut RomajiKanaState, ctx: &AppContext) 
                         if chunk_trim.is_empty() {
                             ui.label(egui::RichText::new(&local.assistant_hint).weak().italics());
                         } else {
-                            ui.label(egui::RichText::new(format!("{} {}", &local.assistant_suggestions_for, chunk_trim)).strong());
-                            ui.add_space(10.0);
-
                             let hiragana_chunk: String = chunk_trim.chars().map(|c| {
                                 if c as u32 >= 0x30A1 && c as u32 <= 0x30F6 { char::from_u32(c as u32 - 0x0060).unwrap_or(c) } else { c }
                             }).collect();
@@ -174,57 +171,133 @@ pub fn render(ui: &mut egui::Ui, state: &mut RomajiKanaState, ctx: &AppContext) 
                                 if c as u32 >= 0x3041 && c as u32 <= 0x3096 { char::from_u32(c as u32 + 0x0060).unwrap_or(c) } else { c }
                             }).collect();
 
-                            // Ищем подходящие кандзи
-                            let mut matches = Vec::new();
+                            let mut matches: Vec<(&std::sync::Arc<crate::back::core::Kanji>, bool, String)> = Vec::new();
                             for kanji in ctx.kanji.iter() {
                                 let clean_kun = kanji.kunyomi.replace(['.', '-'], "");
                                 let clean_on = kanji.onyomi.replace(['.', '-'], "");
 
                                 if clean_kun.contains(&hiragana_chunk) || clean_on.contains(&katakana_chunk) {
                                     let mut is_exact = false;
-                                    for r in clean_kun.split('、') { if r.trim() == hiragana_chunk { is_exact = true; break; } }
-                                    for r in clean_on.split('、') { if r.trim() == katakana_chunk { is_exact = true; break; } }
+                                    let mut display_reading = String::new();
 
-                                    matches.push((kanji, is_exact));
+                                    for r in clean_kun.split('、') {
+                                        if r.trim() == hiragana_chunk {
+                                            is_exact = true;
+                                            display_reading = r.trim().to_string();
+                                            break;
+                                        }
+                                    }
+                                    if !is_exact {
+                                        for r in clean_on.split('、') {
+                                            if r.trim() == katakana_chunk {
+                                                is_exact = true;
+                                                display_reading = r.trim().to_string();
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if display_reading.is_empty() {
+                                        for r in clean_kun.split('、') {
+                                            if r.trim().contains(&hiragana_chunk) {
+                                                display_reading = r.trim().to_string();
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    if display_reading.is_empty() {
+                                        for r in clean_on.split('、') {
+                                            if r.trim().contains(&katakana_chunk) {
+                                                display_reading = r.trim().to_string();
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    matches.push((kanji, is_exact, display_reading));
                                 }
                             }
 
-                            matches.sort_by(|(a, a_exact), (b, b_exact)| {
+                            matches.sort_by(|(a, a_exact, _), (b, b_exact, _)| {
                                 match (a_exact, b_exact) {
                                     (true, false) => std::cmp::Ordering::Less,
                                     (false, true) => std::cmp::Ordering::Greater,
-                                    _ => b.jlpt.cmp(&a.jlpt) 
+                                    _ => b.jlpt.cmp(&a.jlpt)
                                 }
                             });
+
+                            let exact_count = matches.iter().filter(|(_, e, _)| *e).count();
+                            let total = matches.len().min(30);
 
                             if matches.is_empty() {
                                 ui.label(egui::RichText::new(&local.assistant_no_kanji_found).weak());
                             } else {
+                                ui.horizontal(|ui| {
+                                    ui.label(egui::RichText::new(format!("{} {}", &local.assistant_suggestions_for, chunk_trim)).strong());
+                                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                        ui.label(egui::RichText::new(format!("{total}")).size(11.0).weak());
+                                    });
+                                });
+                                ui.add_space(8.0);
+
                                 egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
-                                    for (kanji, _is_exact) in matches.into_iter().take(30) {
-                                        let card_height = 60.0;
+                                    let mut showed_partial_header = false;
+
+                                    for (idx, (kanji, is_exact, display_reading)) in matches.into_iter().take(30).enumerate() {
+                                        if idx == 0 && exact_count > 0 {
+                                            ui.label(egui::RichText::new("Exact").size(10.0).weak().italics());
+                                            ui.add_space(3.0);
+                                        }
+                                        if idx == exact_count && exact_count > 0 && !showed_partial_header {
+                                            showed_partial_header = true;
+                                            ui.add_space(4.0);
+                                            ui.separator();
+                                            ui.add_space(2.0);
+                                            ui.label(egui::RichText::new("Partial").size(10.0).weak().italics());
+                                            ui.add_space(3.0);
+                                        }
+
+                                        let card_height = 62.0;
                                         let (rect, response) = ui.allocate_exact_size(
-                                            egui::vec2(ui.available_width(), card_height), 
+                                            egui::vec2(ui.available_width(), card_height),
                                             egui::Sense::click()
                                         );
 
                                         let bg = if response.hovered() { ui.visuals().widgets.hovered.bg_fill } else { ui.visuals().faint_bg_color };
                                         let stroke = if response.hovered() { ui.visuals().widgets.hovered.fg_stroke } else { egui::Stroke::NONE };
-                                        
+
                                         ui.painter().rect(rect, 8.0, bg, stroke, egui::StrokeKind::Inside);
 
                                         ui.scope_builder(egui::UiBuilder::new().max_rect(rect.shrink(8.0)), |ui| {
                                             ui.horizontal(|ui| {
-                                                ui.label(egui::RichText::new(&kanji.kanji).size(32.0).strong());
-                                                ui.add_space(10.0);
+                                                ui.label(egui::RichText::new(&kanji.kanji).size(30.0).strong());
+                                                ui.add_space(8.0);
                                                 ui.vertical(|ui| {
-                                                    ui.label(egui::RichText::new(format!("{} / {}", kanji.onyomi_romaji, kanji.kunyomi_romaji)).size(11.0));
-                                                    
+                                                    ui.horizontal(|ui| {
+                                                        let reading_color = if is_exact {
+                                                            ui.visuals().hyperlink_color
+                                                        } else {
+                                                            ui.visuals().text_color().gamma_multiply(0.75)
+                                                        };
+                                                        if !display_reading.is_empty() {
+                                                            ui.label(egui::RichText::new(&display_reading).size(13.0).color(reading_color).strong());
+                                                        }
+                                                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                                            let jlpt_color = match kanji.jlpt.as_str() {
+                                                                "N5" => egui::Color32::from_rgb(76, 153, 76),
+                                                                "N4" => egui::Color32::from_rgb(66, 135, 198),
+                                                                "N3" => egui::Color32::from_rgb(198, 167, 66),
+                                                                "N2" => egui::Color32::from_rgb(198, 120, 66),
+                                                                "N1" => egui::Color32::from_rgb(198, 76, 76),
+                                                                _ => ui.visuals().text_color(),
+                                                            };
+                                                            ui.label(egui::RichText::new(&kanji.jlpt).size(10.0).color(jlpt_color).strong());
+                                                        });
+                                                    });
+
                                                     let meaning = ctx.translate_state.data.entries.get(&kanji.kanji).map(|t| t.meaning.clone()).unwrap_or_default();
                                                     let display_meaning = if meaning.is_empty() { "—".to_string() } else { meaning };
-                                                    
                                                     ui.add(egui::Label::new(
-                                                        egui::RichText::new(display_meaning).size(12.0).weak()
+                                                        egui::RichText::new(display_meaning).size(11.0).weak()
                                                     ).truncate());
                                                 });
                                             });
@@ -238,7 +311,7 @@ pub fn render(ui: &mut egui::Ui, state: &mut RomajiKanaState, ctx: &AppContext) 
                                             ui.output_mut(|o| o.cursor_icon = egui::CursorIcon::PointingHand);
                                         }
 
-                                        ui.add_space(8.0);
+                                        ui.add_space(6.0);
                                     }
                                 });
                             }
