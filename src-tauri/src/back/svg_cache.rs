@@ -10,13 +10,11 @@ use std::sync::Arc;
 #[derive(Clone, Debug)]
 pub struct StrokePoint {
     pub pos: Point,
-    pub dist: f32,
 }
 
 #[derive(Clone, Debug)]
 pub struct Stroke {
     pub points: Vec<StrokePoint>,
-    pub total_length: f32,
 }
 
 pub struct SvgCache {
@@ -82,32 +80,23 @@ fn parse_svg_content(raw_text: &str) -> Option<Vec<Stroke>> {
                 }
 
                 let mut points = Vec::new();
-                let mut total_dist = 0.0;
                 let mut is_first = true;
-                let mut last_pos = Point::ZERO;
 
                 kurbo::flatten(bez_path.iter(), 0.2, |el| match el {
                     PathEl::MoveTo(p) => {
-                        last_pos = p;
                         if is_first {
-                            points.push(StrokePoint { pos: p, dist: 0.0 });
+                            points.push(StrokePoint { pos: p });
                             is_first = false;
                         }
                     }
                     PathEl::LineTo(p) => {
-                        let dist = last_pos.distance(p);
-                        total_dist += dist;
-                        points.push(StrokePoint { pos: p, dist: total_dist as f32 });
-                        last_pos = p;
+                        points.push(StrokePoint { pos: p });
                     }
                     _ => {}
                 });
 
                 if !points.is_empty() {
-                    strokes.push(Stroke {
-                        points,
-                        total_length: total_dist as f32,
-                    });
+                    strokes.push(Stroke { points });
                 }
             }
     }
