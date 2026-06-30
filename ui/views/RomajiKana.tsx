@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { AnimatePresence } from "framer-motion";
 import type { KanjiDto } from "../api/types";
 import KanjiDetailPanel from "../components/KanjiDetailPanel";
 import "../styles/kanji-list.css";
@@ -194,13 +195,15 @@ export default function RomajiKana() {
       </aside>
 
       {/* ── Detail panel ── */}
-      {selected && (
-        <KanjiDetailPanel
-          kanji={selected}
-          onClose={() => setSelected(null)}
-          onKanjiClick={setSelected}
-        />
-      )}
+      <AnimatePresence>
+        {selected && (
+          <KanjiDetailPanel
+            kanji={selected}
+            onClose={() => setSelected(null)}
+            onKanjiClick={setSelected}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

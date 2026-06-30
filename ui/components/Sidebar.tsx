@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import type { View } from "../App";
 
 interface NavItem {
@@ -21,6 +22,22 @@ interface Props {
   onToggleTheme: () => void;
 }
 
+function NavButton({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
+  return (
+    <button className={`nav-item${active ? " active" : ""}`} onClick={onClick}>
+      {active && (
+        <motion.div
+          layoutId="nav-active-pill"
+          className="nav-active-pill"
+          transition={{ type: "spring", stiffness: 500, damping: 38 }}
+        />
+      )}
+      <span className="nav-icon">{item.icon}</span>
+      <span className="nav-label">{item.label}</span>
+    </button>
+  );
+}
+
 export default function Sidebar({ activeView, onViewChange, theme, onToggleTheme }: Props) {
   return (
     <nav className="sidebar">
@@ -31,25 +48,21 @@ export default function Sidebar({ activeView, onViewChange, theme, onToggleTheme
 
       <div className="sidebar-nav">
         {TOP_NAV.map(item => (
-          <button
+          <NavButton
             key={item.view}
-            className={`nav-item${activeView === item.view ? " active" : ""}`}
+            item={item}
+            active={activeView === item.view}
             onClick={() => onViewChange(item.view)}
-          >
-            <span className="nav-icon">{item.icon}</span>
-            <span className="nav-label">{item.label}</span>
-          </button>
+          />
         ))}
       </div>
 
       <div className="sidebar-footer">
-        <button
-          className={`nav-item${activeView === "settings" ? " active" : ""}`}
+        <NavButton
+          item={{ view: "settings", icon: "⚙", label: "Settings" }}
+          active={activeView === "settings"}
           onClick={() => onViewChange("settings")}
-        >
-          <span className="nav-icon">⚙</span>
-          <span className="nav-label">Settings</span>
-        </button>
+        />
 
         <div className="nav-divider" />
 

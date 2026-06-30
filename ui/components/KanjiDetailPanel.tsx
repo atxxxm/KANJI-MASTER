@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { motion } from "framer-motion";
 import type { KanjiDto } from "../api/types";
 import AnimatedKanji from "./AnimatedKanji";
 
@@ -42,7 +43,13 @@ function ExampleText({ text, onKanjiClick }: { text: string; onKanjiClick?: (k: 
 
 export default function KanjiDetailPanel({ kanji, onClose, onKanjiClick }: Props) {
   return (
-    <aside className="kanji-detail-panel">
+    <motion.aside
+      className="kanji-detail-panel"
+      initial={{ opacity: 0, x: 24 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 24 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
+    >
       {/* Stroke animation */}
       <AnimatedKanji kanjiId={kanji.id} />
 
@@ -107,6 +114,6 @@ export default function KanjiDetailPanel({ kanji, onClose, onKanjiClick }: Props
           </div>
         </div>
       )}
-    </aside>
+    </motion.aside>
   );
 }

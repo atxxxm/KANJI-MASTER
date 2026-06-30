@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import "./styles/globals.css";
 import "./styles/layout.css";
 import Sidebar from "./components/Sidebar";
@@ -19,6 +20,15 @@ function getInitialTheme(): Theme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+const VIEWS: Record<View, React.ComponentType<any>> = {
+  kanji: KanjiList,
+  kana: KanaChart,
+  romaji: RomajiKana,
+  draw: DrawSearch,
+  anki: AnkiExport,
+  settings: Settings,
+};
+
 export default function App() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [view, setView] = useState<View>("kanji");
@@ -30,6 +40,9 @@ export default function App() {
 
   const toggleTheme = () => setTheme(t => t === "dark" ? "light" : "dark");
 
+  const ActiveView = VIEWS[view];
+  const extraProps = view === "settings" ? { theme, onThemeChange: setTheme } : {};
+
   return (
     <div className="app-layout">
       <Sidebar
@@ -39,12 +52,18 @@ export default function App() {
         onToggleTheme={toggleTheme}
       />
       <main className="app-content">
-        {view === "kanji"    && <KanjiList />}
-        {view === "kana"     && <KanaChart />}
-        {view === "romaji"   && <RomajiKana />}
-        {view === "draw"     && <DrawSearch />}
-        {view === "anki"     && <AnkiExport />}
-        {view === "settings" && <Settings theme={theme} onThemeChange={setTheme} />}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={view}
+            className="view-transition"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15, ease: "easeOut" }}
+          >
+            <ActiveView {...extraProps} />
+          </motion.div>
+        </AnimatePresence>
       </main>
     </div>
   );
