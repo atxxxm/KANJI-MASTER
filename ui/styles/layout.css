@@ -153,13 +153,28 @@
   position: relative;
 }
 
-.view-transition {
+.tab-views {
   flex: 1;
   min-height: 0;
   width: 100%;
+  position: relative;
   overflow: hidden;
+}
+
+.tab-view-slot {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.tab-view-slot.active {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* ── Placeholder (temporary) ─────────────────────────────── */

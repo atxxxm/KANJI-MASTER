@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
 import "./styles/globals.css";
 import "./styles/layout.css";
 import "./styles/tabbar.css";
@@ -101,22 +100,24 @@ export default function App() {
     });
   };
 
-  const activeTab = tabs.find(t => t.id === activeTabId) ?? tabs[0];
-  const ActiveView = VIEWS[activeTab.kind];
-
-  const extraProps: Record<string, unknown> = { onOpenKanji: openKanjiTab };
-  if (activeTab.kind === "settings") {
-    extraProps.theme = theme;
-    extraProps.onThemeChange = setTheme;
-  }
-  if (activeTab.kind === "kanji-detail") {
-    extraProps.kanjiChar = activeTab.kanjiChar;
-  }
+  // Per-tab props: a function of the tab itself, not of which tab is active —
+  // every open tab stays mounted (see render below), so each needs its own props.
+  const buildProps = (tab: Tab): Record<string, unknown> => {
+    const props: Record<string, unknown> = { onOpenKanji: openKanjiTab };
+    if (tab.kind === "settings") {
+      props.theme = theme;
+      props.onThemeChange = setTheme;
+    }
+    if (tab.kind === "kanji-detail") {
+      props.kanjiChar = tab.kanjiChar;
+    }
+    return props;
+  };
 
   return (
     <div className="app-layout">
       <Sidebar
-        activeKind={activeTab.kind}
+        activeKind={tabs.find(t => t.id === activeTabId)?.kind ?? "home"}
         onOpenTab={openOrFocusTab}
         theme={theme}
         onToggleTheme={toggleTheme}
@@ -126,23 +127,27 @@ export default function App() {
       <main className="app-content">
         <TabBar
           tabs={tabs}
-          activeTabId={activeTab.id}
+          activeTabId={activeTabId}
           onSwitch={setActiveTabId}
           onClose={closeTab}
           onReorder={setTabs}
         />
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab.id}
-            className="view-transition"
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-          >
-            <ActiveView {...extraProps} />
-          </motion.div>
-        </AnimatePresence>
+        {/* All open tabs stay mounted so each keeps its own state (search
+            text, filters, draw canvas, scroll position, ...) when the user
+            switches away and back — only the active one is visible. */}
+        <div className="tab-views">
+          {tabs.map(tab => {
+            const Component = VIEWS[tab.kind];
+            return (
+              <div
+                key={tab.id}
+                className={`tab-view-slot${tab.id === activeTabId ? " active" : ""}`}
+              >
+                <Component {...buildProps(tab)} />
+              </div>
+            );
+          })}
+        </div>
       </main>
     </div>
   );
