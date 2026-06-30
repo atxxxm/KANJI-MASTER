@@ -9,6 +9,8 @@
   --radius-lg: 16px;
 
   --transition: 0.18s ease;
+
+  --kanji-font-size: 38px;
 }
 
 [data-theme="dark"] {

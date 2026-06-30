@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { Config } from "../api/types";
+import { useSettings } from "../contexts/SettingsContext";
 import "../styles/settings.css";
 
 interface Props {
@@ -17,13 +17,9 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 }
 
 export default function Settings({ theme, onThemeChange }: Props) {
-  const [config, setConfig] = useState<Config | null>(null);
+  const { config, updateConfig } = useSettings();
   const [status, setStatus] = useState<Status>(null);
   const [reloading, setReloading] = useState(false);
-
-  useEffect(() => {
-    invoke<Config>("get_settings").then(setConfig);
-  }, []);
 
   if (!config) {
     return (
@@ -32,9 +28,6 @@ export default function Settings({ theme, onThemeChange }: Props) {
       </div>
     );
   }
-
-  const update = <K extends keyof Config>(key: K, value: Config[K]) =>
-    setConfig(c => (c ? { ...c, [key]: value } : c));
 
   const handleSave = async () => {
     setStatus(null);
@@ -69,7 +62,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
           <span className="settings-row-label">Dark mode</span>
           <div className="settings-row-control">
             <Toggle on={config.dark_mode} onChange={v => {
-              update("dark_mode", v);
+              updateConfig({ dark_mode: v });
               onThemeChange(v ? "dark" : "light");
             }} />
           </div>
@@ -82,7 +75,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
               type="range" min={10} max={22} step={1}
               className="settings-slider"
               value={config.interface_font_size}
-              onChange={e => update("interface_font_size", Number(e.target.value))}
+              onChange={e => updateConfig({ interface_font_size: Number(e.target.value) })}
             />
             <span className="settings-value">{config.interface_font_size}px</span>
           </div>
@@ -95,7 +88,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
               type="range" min={24} max={96} step={2}
               className="settings-slider"
               value={config.kanji_font_size}
-              onChange={e => update("kanji_font_size", Number(e.target.value))}
+              onChange={e => updateConfig({ kanji_font_size: Number(e.target.value) })}
             />
             <span className="settings-value">{config.kanji_font_size}px</span>
           </div>
@@ -108,9 +101,9 @@ export default function Settings({ theme, onThemeChange }: Props) {
               type="range" min={0.25} max={2} step={0.05}
               className="settings-slider"
               value={config.animation_speed}
-              onChange={e => update("animation_speed", Number(e.target.value))}
+              onChange={e => updateConfig({ animation_speed: Number(e.target.value) })}
             />
-            <span className="settings-value">{config.animation_speed.toFixed(2)}×</span>
+            <span className="settings-value">{config.animation_speed.toFixed(2)}s</span>
           </div>
         </div>
       </div>
@@ -121,14 +114,14 @@ export default function Settings({ theme, onThemeChange }: Props) {
         <div className="settings-row">
           <span className="settings-row-label">Show kanji meaning in lists</span>
           <div className="settings-row-control">
-            <Toggle on={config.show_kanji_meaning} onChange={v => update("show_kanji_meaning", v)} />
+            <Toggle on={config.show_kanji_meaning} onChange={v => updateConfig({ show_kanji_meaning: v })} />
           </div>
         </div>
 
         <div className="settings-row">
           <span className="settings-row-label">Focus search field on open</span>
           <div className="settings-row-control">
-            <Toggle on={config.focus_on_search} onChange={v => update("focus_on_search", v)} />
+            <Toggle on={config.focus_on_search} onChange={v => updateConfig({ focus_on_search: v })} />
           </div>
         </div>
       </div>
@@ -142,7 +135,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
             <input
               className="settings-path-input"
               value={config.path_to_db_core}
-              onChange={e => update("path_to_db_core", e.target.value)}
+              onChange={e => updateConfig({ path_to_db_core: e.target.value })}
             />
           </div>
         </div>
@@ -153,7 +146,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
             <input
               className="settings-path-input"
               value={config.path_to_kanji_localization}
-              onChange={e => update("path_to_kanji_localization", e.target.value)}
+              onChange={e => updateConfig({ path_to_kanji_localization: e.target.value })}
             />
             <button className="settings-secondary-btn" onClick={handleReloadMeanings} disabled={reloading}>
               {reloading ? "Loading…" : "Reload"}
@@ -167,7 +160,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
             <input
               className="settings-path-input"
               value={config.path_to_svg_images}
-              onChange={e => update("path_to_svg_images", e.target.value)}
+              onChange={e => updateConfig({ path_to_svg_images: e.target.value })}
             />
           </div>
         </div>

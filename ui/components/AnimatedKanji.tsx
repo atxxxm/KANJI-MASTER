@@ -1,11 +1,12 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { useSettings } from "../contexts/SettingsContext";
 
 interface Props {
   kanjiId: number;
-  strokeMs?: number;  // duration per stroke in ms
-  gapMs?: number;     // pause between strokes in ms
 }
+
+const DEFAULT_STROKE_MS = 520;
 
 const LOGICAL_SIZE = 200;
 const KVG_SIZE = 109;
@@ -130,7 +131,12 @@ function runAnimation(
   };
 }
 
-export default function AnimatedKanji({ kanjiId, strokeMs = 520, gapMs = 80 }: Props) {
+export default function AnimatedKanji({ kanjiId }: Props) {
+  const { config } = useSettings();
+  // animation_speed is the duration of a single stroke, in seconds
+  const strokeMs = config ? config.animation_speed * 1000 : DEFAULT_STROKE_MS;
+  const gapMs = Math.min(120, strokeMs * 0.15);
+
   const canvasRef  = useRef<HTMLCanvasElement>(null);
   const cancelRef  = useRef<(() => void) | null>(null);
   const [strokes, setStrokes]   = useState<number[][][] | null>(null);
