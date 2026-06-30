@@ -44,7 +44,7 @@ export default function App() {
         {view === "romaji"   && <RomajiKana />}
         {view === "draw"     && <DrawSearch />}
         {view === "anki"     && <AnkiExport />}
-        {view === "settings" && <Settings />}
+        {view === "settings" && <Settings theme={theme} onThemeChange={setTheme} />}
       </main>
     </div>
   );
