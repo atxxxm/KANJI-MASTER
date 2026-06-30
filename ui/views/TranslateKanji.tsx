@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto, TranslationFile, KanjiTranslation } from "../api/types";
 import { useSettings } from "../contexts/SettingsContext";
+import { useKanjiData } from "../contexts/KanjiDataContext";
 import "../styles/kanji-list.css";
 import "../styles/translate.css";
 
@@ -16,10 +17,11 @@ function syncBuffers(kanji: KanjiDto, data: TranslationFile): { meaning: string;
 export default function TranslateKanji() {
   const { config } = useSettings();
   const path = config?.path_to_kanji_localization;
+  const { kanjiList: allKanji, loading: kanjiLoading, refresh: refreshKanji } = useKanjiData();
 
-  const [allKanji, setAllKanji] = useState<KanjiDto[]>([]);
   const [data, setData] = useState<TranslationFile>(EMPTY_FILE);
-  const [loaded, setLoaded] = useState(false);
+  const [translationsLoaded, setTranslationsLoaded] = useState(false);
+  const buffersInitialized = useRef(false);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [meaningBuffer, setMeaningBuffer] = useState("");
@@ -33,20 +35,22 @@ export default function TranslateKanji() {
 
   useEffect(() => {
     if (!path) return;
-    Promise.all([
-      invoke<KanjiDto[]>("get_kanji_list"),
-      invoke<TranslationFile>("get_translations", { path }),
-    ]).then(([kanji, tf]) => {
-      setAllKanji(kanji);
+    invoke<TranslationFile>("get_translations", { path }).then(tf => {
       setData(tf);
-      if (kanji.length > 0) {
-        const buf = syncBuffers(kanji[0], tf);
-        setMeaningBuffer(buf.meaning);
-        setExamplesBuffer(buf.examples);
-      }
-      setLoaded(true);
+      setTranslationsLoaded(true);
     });
   }, [path]);
+
+  // Seed the editing buffers from kanji #0 once both the kanji list and the
+  // translations file have arrived — but only once, so a later refresh()
+  // (e.g. from Settings reload) doesn't stomp on in-progress edits.
+  useEffect(() => {
+    if (buffersInitialized.current || kanjiLoading || !translationsLoaded || allKanji.length === 0) return;
+    const buf = syncBuffers(allKanji[0], data);
+    setMeaningBuffer(buf.meaning);
+    setExamplesBuffer(buf.examples);
+    buffersInitialized.current = true;
+  }, [allKanji, kanjiLoading, translationsLoaded, data]);
 
   // Close the jump dropdown on outside click
   useEffect(() => {
@@ -115,6 +119,8 @@ export default function TranslateKanji() {
     try {
       await invoke("save_translations", { path, data: updated });
       setStatus({ kind: "success", text: `Saved at ID ${updated.last_id}` });
+      // Propagate the new meanings to every other tab's cached kanji list.
+      await refreshKanji();
     } catch (e) {
       setStatus({ kind: "warn", text: String(e) });
     }
@@ -128,7 +134,7 @@ export default function TranslateKanji() {
     );
   }
 
-  if (!loaded) {
+  if (kanjiLoading || !translationsLoaded) {
     return (
       <div className="view-placeholder">
         <span>Loading…</span>

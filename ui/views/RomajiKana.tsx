@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo, useRef, useLayoutEffect } from "react";
+import { useState, useMemo, useRef, useLayoutEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto } from "../api/types";
+import { useKanjiData } from "../contexts/KanjiDataContext";
 import "../styles/kanji-list.css";
 import "../styles/romaji-kana.css";
 
@@ -66,17 +67,13 @@ interface Props {
 }
 
 export default function RomajiKana({ onOpenKanji }: Props) {
+  const { kanjiList: allKanji } = useKanjiData();
   const [text, setText]             = useState("");
   const [isKatakana, setIsKatakana] = useState(false);
-  const [allKanji, setAllKanji]     = useState<KanjiDto[]>([]);
   const [copied, setCopied]         = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const pendingCursor = useRef<number | null>(null);
-
-  useEffect(() => {
-    invoke<KanjiDto[]>("get_kanji_list").then(setAllKanji);
-  }, []);
 
   // Restore caret position after a programmatic value update
   useLayoutEffect(() => {

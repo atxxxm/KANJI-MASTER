@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto } from "../api/types";
+import { useKanjiData } from "../contexts/KanjiDataContext";
 import "../styles/kanji-list.css";
 import "../styles/home.css";
 
@@ -11,33 +11,33 @@ interface Props {
 }
 
 export default function Home({ onOpenKanji }: Props) {
-  const [allKanji, setAllKanji] = useState<KanjiDto[]>([]);
-  const [randomKanji, setRandomKanji] = useState<KanjiDto | null>(null);
+  const { kanjiList } = useKanjiData();
+  const [randomKanjiId, setRandomKanjiId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
-    invoke<KanjiDto[]>("get_kanji_list").then(list => {
-      setAllKanji(list);
-      if (list.length === 0) return;
+    if (kanjiList.length === 0 || randomKanjiId !== null) return;
 
-      // Picked once per app launch (sessionStorage clears on restart),
-      // stable across navigating away from and back to Home.
-      const storedId = sessionStorage.getItem(RANDOM_KANJI_KEY);
-      let chosen = storedId ? list.find(k => k.id === Number(storedId)) : undefined;
-      if (!chosen) {
-        chosen = list[Math.floor(Math.random() * list.length)];
-        sessionStorage.setItem(RANDOM_KANJI_KEY, String(chosen.id));
-      }
-      setRandomKanji(chosen);
-    });
-  }, []);
+    // Picked once per app launch (sessionStorage clears on restart),
+    // stable across navigating away from and back to Home.
+    const storedId = sessionStorage.getItem(RANDOM_KANJI_KEY);
+    const id = storedId && kanjiList.some(k => k.id === Number(storedId))
+      ? Number(storedId)
+      : kanjiList[Math.floor(Math.random() * kanjiList.length)].id;
+    sessionStorage.setItem(RANDOM_KANJI_KEY, String(id));
+    setRandomKanjiId(id);
+  }, [kanjiList, randomKanjiId]);
+
+  // Looked up fresh from kanjiList (rather than cached) so it stays in sync
+  // if meanings get reloaded elsewhere (Translate Kanji save, Settings reload).
+  const randomKanji = randomKanjiId !== null ? kanjiList.find(k => k.id === randomKanjiId) ?? null : null;
 
   const query = search.trim().toLowerCase();
   const hasQuery = query.length > 0;
 
   const results = useMemo(() => {
     if (!hasQuery) return [];
-    return allKanji.filter(k =>
+    return kanjiList.filter(k =>
       k.kanji.includes(query) ||
       k.onyomi.toLowerCase().includes(query) ||
       k.kunyomi.toLowerCase().includes(query) ||
@@ -45,7 +45,7 @@ export default function Home({ onOpenKanji }: Props) {
       k.kunyomi_romaji.toLowerCase().includes(query) ||
       (k.meaning?.toLowerCase().includes(query) ?? false)
     );
-  }, [allKanji, query, hasQuery]);
+  }, [kanjiList, query, hasQuery]);
 
   return (
     <div className="home-view">

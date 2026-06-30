@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useSettings } from "../contexts/SettingsContext";
+import { useKanjiData } from "../contexts/KanjiDataContext";
 import "../styles/settings.css";
 
 interface Props {
@@ -18,6 +19,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 
 export default function Settings({ theme, onThemeChange }: Props) {
   const { config, updateConfig } = useSettings();
+  const { refresh: refreshKanji } = useKanjiData();
   const [status, setStatus] = useState<Status>(null);
   const [reloading, setReloading] = useState(false);
 
@@ -45,6 +47,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
     setStatus(null);
     try {
       const count = await invoke<number>("reload_meanings", { path: config.path_to_kanji_localization });
+      await refreshKanji();
       setStatus({ kind: "success", text: `Loaded ${count} meanings` });
     } catch (e) {
       setStatus({ kind: "error", text: String(e) });

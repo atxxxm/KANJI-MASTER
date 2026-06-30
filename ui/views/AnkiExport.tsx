@@ -1,8 +1,7 @@
-import { useState, useEffect, useMemo } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { useState, useMemo } from "react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
-import type { KanjiDto } from "../api/types";
+import { useKanjiData } from "../contexts/KanjiDataContext";
 import "../styles/kanji-list.css";
 import "../styles/anki-export.css";
 
@@ -31,17 +30,13 @@ const STEP_LABELS: Record<Step, string> = {
 };
 
 export default function AnkiExport() {
+  const { kanjiList: allKanji } = useKanjiData();
   const [step, setStep] = useState<Step>(1);
-  const [allKanji, setAllKanji] = useState<KanjiDto[]>([]);
   const [search, setSearch] = useState("");
   const [jlpt, setJlpt] = useState<string>("all");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [options, setOptions] = useState<ExportOptions>(DEFAULT_OPTIONS);
   const [status, setStatus] = useState<{ kind: "success" | "error"; text: string } | null>(null);
-
-  useEffect(() => {
-    invoke<KanjiDto[]>("get_kanji_list").then(setAllKanji);
-  }, []);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import "./styles/globals.css";
 import "./styles/layout.css";
@@ -17,6 +17,7 @@ import TranslateKanji from "./views/TranslateKanji";
 import { type Tab, createTab, createKanjiTab } from "./api/tabs";
 import type { KanjiDto, Config } from "./api/types";
 import { SettingsContext } from "./contexts/SettingsContext";
+import { KanjiDataContext } from "./contexts/KanjiDataContext";
 
 export type View = "home" | "kanji" | "kana" | "romaji" | "draw" | "translate" | "anki" | "settings" | "kanji-detail";
 
@@ -58,6 +59,9 @@ export default function App() {
   const [activeTabId, setActiveTabId] = useState<string>(() => tabs[0].id);
   const [focusKanjiSearchAt, setFocusKanjiSearchAt] = useState(0);
 
+  const [kanjiList, setKanjiList] = useState<KanjiDto[]>([]);
+  const [kanjiLoading, setKanjiLoading] = useState(true);
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
     localStorage.setItem("theme", theme);
@@ -66,6 +70,20 @@ export default function App() {
   useEffect(() => {
     invoke<Config>("get_settings").then(setConfig);
   }, []);
+
+  // Single shared kanji list, fetched once and handed to every view via
+  // context — previously each of Home/KanjiList/RomajiKana/AnkiExport/
+  // TranslateKanji fetched its own copy, and since all tabs now stay
+  // mounted simultaneously (persistence), that meant up to 5 duplicate
+  // IPC round-trips and 5 in-memory copies of the same array.
+  const refreshKanji = useCallback(async () => {
+    const data = await invoke<KanjiDto[]>("get_kanji_list");
+    setKanjiList(data);
+  }, []);
+
+  useEffect(() => {
+    refreshKanji().finally(() => setKanjiLoading(false));
+  }, [refreshKanji]);
 
   // Apply live-tunable appearance settings as CSS so every view picks them
   // up without prop drilling. `zoom` (Chromium/WebView2-only, which is all
@@ -174,6 +192,7 @@ export default function App() {
 
   return (
     <SettingsContext.Provider value={{ config, updateConfig }}>
+    <KanjiDataContext.Provider value={{ kanjiList, loading: kanjiLoading, refresh: refreshKanji }}>
       <div className="app-layout">
         <Sidebar
           activeKind={tabs.find(t => t.id === activeTabId)?.kind ?? "home"}
@@ -209,6 +228,7 @@ export default function App() {
           </div>
         </main>
       </div>
+    </KanjiDataContext.Provider>
     </SettingsContext.Provider>
   );
 }

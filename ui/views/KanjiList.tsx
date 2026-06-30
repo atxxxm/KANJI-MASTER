@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto } from "../api/types";
+import { useKanjiData } from "../contexts/KanjiDataContext";
 import "../styles/kanji-list.css";
 
 type JlptFilter = "all" | "N5" | "N4" | "N3" | "N2" | "N1";
@@ -14,19 +14,11 @@ interface Props {
 }
 
 export default function KanjiList({ onOpenKanji, active, focusSearchAt }: Props) {
-  const [kanji, setKanji]     = useState<KanjiDto[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { kanjiList, loading } = useKanjiData();
   const [search, setSearch]   = useState("");
   const [jlpt, setJlpt]       = useState<JlptFilter>("all");
 
   const searchRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    invoke<KanjiDto[]>("get_kanji_list").then(data => {
-      setKanji(data);
-      setLoading(false);
-    });
-  }, []);
 
   useEffect(() => {
     if (focusSearchAt) searchRef.current?.focus();
@@ -44,7 +36,7 @@ export default function KanjiList({ onOpenKanji, active, focusSearchAt }: Props)
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return kanji.filter(k => {
+    return kanjiList.filter(k => {
       if (jlpt !== "all" && k.jlpt !== jlpt) return false;
       if (!q) return true;
       return (
@@ -56,7 +48,7 @@ export default function KanjiList({ onOpenKanji, active, focusSearchAt }: Props)
         (k.meaning?.toLowerCase().includes(q) ?? false)
       );
     });
-  }, [kanji, search, jlpt]);
+  }, [kanjiList, search, jlpt]);
 
   return (
     <div className="kanji-list-main">
