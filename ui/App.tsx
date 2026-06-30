@@ -1,5 +1,15 @@
 import { useEffect, useState } from "react";
 import "./styles/globals.css";
+import "./styles/layout.css";
+import Sidebar from "./components/Sidebar";
+import KanjiList from "./views/KanjiList";
+import KanaChart from "./views/KanaChart";
+import RomajiKana from "./views/RomajiKana";
+import DrawSearch from "./views/DrawSearch";
+import AnkiExport from "./views/AnkiExport";
+import Settings from "./views/Settings";
+
+export type View = "kanji" | "kana" | "romaji" | "draw" | "anki" | "settings";
 
 type Theme = "dark" | "light";
 
@@ -11,6 +21,7 @@ function getInitialTheme(): Theme {
 
 export default function App() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [view, setView] = useState<View>("kanji");
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -20,25 +31,21 @@ export default function App() {
   const toggleTheme = () => setTheme(t => t === "dark" ? "light" : "dark");
 
   return (
-    <div style={{ height: "100%", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 16 }}>
-      <h1 style={{ fontSize: 32, fontWeight: 700, color: "var(--accent)" }}>漢字マスター</h1>
-      <p style={{ color: "var(--text-muted)", fontSize: 13 }}>Kanji Master — UI в разработке</p>
-      <button
-        onClick={toggleTheme}
-        style={{
-          marginTop: 8,
-          padding: "8px 20px",
-          borderRadius: "var(--radius-md)",
-          background: "var(--surface-2)",
-          color: "var(--text)",
-          border: "1px solid var(--border)",
-          fontSize: 13,
-          cursor: "pointer",
-          transition: "background var(--transition)",
-        }}
-      >
-        {theme === "dark" ? "☀ Light" : "☾ Dark"}
-      </button>
+    <div className="app-layout">
+      <Sidebar
+        activeView={view}
+        onViewChange={setView}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+      />
+      <main className="app-content">
+        {view === "kanji"    && <KanjiList />}
+        {view === "kana"     && <KanaChart />}
+        {view === "romaji"   && <RomajiKana />}
+        {view === "draw"     && <DrawSearch />}
+        {view === "anki"     && <AnkiExport />}
+        {view === "settings" && <Settings />}
+      </main>
     </div>
   );
 }
