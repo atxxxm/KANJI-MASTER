@@ -1,31 +1,17 @@
 import { motion } from "framer-motion";
 import type { View } from "../App";
-
-interface NavItem {
-  view: View;
-  icon: string;
-  label: string;
-}
-
-const TOP_NAV: NavItem[] = [
-  { view: "home",    icon: "⌂", label: "Home" },
-  { view: "kanji",   icon: "漢", label: "Kanji" },
-  { view: "kana",    icon: "あ", label: "Kana" },
-  { view: "romaji",  icon: "Aa", label: "Romaji → Kana" },
-  { view: "draw",    icon: "✍", label: "Draw Search" },
-  { view: "anki",    icon: "↗", label: "Anki Export" },
-];
+import { NAV_ITEMS, SETTINGS_NAV, type NavMeta } from "../api/navMeta";
 
 interface Props {
-  activeView: View;
-  onViewChange: (v: View) => void;
+  activeKind: View;
+  onOpenTab: (v: View) => void;
   theme: "dark" | "light";
   onToggleTheme: () => void;
   collapsed: boolean;
   onToggleCollapsed: () => void;
 }
 
-function NavButton({ item, active, onClick }: { item: NavItem; active: boolean; onClick: () => void }) {
+function NavButton({ item, active, onClick }: { item: NavMeta; active: boolean; onClick: () => void }) {
   return (
     <button className={`nav-item${active ? " active" : ""}`} onClick={onClick} title={item.label}>
       {active && (
@@ -41,7 +27,7 @@ function NavButton({ item, active, onClick }: { item: NavItem; active: boolean; 
   );
 }
 
-export default function Sidebar({ activeView, onViewChange, theme, onToggleTheme, collapsed, onToggleCollapsed }: Props) {
+export default function Sidebar({ activeKind, onOpenTab, theme, onToggleTheme, collapsed, onToggleCollapsed }: Props) {
   return (
     <nav className={`sidebar${collapsed ? " collapsed" : ""}`}>
       <button className="sidebar-brand" onClick={onToggleCollapsed} title={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
@@ -50,21 +36,21 @@ export default function Sidebar({ activeView, onViewChange, theme, onToggleTheme
       </button>
 
       <div className="sidebar-nav">
-        {TOP_NAV.map(item => (
+        {NAV_ITEMS.map(item => (
           <NavButton
             key={item.view}
             item={item}
-            active={activeView === item.view}
-            onClick={() => onViewChange(item.view)}
+            active={activeKind === item.view}
+            onClick={() => onOpenTab(item.view)}
           />
         ))}
       </div>
 
       <div className="sidebar-footer">
         <NavButton
-          item={{ view: "settings", icon: "⚙", label: "Settings" }}
-          active={activeView === "settings"}
-          onClick={() => onViewChange("settings")}
+          item={SETTINGS_NAV}
+          active={activeKind === "settings"}
+          onClick={() => onOpenTab("settings")}
         />
 
         <div className="nav-divider" />
