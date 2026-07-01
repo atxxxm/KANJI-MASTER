@@ -16,12 +16,6 @@ const toHiragana = (s: string) =>
     return code >= 0x30a1 && code <= 0x30f6 ? String.fromCharCode(code - 0x60) : c;
   }).join("");
 
-const toKatakana = (s: string) =>
-  [...s].map(c => {
-    const code = c.charCodeAt(0);
-    return code >= 0x3041 && code <= 0x3096 ? String.fromCharCode(code + 0x60) : c;
-  }).join("");
-
 // Extract last contiguous kana run from a string
 function lastKanaWord(s: string): string {
   const matches = s.match(/[぀-ヿ]+/g);
@@ -106,10 +100,10 @@ export default function RomajiKana({ onOpenKanji, onOpenKanjiNewTab }: Props) {
     setText(convertedBefore + after);
   };
 
+  // Only affects newly typed romaji going forward — text already on the
+  // page keeps whichever script it was converted with.
   const toggleMode = (mode: string) => {
-    const katakana = mode === "katakana";
-    setIsKatakana(katakana);
-    setText(prev => (katakana ? toKatakana(prev) : toHiragana(prev)));
+    setIsKatakana(mode === "katakana");
   };
 
   const kanaQuery = useMemo(() => lastKanaWord(text), [text]);
