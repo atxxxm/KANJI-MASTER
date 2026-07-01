@@ -1,5 +1,6 @@
 use crate::back::core::Kanji;
 use crate::back::svg_cache::parse_svg_content;
+use rayon::prelude::*;
 use std::fs;
 use std::sync::Arc;
 
@@ -30,18 +31,22 @@ impl RecognitionSystem {
     }
 
     pub fn load_from_svgs(&mut self, kanji_db: &[Arc<Kanji>], svg_path: &str) {
-        self.cache.clear();
-        for k in kanji_db {
-            let file_path = format!("{}/0{}.svg", svg_path, k.unicode.to_lowercase());
-            let Ok(content) = fs::read_to_string(&file_path) else { continue };
-            let Some(strokes) = parse_svg_content(&content) else { continue };
-            let raw_strokes: Vec<Vec<(f32, f32)>> = strokes
-                .iter()
-                .map(|s| s.points.iter().map(|sp| (sp.pos.x as f32, sp.pos.y as f32)).collect())
-                .collect();
-            let normalized = normalize_kanji(raw_strokes);
-            self.cache.push(SimplifiedKanji { id: k.id, strokes: normalized });
-        }
+        // Each kanji parses an independent SVG file, so fan the work out across
+        // all cores. Result order is irrelevant — `search` scans the whole cache.
+        self.cache = kanji_db
+            .par_iter()
+            .filter_map(|k| {
+                let file_path = format!("{}/0{}.svg", svg_path, k.unicode.to_lowercase());
+                let content = fs::read_to_string(&file_path).ok()?;
+                let strokes = parse_svg_content(&content)?;
+                let raw_strokes: Vec<Vec<(f32, f32)>> = strokes
+                    .iter()
+                    .map(|s| s.points.iter().map(|sp| (sp.pos.x as f32, sp.pos.y as f32)).collect())
+                    .collect();
+                let normalized = normalize_kanji(raw_strokes);
+                Some(SimplifiedKanji { id: k.id, strokes: normalized })
+            })
+            .collect();
     }
 
     // Search for similar kanji
@@ -53,7 +58,7 @@ impl RecognitionSystem {
         let user_normalized = normalize_kanji(user_strokes.to_vec());
         let user_stroke_count = user_normalized.len();
         
-        let mut scores: Vec<(i32, f32)> = self.cache.iter()
+        let mut scores: Vec<(i32, f32)> = self.cache.par_iter()
             .filter(|k| {
                 // Optimization: skip if stroke count is too different
                 let diff = (k.strokes.len() as i32 - user_stroke_count as i32).abs();
