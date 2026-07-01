@@ -33,6 +33,7 @@
 .kanji-detail-view .detail-section:nth-of-type(2) { animation-delay: 120ms; }
 .kanji-detail-view .detail-section:nth-of-type(3) { animation-delay: 160ms; }
 .kanji-detail-view .detail-section:nth-of-type(4) { animation-delay: 200ms; }
+.kanji-detail-view .detail-section:nth-of-type(n+5) { animation-delay: 240ms; }
 
 .kanji-detail-view .detail-kanji {
   font-size: 88px;

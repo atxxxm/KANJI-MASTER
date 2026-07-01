@@ -2,6 +2,7 @@ mod back;
 
 use back::config::{get_config_path, load_config, save_config, Config};
 use back::core::{Database, Kanji};
+use back::radicals::RadicalCache;
 use back::recognition::RecognitionSystem;
 use back::romaji_kana::to_kana;
 use back::svg_cache::SvgCache;
@@ -21,6 +22,10 @@ struct AppState {
     // Lazily parses each kanji's SVG (KanjiVG 0-109 coords) on first request
     // instead of parsing every file at startup.
     svg_cache: SvgCache,
+    // Lazily parses each kanji's SVG for its top-level component/radical
+    // breakdown, cached separately since most requests only need one of
+    // the two parses.
+    radical_cache: RadicalCache,
     recognition: RecognitionSystem,
     config: Config,
     // kanji char → meaning string (loaded from user's localization JSON)
@@ -112,6 +117,14 @@ fn get_svg_strokes(state: State<AppStateHandle>, kanji_id: i32) -> Option<Vec<Ve
             })
             .collect()
     })
+}
+
+/// Returns the kanji's top-level components (e.g. 語 -> ["言", "吾"]), parsed
+/// from its KanjiVG SVG. Empty for atomic radicals that don't decompose.
+#[tauri::command]
+fn get_kanji_components(state: State<AppStateHandle>, kanji_id: i32) -> Vec<String> {
+    let mut st = state.lock().unwrap();
+    st.radical_cache.get_or_load(kanji_id).cloned().unwrap_or_default()
 }
 
 /// Receives user-drawn strokes from the canvas and returns the top 8 matching kanji.
@@ -247,6 +260,9 @@ fn build_app_state(resource_dir: &Path) -> AppState {
     let mut svg_cache = SvgCache::new();
     svg_cache.prepare(&kanji, &config.path_to_svg_images);
 
+    let mut radical_cache = RadicalCache::new();
+    radical_cache.prepare(&kanji, &config.path_to_svg_images);
+
     // Recognition templates are parsed from 6700+ SVGs, which is too slow to do
     // on the startup critical path. Start empty and fill it from a background
     // thread in `setup` so the window can appear immediately.
@@ -267,6 +283,7 @@ fn build_app_state(resource_dir: &Path) -> AppState {
         kanji,
         kanji_by_char,
         svg_cache,
+        radical_cache,
         recognition,
         config,
         kanji_meanings,
@@ -324,6 +341,7 @@ pub fn run() {
             get_kanji_by_char,
             convert_romaji,
             get_svg_strokes,
+            get_kanji_components,
             search_by_strokes,
             is_recognition_ready,
             get_settings,

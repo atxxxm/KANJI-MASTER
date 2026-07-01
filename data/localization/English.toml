@@ -144,6 +144,7 @@ onyomi = "On-yomi"
 kunyomi = "Kun-yomi"
 strokes = "strokes"
 grade = "Grade"
+components = "Components"
 examples = "Examples"
 
 [local.kana]

@@ -414,6 +414,41 @@
   transform: translateY(0) scale(0.96);
 }
 
+/* ── Radical/component breakdown ─────────────────────────── */
+.detail-components {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.detail-component {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  font-size: 26px;
+  font-family: var(--font);
+  color: var(--text-muted);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: default;
+  transition: all 0.2s var(--spring);
+}
+.detail-component.clickable {
+  color: var(--accent);
+  cursor: pointer;
+}
+.detail-component.clickable:hover {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  transform: translateY(-2px) scale(1.05);
+}
+.detail-component.clickable:active {
+  transform: translateY(0) scale(0.97);
+}
+
 /* ── Clickable kanji in examples ─────────────────────────── */
 .example-kanji-link {
   color: var(--accent);

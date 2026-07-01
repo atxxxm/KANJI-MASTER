@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto } from "../api/types";
 import AnimatedKanji from "./AnimatedKanji";
@@ -63,10 +63,65 @@ function ExampleText({ text, onKanjiClick, onKanjiClickNewTab }: {
   );
 }
 
+// Radical/component breakdown (e.g. 語 -> 言 + 吾), parsed on the backend
+// from the kanji's own KanjiVG SVG. Components that also happen to be one
+// of our 2209 dictionary kanji are clickable; the rest (many radicals
+// aren't standalone jōyō kanji) render as plain, non-interactive glyphs.
+function ComponentsRow({ kanji, kanjiByChar, onKanjiClick, onKanjiClickNewTab }: {
+  kanji: KanjiDto;
+  kanjiByChar: Map<string, KanjiDto>;
+  onKanjiClick: (k: KanjiDto) => void;
+  onKanjiClickNewTab: (k: KanjiDto) => void;
+}) {
+  const { open } = useContextMenu();
+  const { t } = useLocalization();
+  const [components, setComponents] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    invoke<string[]>("get_kanji_components", { kanjiId: kanji.id }).then(cs => {
+      if (!cancelled) setComponents(cs);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [kanji.id]);
+
+  if (components.length === 0) return null;
+
+  return (
+    <div className="detail-section">
+      <div className="detail-label">{t("current_kanji.components")}</div>
+      <div className="detail-components">
+        {components.map((ch, i) => {
+          const match = kanjiByChar.get(ch);
+          return (
+            <button
+              key={i}
+              type="button"
+              className={`detail-component${match ? " clickable" : ""}`}
+              disabled={!match}
+              onClick={() => match && onKanjiClick(match)}
+              onContextMenu={e => {
+                if (!match) return;
+                e.preventDefault();
+                open(e.clientX, e.clientY, kanjiMenuItems(match, onKanjiClick, onKanjiClickNewTab, t));
+              }}
+            >
+              {ch}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNewTab }: Props) {
-  const { translationsByChar } = useKanjiData();
+  const { translationsByChar, kanjiList } = useKanjiData();
   const { t } = useLocalization();
   const translations = translationsByChar[kanji.kanji]?.translate_examples;
+  const kanjiByChar = useMemo(() => new Map(kanjiList.map(k => [k.kanji, k])), [kanjiList]);
 
   // Which example indices are currently showing their translation —
   // keyed per-kanji so switching to a different kanji in the same tab
@@ -102,6 +157,13 @@ export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNe
           </div>
         </div>
       </div>
+
+      <ComponentsRow
+        kanji={kanji}
+        kanjiByChar={kanjiByChar}
+        onKanjiClick={onKanjiClick}
+        onKanjiClickNewTab={onKanjiClickNewTab}
+      />
 
       {kanji.onyomi && (
         <div className="detail-section">
