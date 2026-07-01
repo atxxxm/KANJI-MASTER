@@ -17,8 +17,9 @@ use tauri::State;
 struct AppState {
     kanji: Vec<Arc<Kanji>>,
     kanji_by_char: HashMap<String, Arc<Kanji>>,
-    // Pre-flattened stroke points for canvas animation (KanjiVG 0-109 coords)
-    svg_points: HashMap<i32, Vec<Vec<[f32; 2]>>>,
+    // Lazily parses each kanji's SVG (KanjiVG 0-109 coords) on first request
+    // instead of parsing every file at startup.
+    svg_cache: SvgCache,
     recognition: RecognitionSystem,
     config: Config,
     // kanji char → meaning string (loaded from user's localization JSON)
@@ -92,11 +93,24 @@ fn convert_romaji(input: String, is_katakana: bool, live_input: bool) -> String 
     to_kana(&input, is_katakana, live_input)
 }
 
-/// Returns stroke point arrays for canvas animation.
+/// Returns stroke point arrays for canvas animation, parsing the kanji's SVG
+/// file on first request and caching the result for subsequent calls.
 /// Each stroke is a flat sequence of [x, y] in KanjiVG 0-109 coordinates.
 #[tauri::command]
 fn get_svg_strokes(state: State<AppStateHandle>, kanji_id: i32) -> Option<Vec<Vec<[f32; 2]>>> {
-    state.lock().unwrap().svg_points.get(&kanji_id).cloned()
+    let mut st = state.lock().unwrap();
+    st.svg_cache.get_or_load(kanji_id).map(|strokes| {
+        strokes
+            .iter()
+            .map(|stroke| {
+                stroke
+                    .points
+                    .iter()
+                    .map(|sp| [sp.pos.x as f32, sp.pos.y as f32])
+                    .collect()
+            })
+            .collect()
+    })
 }
 
 /// Receives user-drawn strokes from the canvas and returns the top 8 matching kanji.
@@ -201,28 +215,10 @@ fn build_app_state() -> AppState {
         .collect();
 
     let mut svg_cache = SvgCache::new();
-    svg_cache.load_all(&kanji, &config.path_to_svg_images);
-
-    let svg_points: HashMap<i32, Vec<Vec<[f32; 2]>>> = svg_cache
-        .data
-        .iter()
-        .map(|(id, strokes)| {
-            let pts = strokes
-                .iter()
-                .map(|stroke| {
-                    stroke
-                        .points
-                        .iter()
-                        .map(|sp| [sp.pos.x as f32, sp.pos.y as f32])
-                        .collect()
-                })
-                .collect();
-            (*id, pts)
-        })
-        .collect();
+    svg_cache.prepare(&kanji, &config.path_to_svg_images);
 
     let mut recognition = RecognitionSystem::new();
-    recognition.load_cache(&svg_cache.data);
+    recognition.load_from_svgs(&kanji, &config.path_to_svg_images);
 
     let kanji_meanings: HashMap<String, String> =
         if std::path::Path::new(&config.path_to_kanji_localization).exists() {
@@ -238,7 +234,7 @@ fn build_app_state() -> AppState {
     AppState {
         kanji,
         kanji_by_char,
-        svg_points,
+        svg_cache,
         recognition,
         config,
         kanji_meanings,
