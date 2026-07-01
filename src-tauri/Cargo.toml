@@ -1,6 +1,6 @@
 [package]
 name = "kanji-master"
-version = "0.3.5"
+version = "0.3.8"
 description = "Simple App For Learning Kanji"
 authors = ["atxxxm"]
 edition = "2024"
