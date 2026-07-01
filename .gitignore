@@ -1,6 +1,5 @@
 /target
 src-tauri/target
-docs/book
 node_modules
 dist
 src-tauri/gen
