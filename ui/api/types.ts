@@ -29,10 +29,10 @@ export interface Config {
   kanji_font_size: number;
   animation_speed: number;
   path_to_db_core: string;
-  path_to_localization: string;
   path_to_kanji_localization: string;
   path_to_svg_images: string;
   show_kanji_meaning: boolean;
   focus_on_search: boolean;
   dark_mode: boolean;
+  interface_language: string;
 }

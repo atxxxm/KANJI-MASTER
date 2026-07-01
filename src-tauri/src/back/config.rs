@@ -11,17 +11,22 @@ pub struct Config {
     pub kanji_font_size: f32,
     pub animation_speed: f32,
     pub path_to_db_core: String,
-    pub path_to_localization: String,
     pub path_to_kanji_localization: String,
     pub path_to_svg_images: String,
     pub show_kanji_meaning: bool,
     pub focus_on_search: bool,
     #[serde(default = "default_dark_mode")]
     pub dark_mode: bool,
+    #[serde(default = "default_interface_language")]
+    pub interface_language: String,
 }
 
 fn default_dark_mode() -> bool {
     true
+}
+
+fn default_interface_language() -> String {
+    "English".to_string()
 }
 
 impl Default for Config {
@@ -29,7 +34,6 @@ impl Default for Config {
         let config_dir = get_app_config_dir();
 
         let path_to_db = config_dir.join("db").join("core.db");
-        let path_to_loc = config_dir.join("localization").join("localization.toml");
         let path_to_kanji_loc = config_dir.join("kanji-localization").join("en.json");
         let path_to_svg = config_dir.join("kanji-svg");
 
@@ -38,12 +42,12 @@ impl Default for Config {
             kanji_font_size: 48.0,
             animation_speed: 0.75,
             path_to_db_core: path_to_db.to_string_lossy().to_string(),
-            path_to_localization: path_to_loc.to_string_lossy().to_string(),
             path_to_kanji_localization: path_to_kanji_loc.to_string_lossy().to_string(),
             path_to_svg_images: path_to_svg.to_string_lossy().to_string(),
             show_kanji_meaning: false,
             focus_on_search: true,
             dark_mode: true,
+            interface_language: default_interface_language(),
         }
     }
 }

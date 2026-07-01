@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useSettings } from "../contexts/SettingsContext";
 import { useKanjiData } from "../contexts/KanjiDataContext";
+import { useLocalization } from "../contexts/LocalizationContext";
 import "../styles/settings.css";
 
 const GITHUB_URL = "https://github.com/atxxxm/KANJI-MASTER";
@@ -23,13 +24,14 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 export default function Settings({ theme, onThemeChange }: Props) {
   const { config, updateConfig } = useSettings();
   const { refresh: refreshKanji } = useKanjiData();
+  const { languages, t } = useLocalization();
   const [status, setStatus] = useState<Status>(null);
   const [reloading, setReloading] = useState(false);
 
   if (!config) {
     return (
       <div className="settings-view">
-        <span style={{ color: "var(--text-muted)", fontSize: 13 }}>Loading settings…</span>
+        <span style={{ color: "var(--text-muted)", fontSize: 13 }}>{t("settings.loading")}</span>
       </div>
     );
   }
@@ -39,7 +41,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
     try {
       await invoke("save_settings", { config });
       onThemeChange(config.dark_mode ? "dark" : "light");
-      setStatus({ kind: "success", text: "Settings saved" });
+      setStatus({ kind: "success", text: t("settings.saved_status") });
     } catch (e) {
       setStatus({ kind: "error", text: String(e) });
     }
@@ -62,10 +64,25 @@ export default function Settings({ theme, onThemeChange }: Props) {
   return (
     <div className="settings-view">
       <div className="settings-section">
-        <div className="settings-section-title">Appearance</div>
+        <div className="settings-section-title">{t("settings.appearance")}</div>
 
         <div className="settings-row">
-          <span className="settings-row-label">Dark mode</span>
+          <span className="settings-row-label">{t("settings.interface_language")}</span>
+          <div className="settings-row-control">
+            <select
+              className="settings-select"
+              value={config.interface_language}
+              onChange={e => updateConfig({ interface_language: e.target.value })}
+            >
+              {languages.map(lang => (
+                <option key={lang} value={lang}>{lang}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="settings-row">
+          <span className="settings-row-label">{t("settings.dark_mode")}</span>
           <div className="settings-row-control">
             <Toggle on={config.dark_mode} onChange={v => {
               updateConfig({ dark_mode: v });
@@ -75,7 +92,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
         </div>
 
         <div className="settings-row">
-          <span className="settings-row-label">Interface font size</span>
+          <span className="settings-row-label">{t("settings.interface_font_size")}</span>
           <div className="settings-row-control">
             <input
               type="range" min={10} max={22} step={1}
@@ -88,7 +105,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
         </div>
 
         <div className="settings-row">
-          <span className="settings-row-label">Kanji font size</span>
+          <span className="settings-row-label">{t("settings.kanji_font_size")}</span>
           <div className="settings-row-control">
             <input
               type="range" min={24} max={96} step={2}
@@ -101,7 +118,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
         </div>
 
         <div className="settings-row">
-          <span className="settings-row-label">Stroke animation speed</span>
+          <span className="settings-row-label">{t("settings.animation_speed")}</span>
           <div className="settings-row-control">
             <input
               type="range" min={0.25} max={2} step={0.05}
@@ -115,17 +132,17 @@ export default function Settings({ theme, onThemeChange }: Props) {
       </div>
 
       <div className="settings-section">
-        <div className="settings-section-title">Behavior</div>
+        <div className="settings-section-title">{t("settings.behavior")}</div>
 
         <div className="settings-row">
-          <span className="settings-row-label">Show kanji meaning in lists</span>
+          <span className="settings-row-label">{t("settings.show_kanji_meaning")}</span>
           <div className="settings-row-control">
             <Toggle on={config.show_kanji_meaning} onChange={v => updateConfig({ show_kanji_meaning: v })} />
           </div>
         </div>
 
         <div className="settings-row">
-          <span className="settings-row-label">Focus search field on open</span>
+          <span className="settings-row-label">{t("settings.focus_on_search")}</span>
           <div className="settings-row-control">
             <Toggle on={config.focus_on_search} onChange={v => updateConfig({ focus_on_search: v })} />
           </div>
@@ -133,10 +150,10 @@ export default function Settings({ theme, onThemeChange }: Props) {
       </div>
 
       <div className="settings-section">
-        <div className="settings-section-title">Files &amp; data</div>
+        <div className="settings-section-title">{t("settings.files_and_data")}</div>
 
         <div className="settings-row settings-path-row">
-          <span className="settings-row-label">Database path</span>
+          <span className="settings-row-label">{t("settings.database_path")}</span>
           <div className="settings-row-control">
             <input
               className="settings-path-input"
@@ -147,7 +164,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
         </div>
 
         <div className="settings-row settings-path-row">
-          <span className="settings-row-label">Kanji localization (meanings) JSON</span>
+          <span className="settings-row-label">{t("settings.kanji_localization")}</span>
           <div className="settings-row-control">
             <input
               className="settings-path-input"
@@ -155,13 +172,13 @@ export default function Settings({ theme, onThemeChange }: Props) {
               onChange={e => updateConfig({ path_to_kanji_localization: e.target.value })}
             />
             <button className="settings-secondary-btn" onClick={handleReloadMeanings} disabled={reloading}>
-              {reloading ? "Loading…" : "Reload"}
+              {reloading ? t("settings.loading") : t("settings.reload_button")}
             </button>
           </div>
         </div>
 
         <div className="settings-row settings-path-row">
-          <span className="settings-row-label">SVG stroke data folder</span>
+          <span className="settings-row-label">{t("settings.svg_folder")}</span>
           <div className="settings-row-control">
             <input
               className="settings-path-input"
@@ -173,7 +190,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
       </div>
 
       <div className="settings-footer">
-        <button className="settings-save-btn" onClick={handleSave}>Save settings</button>
+        <button className="settings-save-btn" onClick={handleSave}>{t("settings.save_button")}</button>
         {status && <span className={`settings-status ${status.kind}`}>{status.text}</span>}
       </div>
 
@@ -181,7 +198,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
         <button className="settings-about-link" onClick={() => openUrl(GITHUB_URL)}>
           {GITHUB_URL.replace("https://", "")}
         </button>
-        <span className="settings-about-license">Licensed under GPL-3.0</span>
+        <span className="settings-about-license">{t("settings.license")}</span>
       </div>
     </div>
   );

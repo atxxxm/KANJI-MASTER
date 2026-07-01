@@ -10,7 +10,7 @@ use back::translation::TranslationFile;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tauri::State;
+use tauri::{AppHandle, State};
 
 // ── App state ────────────────────────────────────────────────────────────────
 
@@ -201,6 +201,19 @@ fn save_translations(
     Ok(())
 }
 
+/// Lists the interface languages bundled with the app (one per
+/// `<Name>.toml` file in the localization resources).
+#[tauri::command]
+fn list_languages(app: AppHandle) -> Vec<String> {
+    back::localization::list_available_languages(&app).unwrap_or_default()
+}
+
+/// Loads `<lang>.toml`'s strings as a flat "section.key" -> text map.
+#[tauri::command]
+fn get_localization(app: AppHandle, lang: String) -> HashMap<String, String> {
+    back::localization::load_language(&app, &lang).unwrap_or_default()
+}
+
 // ── Startup ──────────────────────────────────────────────────────────────────
 
 fn build_app_state() -> AppState {
@@ -263,6 +276,8 @@ pub fn run() {
             reload_meanings,
             get_translations,
             save_translations,
+            list_languages,
+            get_localization,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

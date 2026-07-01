@@ -19,6 +19,7 @@ import { type Tab, createTab, createKanjiTab } from "./api/tabs";
 import type { KanjiDto, Config, TranslationFile, KanjiTranslation } from "./api/types";
 import { SettingsContext } from "./contexts/SettingsContext";
 import { KanjiDataContext } from "./contexts/KanjiDataContext";
+import { LocalizationContext } from "./contexts/LocalizationContext";
 
 export type View = "home" | "kanji" | "kana" | "romaji" | "draw" | "translate" | "anki" | "settings" | "kanji-detail";
 
@@ -106,6 +107,34 @@ export default function App() {
   const refreshAll = useCallback(async () => {
     await Promise.all([refreshKanji(), refreshTranslations()]);
   }, [refreshKanji, refreshTranslations]);
+
+  // Interface language: list of bundled `<Name>.toml` resources, plus the
+  // flat "section.key" -> text strings for whichever one is active. English
+  // is always loaded as a base layer so a key missing from another language
+  // file (translation not filled in yet) falls back to English text instead
+  // of a raw "section.key" string.
+  const [languages, setLanguages] = useState<string[]>([]);
+  const [baseStrings, setBaseStrings] = useState<Record<string, string>>({});
+  const [overrideStrings, setOverrideStrings] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    invoke<string[]>("list_languages").then(setLanguages);
+    invoke<Record<string, string>>("get_localization", { lang: "English" }).then(setBaseStrings);
+  }, []);
+
+  const interfaceLanguage = config?.interface_language;
+  useEffect(() => {
+    if (!interfaceLanguage || interfaceLanguage === "English") {
+      setOverrideStrings({});
+      return;
+    }
+    invoke<Record<string, string>>("get_localization", { lang: interfaceLanguage }).then(setOverrideStrings);
+  }, [interfaceLanguage]);
+
+  const t = useCallback(
+    (key: string) => overrideStrings[key] ?? baseStrings[key] ?? key,
+    [baseStrings, overrideStrings]
+  );
 
   // Apply live-tunable appearance settings as CSS so every view picks them
   // up without prop drilling. `zoom` (Chromium/WebView2-only, which is all
@@ -240,6 +269,7 @@ export default function App() {
 
   return (
     <SettingsContext.Provider value={{ config, updateConfig }}>
+    <LocalizationContext.Provider value={{ languages, t }}>
     <KanjiDataContext.Provider value={{ kanjiList, loading: kanjiLoading, translationsByChar, translationsLoading, refresh: refreshAll }}>
     <ContextMenuProvider>
       <div className="app-layout">
@@ -282,6 +312,7 @@ export default function App() {
       </div>
     </ContextMenuProvider>
     </KanjiDataContext.Provider>
+    </LocalizationContext.Provider>
     </SettingsContext.Provider>
   );
 }
