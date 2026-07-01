@@ -24,6 +24,11 @@ impl RecognitionSystem {
         Self { cache: Vec::new() }
     }
 
+    /// True once the SVG templates have been parsed into the cache.
+    pub fn is_loaded(&self) -> bool {
+        !self.cache.is_empty()
+    }
+
     pub fn load_from_svgs(&mut self, kanji_db: &[Arc<Kanji>], svg_path: &str) {
         self.cache.clear();
         for k in kanji_db {

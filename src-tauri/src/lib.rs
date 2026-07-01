@@ -10,7 +10,7 @@ use back::translation::TranslationFile;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 // ── App state ────────────────────────────────────────────────────────────────
 
@@ -140,6 +140,14 @@ fn search_by_strokes(
         .collect()
 }
 
+/// Whether the stroke-recognition templates have finished loading in the
+/// background. The draw-search UI uses this to show a loading state instead of
+/// reporting "no matches" while templates are still being parsed at startup.
+#[tauri::command]
+fn is_recognition_ready(state: State<AppStateHandle>) -> bool {
+    state.lock().unwrap().recognition.is_loaded()
+}
+
 #[tauri::command]
 fn get_settings(state: State<AppStateHandle>) -> Config {
     state.lock().unwrap().config.clone()
@@ -230,8 +238,10 @@ fn build_app_state() -> AppState {
     let mut svg_cache = SvgCache::new();
     svg_cache.prepare(&kanji, &config.path_to_svg_images);
 
-    let mut recognition = RecognitionSystem::new();
-    recognition.load_from_svgs(&kanji, &config.path_to_svg_images);
+    // Recognition templates are parsed from 6700+ SVGs, which is too slow to do
+    // on the startup critical path. Start empty and fill it from a background
+    // thread in `setup` so the window can appear immediately.
+    let recognition = RecognitionSystem::new();
 
     let kanji_meanings: HashMap<String, String> =
         if std::path::Path::new(&config.path_to_kanji_localization).exists() {
@@ -265,12 +275,41 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .manage(Mutex::new(state))
+        .setup(|app| {
+            let handle = app.handle().clone();
+
+            // Snapshot the inputs the recognition cache needs (Arc clones + a
+            // path string — cheap) so the background thread doesn't hold the
+            // state lock while parsing SVGs.
+            let (kanji, svg_path) = {
+                let st = handle.state::<AppStateHandle>();
+                let st = st.lock().unwrap();
+                (st.kanji.clone(), st.config.path_to_svg_images.clone())
+            };
+
+            std::thread::spawn(move || {
+                let mut recognition = RecognitionSystem::new();
+                recognition.load_from_svgs(&kanji, &svg_path);
+
+                {
+                    let st = handle.state::<AppStateHandle>();
+                    let mut st = st.lock().unwrap();
+                    st.recognition = recognition;
+                }
+
+                // Let the UI enable draw-search once templates are ready.
+                let _ = handle.emit("recognition-ready", ());
+            });
+
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             get_kanji_list,
             get_kanji_by_char,
             convert_romaji,
             get_svg_strokes,
             search_by_strokes,
+            is_recognition_ready,
             get_settings,
             save_settings,
             reload_meanings,

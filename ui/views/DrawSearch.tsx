@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import type { KanjiDto } from "../api/types";
 import { useContextMenu } from "../contexts/ContextMenuContext";
 import { useLocalization } from "../contexts/LocalizationContext";
@@ -27,6 +28,9 @@ export default function DrawSearch({ onOpenKanji, onOpenKanjiNewTab, active }: P
   const [strokeCount, setStrokeCount] = useState(0);
   const [results, setResults] = useState<KanjiDto[]>([]);
   const [searching, setSearching] = useState(false);
+  // Recognition templates load in a background thread at startup; until they're
+  // ready the backend returns no matches, so gate the UI on this flag.
+  const [ready, setReady] = useState(false);
 
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -99,6 +103,24 @@ export default function DrawSearch({ onOpenKanji, onOpenKanjiNewTab, active }: P
       setSearching(false);
     }
   }, []);
+
+  // Track when background-loaded recognition templates become available.
+  useEffect(() => {
+    let cancelled = false;
+    invoke<boolean>("is_recognition_ready").then(r => {
+      if (!cancelled) setReady(r);
+    });
+    const unlistenPromise = listen("recognition-ready", () => setReady(true));
+    return () => {
+      cancelled = true;
+      unlistenPromise.then(unlisten => unlisten());
+    };
+  }, []);
+
+  // Once templates finish loading, re-run any strokes already on the canvas.
+  useEffect(() => {
+    if (ready && strokesRef.current.length > 0) runSearch();
+  }, [ready, runSearch]);
 
   const getPos = (e: React.PointerEvent<HTMLCanvasElement>): Point => {
     const rect = canvasRef.current!.getBoundingClientRect();
@@ -184,7 +206,7 @@ export default function DrawSearch({ onOpenKanji, onOpenKanjiNewTab, active }: P
 
         <div className="draw-results">
           <div className="draw-results-label">
-            {searching
+            {searching || (strokeCount > 0 && !ready)
               ? t("draw_and_search.searching")
               : strokeCount === 0
               ? t("draw_and_search.best_matches")
@@ -193,7 +215,11 @@ export default function DrawSearch({ onOpenKanji, onOpenKanjiNewTab, active }: P
           {results.length === 0 ? (
             <div className="view-placeholder" style={{ padding: "24px 0" }}>
               <span style={{ fontSize: 13 }}>
-                {strokeCount === 0 ? t("draw_and_search.draw_something") : t("draw_and_search.not_match_yet")}
+                {strokeCount === 0
+                  ? t("draw_and_search.draw_something")
+                  : !ready
+                  ? t("draw_and_search.searching")
+                  : t("draw_and_search.not_match_yet")}
               </span>
             </div>
           ) : (
