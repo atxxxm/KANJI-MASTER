@@ -79,6 +79,11 @@
   grid-template-columns: repeat(auto-fill, minmax(max(96px, calc(var(--kanji-font-size) + 56px)), 1fr));
   gap: 10px;
   align-content: start;
+  /* Isolate the grid's internal layout: swapping thousands of cards on
+     filter/search no longer forces the browser to re-check sibling layout
+     (sidebar, toolbar). `layout` only — no `paint`, so hover shadows/lifts
+     on edge cards aren't clipped. */
+  contain: layout;
 }
 
 .kanji-card {
