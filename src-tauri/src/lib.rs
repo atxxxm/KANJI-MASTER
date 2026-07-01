@@ -1,0 +1,273 @@
+mod back;
+
+use back::config::{get_config_path, load_config, save_config, Config};
+use back::core::{Database, Kanji};
+use back::recognition::RecognitionSystem;
+use back::romaji_kana::to_kana;
+use back::svg_cache::SvgCache;
+use back::translation::TranslationFile;
+
+use serde::Serialize;
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+use tauri::State;
+
+// ── App state ────────────────────────────────────────────────────────────────
+
+struct AppState {
+    kanji: Vec<Arc<Kanji>>,
+    kanji_by_char: HashMap<String, Arc<Kanji>>,
+    // Pre-flattened stroke points for canvas animation (KanjiVG 0-109 coords)
+    svg_points: HashMap<i32, Vec<Vec<[f32; 2]>>>,
+    recognition: RecognitionSystem,
+    config: Config,
+    // kanji char → meaning string (loaded from user's localization JSON)
+    kanji_meanings: HashMap<String, String>,
+}
+
+type AppStateHandle = Mutex<AppState>;
+
+// ── Serializable DTO ─────────────────────────────────────────────────────────
+
+#[derive(Serialize, Clone)]
+struct KanjiDto {
+    id: i32,
+    kanji: String,
+    strokes: i8,
+    jlpt: String,
+    grade: String,
+    frequency: String,
+    unicode: String,
+    onyomi: String,
+    onyomi_romaji: String,
+    kunyomi: String,
+    kunyomi_romaji: String,
+    examples: Vec<String>,
+    meaning: Option<String>,
+}
+
+fn to_dto(k: &Kanji, meaning: Option<String>) -> KanjiDto {
+    KanjiDto {
+        id: k.id,
+        kanji: k.kanji.clone(),
+        strokes: k.strokes,
+        jlpt: k.jlpt.clone(),
+        grade: k.grade.clone(),
+        frequency: k.frequency.clone(),
+        unicode: k.unicode.clone(),
+        onyomi: k.onyomi.clone(),
+        onyomi_romaji: k.onyomi_romaji.clone(),
+        kunyomi: k.kunyomi.clone(),
+        kunyomi_romaji: k.kunyomi_romaji.clone(),
+        examples: k.example.clone(),
+        meaning,
+    }
+}
+
+// ── Tauri commands ───────────────────────────────────────────────────────────
+
+#[tauri::command]
+fn get_kanji_list(state: State<AppStateHandle>) -> Vec<KanjiDto> {
+    let st = state.lock().unwrap();
+    st.kanji
+        .iter()
+        .map(|k| {
+            let meaning = st.kanji_meanings.get(&k.kanji).cloned();
+            to_dto(k, meaning)
+        })
+        .collect()
+}
+
+#[tauri::command]
+fn get_kanji_by_char(state: State<AppStateHandle>, ch: String) -> Option<KanjiDto> {
+    let st = state.lock().unwrap();
+    st.kanji_by_char.get(&ch).map(|k| {
+        let meaning = st.kanji_meanings.get(&k.kanji).cloned();
+        to_dto(k, meaning)
+    })
+}
+
+#[tauri::command]
+fn convert_romaji(input: String, is_katakana: bool, live_input: bool) -> String {
+    to_kana(&input, is_katakana, live_input)
+}
+
+/// Returns stroke point arrays for canvas animation.
+/// Each stroke is a flat sequence of [x, y] in KanjiVG 0-109 coordinates.
+#[tauri::command]
+fn get_svg_strokes(state: State<AppStateHandle>, kanji_id: i32) -> Option<Vec<Vec<[f32; 2]>>> {
+    state.lock().unwrap().svg_points.get(&kanji_id).cloned()
+}
+
+/// Receives user-drawn strokes from the canvas and returns the top 8 matching kanji.
+/// Input strokes can use any coordinate scale — RecognitionSystem normalises them.
+#[tauri::command]
+fn search_by_strokes(
+    state: State<AppStateHandle>,
+    strokes: Vec<Vec<[f32; 2]>>,
+) -> Vec<KanjiDto> {
+    let st = state.lock().unwrap();
+    let user_strokes: Vec<Vec<(f32, f32)>> = strokes
+        .iter()
+        .map(|s| s.iter().map(|p| (p[0], p[1])).collect())
+        .collect();
+
+    let results = st.recognition.search(&user_strokes, 8);
+    let by_id: HashMap<i32, &Arc<Kanji>> = st.kanji.iter().map(|k| (k.id, k)).collect();
+
+    results
+        .iter()
+        .filter_map(|(id, _score)| {
+            by_id.get(id).map(|k| {
+                let meaning = st.kanji_meanings.get(&k.kanji).cloned();
+                to_dto(k, meaning)
+            })
+        })
+        .collect()
+}
+
+#[tauri::command]
+fn get_settings(state: State<AppStateHandle>) -> Config {
+    state.lock().unwrap().config.clone()
+}
+
+#[tauri::command]
+fn save_settings(state: State<AppStateHandle>, config: Config) -> Result<(), String> {
+    let path = get_config_path().ok_or_else(|| "Cannot determine config path".to_string())?;
+    save_config(&path, &config).map_err(|e| e.to_string())?;
+    state.lock().unwrap().config = config;
+    Ok(())
+}
+
+/// Reload meanings from a user-specified JSON localization file.
+#[tauri::command]
+fn reload_meanings(state: State<AppStateHandle>, path: String) -> Result<usize, String> {
+    let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+    let tf: TranslationFile = serde_json::from_str(&content).map_err(|e| e.to_string())?;
+    let meanings: HashMap<String, String> = tf
+        .entries
+        .into_iter()
+        .map(|(k, v)| (k, v.meaning))
+        .collect();
+    let count = meanings.len();
+    state.lock().unwrap().kanji_meanings = meanings;
+    Ok(count)
+}
+
+/// Loads the full translation file (meaning + examples per kanji) for the
+/// Translate Kanji editor. Returns an empty file if it doesn't exist yet.
+#[tauri::command]
+fn get_translations(path: String) -> TranslationFile {
+    std::fs::read_to_string(&path)
+        .ok()
+        .and_then(|c| serde_json::from_str::<TranslationFile>(&c).ok())
+        .unwrap_or_default()
+}
+
+/// Writes the full translation file to disk and refreshes the in-memory
+/// meanings cache so get_kanji_list/get_kanji_by_char reflect the edit.
+#[tauri::command]
+fn save_translations(
+    state: State<AppStateHandle>,
+    path: String,
+    data: TranslationFile,
+) -> Result<(), String> {
+    if let Some(parent) = std::path::Path::new(&path).parent() {
+        std::fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+    }
+    let json = serde_json::to_string_pretty(&data).map_err(|e| e.to_string())?;
+    std::fs::write(&path, json).map_err(|e| e.to_string())?;
+
+    let meanings: HashMap<String, String> = data
+        .entries
+        .into_iter()
+        .map(|(k, v)| (k, v.meaning))
+        .collect();
+    state.lock().unwrap().kanji_meanings = meanings;
+    Ok(())
+}
+
+// ── Startup ──────────────────────────────────────────────────────────────────
+
+fn build_app_state() -> AppState {
+    let config = load_config().unwrap_or_default();
+
+    let db = Database::new(&config.path_to_db_core);
+    let kanji = db.get_kanji().unwrap_or_default();
+
+    let kanji_by_char: HashMap<String, Arc<Kanji>> = kanji
+        .iter()
+        .map(|k| (k.kanji.clone(), Arc::clone(k)))
+        .collect();
+
+    let mut svg_cache = SvgCache::new();
+    svg_cache.load_all(&kanji, &config.path_to_svg_images);
+
+    let svg_points: HashMap<i32, Vec<Vec<[f32; 2]>>> = svg_cache
+        .data
+        .iter()
+        .map(|(id, strokes)| {
+            let pts = strokes
+                .iter()
+                .map(|stroke| {
+                    stroke
+                        .points
+                        .iter()
+                        .map(|sp| [sp.pos.x as f32, sp.pos.y as f32])
+                        .collect()
+                })
+                .collect();
+            (*id, pts)
+        })
+        .collect();
+
+    let mut recognition = RecognitionSystem::new();
+    recognition.load_cache(&svg_cache.data);
+
+    let kanji_meanings: HashMap<String, String> =
+        if std::path::Path::new(&config.path_to_kanji_localization).exists() {
+            std::fs::read_to_string(&config.path_to_kanji_localization)
+                .ok()
+                .and_then(|c| serde_json::from_str::<TranslationFile>(&c).ok())
+                .map(|tf| tf.entries.into_iter().map(|(k, v)| (k, v.meaning)).collect())
+                .unwrap_or_default()
+        } else {
+            HashMap::new()
+        };
+
+    AppState {
+        kanji,
+        kanji_by_char,
+        svg_points,
+        recognition,
+        config,
+        kanji_meanings,
+    }
+}
+
+// ── Entry point ──────────────────────────────────────────────────────────────
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    let state = build_app_state();
+
+    tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
+        .manage(Mutex::new(state))
+        .invoke_handler(tauri::generate_handler![
+            get_kanji_list,
+            get_kanji_by_char,
+            convert_romaji,
+            get_svg_strokes,
+            search_by_strokes,
+            get_settings,
+            save_settings,
+            reload_meanings,
+            get_translations,
+            save_translations,
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}

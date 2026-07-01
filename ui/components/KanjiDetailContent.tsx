@@ -1,0 +1,128 @@
+import { invoke } from "@tauri-apps/api/core";
+import type { KanjiDto } from "../api/types";
+import AnimatedKanji from "./AnimatedKanji";
+import { useContextMenu } from "../contexts/ContextMenuContext";
+import { kanjiMenuItems } from "../utils/kanjiMenu";
+
+interface Props {
+  kanji: KanjiDto;
+  onKanjiClick: (k: KanjiDto) => void;
+  onKanjiClickNewTab: (k: KanjiDto) => void;
+}
+
+// CJK Unified Ideographs range
+const isCjk = (ch: string) => {
+  const c = ch.charCodeAt(0);
+  return c >= 0x4e00 && c <= 0x9faf;
+};
+
+function ExampleText({ text, onKanjiClick, onKanjiClickNewTab }: {
+  text: string;
+  onKanjiClick: (k: KanjiDto) => void;
+  onKanjiClickNewTab: (k: KanjiDto) => void;
+}) {
+  const { open } = useContextMenu();
+
+  const resolve = async (ch: string): Promise<KanjiDto | null> =>
+    invoke<KanjiDto | null>("get_kanji_by_char", { ch });
+
+  const handleClick = async (ch: string) => {
+    const k = await resolve(ch);
+    if (k) onKanjiClick(k);
+  };
+
+  const handleContextMenu = async (e: React.MouseEvent, ch: string) => {
+    e.preventDefault();
+    const k = await resolve(ch);
+    if (k) open(e.clientX, e.clientY, kanjiMenuItems(k, onKanjiClick, onKanjiClickNewTab));
+  };
+
+  return (
+    <>
+      {[...text].map((ch, i) =>
+        isCjk(ch) ? (
+          <span
+            key={i}
+            className="example-kanji-link"
+            onClick={() => handleClick(ch)}
+            onContextMenu={e => handleContextMenu(e, ch)}
+          >
+            {ch}
+          </span>
+        ) : (
+          <span key={i}>{ch}</span>
+        )
+      )}
+    </>
+  );
+}
+
+export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNewTab }: Props) {
+  return (
+    <>
+      {/* Stroke animation */}
+      <AnimatedKanji kanjiId={kanji.id} />
+
+      {/* Header */}
+      <div className="detail-header">
+        <span className="detail-kanji">{kanji.kanji}</span>
+        <div className="detail-header-right">
+          <div className="detail-meta-badges">
+            {kanji.jlpt && (
+              <span className={`detail-badge jlpt-${kanji.jlpt}`}>{kanji.jlpt}</span>
+            )}
+            {kanji.strokes > 0 && (
+              <span className="detail-badge">{kanji.strokes} strokes</span>
+            )}
+            {kanji.grade && kanji.grade !== "0" && (
+              <span className="detail-badge">Grade {kanji.grade}</span>
+            )}
+            {kanji.frequency && kanji.frequency !== "0" && (
+              <span className="detail-badge">#{kanji.frequency}</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {kanji.onyomi && (
+        <div className="detail-section">
+          <div className="detail-label">On-yomi</div>
+          <div className="detail-reading">{kanji.onyomi}</div>
+          {kanji.onyomi_romaji && (
+            <div className="detail-reading-romaji">{kanji.onyomi_romaji}</div>
+          )}
+        </div>
+      )}
+
+      {kanji.kunyomi && (
+        <div className="detail-section">
+          <div className="detail-label">Kun-yomi</div>
+          <div className="detail-reading">{kanji.kunyomi}</div>
+          {kanji.kunyomi_romaji && (
+            <div className="detail-reading-romaji">{kanji.kunyomi_romaji}</div>
+          )}
+        </div>
+      )}
+
+      {kanji.meaning && (
+        <div className="detail-section">
+          <div className="detail-label">Meaning</div>
+          <div className="detail-meaning">{kanji.meaning}</div>
+        </div>
+      )}
+
+      {kanji.examples.length > 0 && (
+        <div className="detail-section">
+          <div className="detail-label">Examples</div>
+          <div className="detail-examples">
+            {kanji.examples.map((ex, i) => (
+              <div key={i} className="detail-example">
+                <ExampleText text={ex} onKanjiClick={onKanjiClick} onKanjiClickNewTab={onKanjiClickNewTab} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
