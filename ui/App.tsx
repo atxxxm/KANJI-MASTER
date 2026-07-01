@@ -89,6 +89,18 @@ export default function App() {
     refreshKanji().finally(() => setKanjiLoading(false));
   }, [refreshKanji]);
 
+  // Fades out the static HTML splash screen (index.html) once the settings
+  // and kanji dictionary the app actually needs to render have arrived,
+  // instead of a fixed delay.
+  useEffect(() => {
+    if (kanjiLoading || !config) return;
+    const splash = document.getElementById("splash");
+    if (!splash) return;
+    splash.classList.add("splash-hidden");
+    const timeout = setTimeout(() => splash.remove(), 400);
+    return () => clearTimeout(timeout);
+  }, [kanjiLoading, config]);
+
   // Example translations (for the Kanji Detail view's translation toggle),
   // fetched from the same localization file as meanings but kept separately
   // since get_kanji_list only carries the flattened `meaning` string.

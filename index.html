@@ -5,10 +5,73 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Kanji Master</title>
+
+    <script>
+      // Applied synchronously, before any CSS/JS bundle loads, so the window
+      // never flashes the wrong background color while the app boots.
+      (function () {
+        var saved = localStorage.getItem("theme");
+        var theme = saved === "dark" || saved === "light"
+          ? saved
+          : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+
+    <style>
+      /* Minimal, self-contained copy of the theme variables the splash
+         needs — duplicated here (rather than relying on the bundled
+         globals.css) so the splash paints before the JS bundle arrives. */
+      html[data-theme="dark"]  { --splash-bg: #16161a; --splash-text: #e8e6e1; --splash-accent: #e05a3a; --splash-muted: rgba(232,230,225,0.45); }
+      html[data-theme="light"] { --splash-bg: #f0ede7; --splash-text: #1a1a1a; --splash-accent: #c84b2f; --splash-muted: rgba(26,26,26,0.45); }
+
+      html, body { height: 100%; margin: 0; }
+
+      #splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        background: var(--splash-bg);
+        color: var(--splash-text);
+        font-family: 'Noto Sans JP', sans-serif;
+        z-index: 9999;
+        transition: opacity 0.35s ease;
+      }
+      #splash.splash-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      #splash-kanji {
+        font-size: 64px;
+        font-weight: 500;
+        color: var(--splash-accent);
+        animation: splash-pulse 1.8s ease-in-out infinite;
+      }
+      #splash-title {
+        font-size: 15px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--splash-muted);
+      }
+
+      @keyframes splash-pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50%      { opacity: 0.55; transform: scale(0.94); }
+      }
+    </style>
   </head>
 
   <body>
     <div id="root"></div>
+    <div id="splash">
+      <span id="splash-kanji">漢</span>
+      <span id="splash-title">Kanji Master</span>
+    </div>
     <script type="module" src="/ui/main.tsx"></script>
   </body>
 </html>
