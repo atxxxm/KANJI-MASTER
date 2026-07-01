@@ -3,12 +3,16 @@
   z-index: 1000;
   min-width: 200px;
   padding: 4px;
-  background: var(--surface);
+  background: var(--surface-3);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.5);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
+  transform-origin: top left;
+  animation: rise-in 0.16s var(--spring-soft);
 }
 
 .context-menu-item {
@@ -24,10 +28,11 @@
   font-size: 13px;
   text-align: left;
   cursor: pointer;
-  transition: background var(--transition);
+  transition: background var(--transition), transform 0.15s var(--spring);
 }
 .context-menu-item:hover:not(:disabled) {
   background: var(--surface-2);
+  transform: translateX(2px);
 }
 .context-menu-item:disabled {
   color: var(--text-muted);

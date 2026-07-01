@@ -16,9 +16,13 @@
   height: 340px;
   border-radius: var(--radius-lg);
   background: var(--surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
   flex-shrink: 0;
+  animation: rise-in 0.4s var(--spring-soft);
 }
 
 .draw-canvas-wrapper canvas {
@@ -57,9 +61,10 @@
   background: var(--surface-2);
   color: var(--text);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all 0.2s var(--spring);
 }
-.draw-btn:hover:not(:disabled) { border-color: var(--border-hover); background: var(--surface-3); }
+.draw-btn:hover:not(:disabled) { border-color: var(--border-hover); background: var(--surface-3); transform: translateY(-1px); }
+.draw-btn:active:not(:disabled) { transform: translateY(0) scale(0.96); }
 .draw-btn:disabled { opacity: 0.4; cursor: default; }
 
 .draw-btn.primary {
@@ -105,19 +110,35 @@
   padding: 10px 6px;
   border-radius: var(--radius-md);
   background: var(--surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--border);
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: border-color var(--transition), background var(--transition), transform 0.22s var(--spring), box-shadow 0.22s var(--spring-soft);
   font-family: var(--font);
+  animation: rise-in 0.35s var(--spring-soft) backwards;
 }
 .draw-result-card:hover {
   border-color: var(--border-hover);
-  transform: translateY(-2px);
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: var(--shadow-md);
+}
+.draw-result-card:active {
+  transform: translateY(-1px) scale(1);
 }
 .draw-result-card.selected {
   border-color: var(--accent);
   background: var(--accent-dim);
 }
+
+.draw-results-grid .draw-result-card:nth-child(1) { animation-delay: 0ms; }
+.draw-results-grid .draw-result-card:nth-child(2) { animation-delay: 25ms; }
+.draw-results-grid .draw-result-card:nth-child(3) { animation-delay: 50ms; }
+.draw-results-grid .draw-result-card:nth-child(4) { animation-delay: 75ms; }
+.draw-results-grid .draw-result-card:nth-child(5) { animation-delay: 100ms; }
+.draw-results-grid .draw-result-card:nth-child(6) { animation-delay: 125ms; }
+.draw-results-grid .draw-result-card:nth-child(7) { animation-delay: 150ms; }
+.draw-results-grid .draw-result-card:nth-child(n+8) { animation-delay: 175ms; }
 
 .draw-result-rank {
   font-size: 9px;

@@ -4,22 +4,31 @@
 :root {
   --font: 'Noto Sans JP', sans-serif;
 
-  --radius-sm:  6px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-sm:  8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
 
   --transition: 0.18s ease;
+  /* Overshoot easing — cheap way to get "spring physics" feel out of plain
+     CSS transitions, for the many elements not worth wiring through
+     framer-motion (kanji cards, buttons rendered in the hundreds). */
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --glass-blur: 18px;
 
   --kanji-font-size: 38px;
 }
 
 [data-theme="dark"] {
-  --bg:          #16161a;
-  --surface:     #1f1f25;
-  --surface-2:   #2a2a32;
-  --surface-3:   #35353f;
-  --border:      rgba(255,255,255,0.07);
-  --border-hover:rgba(255,255,255,0.15);
+  --bg:          #121216;
+  --bg-glow-1:   rgba(224,90,58,0.16);
+  --bg-glow-2:   rgba(66,135,200,0.10);
+  --surface:     rgba(38,38,46,0.6);
+  --surface-2:   rgba(52,52,62,0.55);
+  --surface-3:   rgba(66,66,78,0.55);
+  --border:      rgba(255,255,255,0.09);
+  --border-hover:rgba(255,255,255,0.2);
 
   --text:        #e8e6e1;
   --text-muted:  rgba(232,230,225,0.50);
@@ -29,14 +38,20 @@
   --accent-hover:#e87057;
   --on-accent:   #ffffff;
 
+  --shadow-sm: 0 2px 10px rgba(0,0,0,0.22);
+  --shadow-md: 0 10px 30px rgba(0,0,0,0.32);
+  --shadow-lg: 0 20px 50px rgba(0,0,0,0.4);
+
   color-scheme: dark;
 }
 
 [data-theme="light"] {
-  --bg:          #f0ede7;
-  --surface:     #ffffff;
-  --surface-2:   #f5f2ec;
-  --surface-3:   #ece8e0;
+  --bg:          #eeebe4;
+  --bg-glow-1:   rgba(200,75,47,0.12);
+  --bg-glow-2:   rgba(66,135,200,0.08);
+  --surface:     rgba(255,255,255,0.6);
+  --surface-2:   rgba(255,255,255,0.42);
+  --surface-3:   rgba(255,255,255,0.65);
   --border:      rgba(0,0,0,0.08);
   --border-hover:rgba(0,0,0,0.18);
 
@@ -48,7 +63,20 @@
   --accent-hover:#e05a3a;
   --on-accent:   #ffffff;
 
+  --shadow-sm: 0 2px 10px rgba(0,0,0,0.06);
+  --shadow-md: 0 10px 30px rgba(0,0,0,0.09);
+  --shadow-lg: 0 20px 50px rgba(0,0,0,0.12);
+
   color-scheme: light;
+}
+
+/* Frosted-glass surface — panels, cards, popovers all share this so the
+   decorative background glow behind them actually reads as "glass". */
+.glass {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
 }
 
 /* ── Reset ───────────────────────────────────────────────── */
@@ -67,10 +95,19 @@ html, body, #root {
 body {
   font-family: var(--font);
   font-size: 14px;
-  background: var(--bg);
+  background:
+    radial-gradient(ellipse 900px 600px at 10% -10%, var(--bg-glow-1), transparent 60%),
+    radial-gradient(ellipse 800px 700px at 100% 100%, var(--bg-glow-2), transparent 55%),
+    var(--bg);
+  background-attachment: fixed;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
-  transition: background var(--transition), color var(--transition);
+  transition: background-color var(--transition), color var(--transition);
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 button {

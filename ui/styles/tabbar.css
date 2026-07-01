@@ -4,9 +4,13 @@
   gap: 2px;
   padding: 6px 8px 0;
   background: var(--surface);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
   overflow-x: auto;
+  position: relative;
+  z-index: 1;
 }
 
 .tab-chip-item {
@@ -34,11 +38,15 @@
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
-  transition: color var(--transition);
+  transition: color var(--transition), transform 0.2s var(--spring);
   max-width: 200px;
 }
 .tab-chip:hover {
   color: var(--text);
+  transform: translateY(-1px);
+}
+.tab-chip:active {
+  transform: translateY(0) scale(0.97);
 }
 .tab-chip.active {
   color: var(--text);
@@ -47,7 +55,9 @@
 .tab-active-bg {
   position: absolute;
   inset: 0;
-  background: var(--bg);
+  background: var(--surface-3);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--border);
   border-bottom: none;
   border-radius: var(--radius-sm) var(--radius-sm) 0 0;

@@ -15,14 +15,26 @@
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   margin-bottom: 18px;
+  animation: rise-in 0.4s var(--spring-soft);
 }
 
 .kanji-detail-view .detail-header,
 .kanji-detail-view .detail-section {
+  background: var(--surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--shadow-sm);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   margin-bottom: 12px;
+  animation: rise-in 0.4s var(--spring-soft) backwards;
 }
+
+.kanji-detail-view .detail-header  { animation-delay: 40ms; }
+.kanji-detail-view .detail-section:nth-of-type(1) { animation-delay: 80ms; }
+.kanji-detail-view .detail-section:nth-of-type(2) { animation-delay: 120ms; }
+.kanji-detail-view .detail-section:nth-of-type(3) { animation-delay: 160ms; }
+.kanji-detail-view .detail-section:nth-of-type(4) { animation-delay: 200ms; }
 
 .kanji-detail-view .detail-kanji {
   font-size: 88px;

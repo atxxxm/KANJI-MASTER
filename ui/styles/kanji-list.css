@@ -14,7 +14,11 @@
   padding: 10px 14px;
   border-bottom: 1px solid var(--border);
   background: var(--surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .search-input {
@@ -26,10 +30,10 @@
   color: var(--text);
   font-size: 13px;
   border: 1px solid var(--border);
-  transition: border-color var(--transition);
+  transition: border-color var(--transition), box-shadow 0.2s var(--spring-soft);
 }
 .search-input::placeholder { color: var(--text-muted); }
-.search-input:focus { border-color: var(--accent); }
+.search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
 
 .jlpt-filters {
   display: flex;
@@ -47,9 +51,10 @@
   color: var(--text-muted);
   font-family: var(--font);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all 0.18s var(--spring);
 }
-.jlpt-btn:hover { color: var(--text); border-color: var(--border-hover); }
+.jlpt-btn:hover { color: var(--text); border-color: var(--border-hover); transform: translateY(-1px); }
+.jlpt-btn:active { transform: translateY(0) scale(0.95); }
 .jlpt-btn.active { color: #fff !important; border-color: transparent !important; }
 .jlpt-btn.active.f-all { background: var(--accent); }
 .jlpt-btn.active.f-N5  { background: #4a9c4a; }
@@ -85,23 +90,51 @@
   gap: 3px;
   border-radius: var(--radius-md);
   background: var(--surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--border);
   cursor: pointer;
   padding: 6px 4px;
-  transition: border-color var(--transition), background var(--transition), transform 0.12s ease, box-shadow 0.12s ease;
+  transition: border-color var(--transition), background var(--transition), transform 0.22s var(--spring), box-shadow 0.22s var(--spring-soft);
   font-family: var(--font);
   position: relative;
+  animation: rise-in 0.4s var(--spring-soft) backwards;
 }
 .kanji-card:hover {
   border-color: var(--border-hover);
   background: var(--surface-2);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  transform: translateY(-3px) scale(1.035);
+  box-shadow: var(--shadow-md), 0 0 0 1px var(--accent-dim);
+}
+.kanji-card:active {
+  transform: translateY(-1px) scale(1.0);
 }
 .kanji-card.selected {
   border-color: var(--accent);
   background: var(--accent-dim);
 }
+
+/* Staggered entrance for the first couple rows — capped so a 2000+ item
+   grid doesn't leave the last cards waiting seconds to appear. */
+.kanji-grid .kanji-card:nth-child(1)  { animation-delay: 0ms; }
+.kanji-grid .kanji-card:nth-child(2)  { animation-delay: 12ms; }
+.kanji-grid .kanji-card:nth-child(3)  { animation-delay: 24ms; }
+.kanji-grid .kanji-card:nth-child(4)  { animation-delay: 36ms; }
+.kanji-grid .kanji-card:nth-child(5)  { animation-delay: 48ms; }
+.kanji-grid .kanji-card:nth-child(6)  { animation-delay: 60ms; }
+.kanji-grid .kanji-card:nth-child(7)  { animation-delay: 72ms; }
+.kanji-grid .kanji-card:nth-child(8)  { animation-delay: 84ms; }
+.kanji-grid .kanji-card:nth-child(9)  { animation-delay: 96ms; }
+.kanji-grid .kanji-card:nth-child(10) { animation-delay: 108ms; }
+.kanji-grid .kanji-card:nth-child(11) { animation-delay: 120ms; }
+.kanji-grid .kanji-card:nth-child(12) { animation-delay: 132ms; }
+.kanji-grid .kanji-card:nth-child(13) { animation-delay: 144ms; }
+.kanji-grid .kanji-card:nth-child(14) { animation-delay: 156ms; }
+.kanji-grid .kanji-card:nth-child(15) { animation-delay: 168ms; }
+.kanji-grid .kanji-card:nth-child(16) { animation-delay: 180ms; }
+.kanji-grid .kanji-card:nth-child(17) { animation-delay: 192ms; }
+.kanji-grid .kanji-card:nth-child(18) { animation-delay: 204ms; }
+.kanji-grid .kanji-card:nth-child(n+19) { animation-delay: 216ms; }
 
 .kanji-char {
   font-size: var(--kanji-font-size);
@@ -244,10 +277,14 @@
   background: var(--surface-2);
   border-radius: var(--radius-sm);
   user-select: text;
+  transition: background var(--transition), transform 0.18s var(--spring);
 }
 
 .detail-example.has-translation {
   cursor: pointer;
+}
+.detail-example.has-translation:active {
+  transform: scale(0.99);
 }
 
 .detail-example.has-translation:hover {
@@ -304,12 +341,16 @@
   border: 1px solid var(--border);
   background: none;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all 0.2s var(--spring);
 }
 .replay-btn:hover {
   color: var(--text);
   border-color: var(--border-hover);
   background: var(--surface-3);
+  transform: translateY(-1px);
+}
+.replay-btn:active {
+  transform: translateY(0) scale(0.96);
 }
 
 /* ── Clickable kanji in examples ─────────────────────────── */

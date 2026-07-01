@@ -26,8 +26,15 @@
   padding: 11px 14px;
   border-radius: var(--radius-md);
   background: var(--surface);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--border);
   margin-bottom: 6px;
+  transition: transform 0.2s var(--spring), box-shadow 0.2s var(--spring-soft);
+}
+.settings-row:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .settings-row-label {
@@ -80,9 +87,12 @@
   height: 16px;
   border-radius: 50%;
   background: #fff;
-  transition: transform var(--transition);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s var(--spring);
 }
 .settings-toggle.on::after { transform: translateX(16px); }
+.settings-toggle:active::after { transform: scale(0.88); }
+.settings-toggle.on:active::after { transform: translateX(16px) scale(0.88); }
 
 .settings-path-input {
   flex: 1;
@@ -132,9 +142,10 @@
   background: var(--accent);
   color: #fff;
   cursor: pointer;
-  transition: all var(--transition);
+  transition: background var(--transition), transform 0.2s var(--spring), box-shadow 0.2s var(--spring-soft);
 }
-.settings-save-btn:hover { background: var(--accent-hover); }
+.settings-save-btn:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.settings-save-btn:active { transform: translateY(0) scale(0.97); }
 
 .settings-secondary-btn {
   padding: 9px 16px;
@@ -146,9 +157,10 @@
   background: var(--surface-2);
   color: var(--text);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: all 0.2s var(--spring);
 }
-.settings-secondary-btn:hover { border-color: var(--border-hover); background: var(--surface-3); }
+.settings-secondary-btn:hover { border-color: var(--border-hover); background: var(--surface-3); transform: translateY(-1px); }
+.settings-secondary-btn:active { transform: translateY(0) scale(0.97); }
 
 .settings-status {
   font-size: 12px;
