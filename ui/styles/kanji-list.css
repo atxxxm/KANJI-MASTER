@@ -96,7 +96,11 @@
   transition: border-color var(--transition), background var(--transition), transform 0.22s var(--spring), box-shadow 0.22s var(--spring-soft);
   font-family: var(--font);
   position: relative;
-  animation: rise-in 0.4s var(--spring-soft) backwards;
+  /* Native virtualization: the renderer skips layout/paint for cards outside
+     the scroll viewport. `auto` makes it remember each card's real size after
+     it has been rendered once, so the scrollbar and positions stay stable. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 110px;
 }
 .kanji-card:hover {
   border-color: var(--border-hover);

@@ -106,7 +106,6 @@ body {
     radial-gradient(ellipse 900px 600px at 10% -10%, var(--bg-glow-1), transparent 60%),
     radial-gradient(ellipse 800px 700px at 100% 100%, var(--bg-glow-2), transparent 55%),
     var(--bg);
-  background-attachment: fixed;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   transition: background-color var(--transition), color var(--transition);
