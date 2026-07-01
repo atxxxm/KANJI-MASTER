@@ -145,3 +145,33 @@
 }
 .settings-status.success { color: #4a9c4a; }
 .settings-status.error { color: #c84c4c; }
+
+.settings-about {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.settings-about-link {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--transition);
+}
+.settings-about-link:hover { color: var(--accent); text-decoration: underline; }
+
+.settings-about-license {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.settings-about-license::before {
+  content: "·";
+  margin-right: 10px;
+}

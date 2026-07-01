@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { useSettings } from "../contexts/SettingsContext";
 import { useKanjiData } from "../contexts/KanjiDataContext";
 import "../styles/settings.css";
+
+const GITHUB_URL = "https://github.com/atxxxm/KANJI-MASTER";
 
 interface Props {
   theme: "dark" | "light";
@@ -172,6 +175,13 @@ export default function Settings({ theme, onThemeChange }: Props) {
       <div className="settings-footer">
         <button className="settings-save-btn" onClick={handleSave}>Save settings</button>
         {status && <span className={`settings-status ${status.kind}`}>{status.text}</span>}
+      </div>
+
+      <div className="settings-about">
+        <button className="settings-about-link" onClick={() => openUrl(GITHUB_URL)}>
+          {GITHUB_URL.replace("https://", "")}
+        </button>
+        <span className="settings-about-license">Licensed under GPL-3.0</span>
       </div>
     </div>
   );
