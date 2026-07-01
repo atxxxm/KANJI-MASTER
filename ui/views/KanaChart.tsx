@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { GOJUON, DAKUTEN, HANDAKUTEN, YOON, type KanaCell } from "../api/kanaData";
+import ModeSwitch from "../components/ModeSwitch";
 import "../styles/romaji-kana.css";
 import "../styles/kana-chart.css";
 
@@ -29,20 +30,14 @@ export default function KanaChart() {
   return (
     <div className="kana-chart-view">
       <div className="kana-chart-toolbar">
-        <div className="mode-toggle">
-          <button
-            className={`mode-btn${script === "hiragana" ? " active" : ""}`}
-            onClick={() => setScript("hiragana")}
-          >
-            Hiragana &nbsp;あ
-          </button>
-          <button
-            className={`mode-btn${script === "katakana" ? " active" : ""}`}
-            onClick={() => setScript("katakana")}
-          >
-            Katakana &nbsp;ア
-          </button>
-        </div>
+        <ModeSwitch
+          value={script}
+          onChange={v => setScript(v as Script)}
+          options={[
+            { value: "hiragana", label: "Hiragana あ" },
+            { value: "katakana", label: "Katakana ア" },
+          ]}
+        />
       </div>
 
       <div className="kana-chart-scroll">

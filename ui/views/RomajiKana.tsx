@@ -4,6 +4,7 @@ import type { KanjiDto } from "../api/types";
 import { useKanjiData } from "../contexts/KanjiDataContext";
 import { useContextMenu } from "../contexts/ContextMenuContext";
 import { kanjiMenuItems } from "../utils/kanjiMenu";
+import ModeSwitch from "../components/ModeSwitch";
 import "../styles/kanji-list.css";
 import "../styles/romaji-kana.css";
 
@@ -105,7 +106,8 @@ export default function RomajiKana({ onOpenKanji, onOpenKanjiNewTab }: Props) {
     setText(convertedBefore + after);
   };
 
-  const toggleMode = (katakana: boolean) => {
+  const toggleMode = (mode: string) => {
+    const katakana = mode === "katakana";
     setIsKatakana(katakana);
     setText(prev => (katakana ? toKatakana(prev) : toHiragana(prev)));
   };
@@ -128,49 +130,63 @@ export default function RomajiKana({ onOpenKanji, onOpenKanjiNewTab }: Props) {
     <div className="romaji-layout">
       {/* ── Left: converter ── */}
       <div className="romaji-main">
-        <div className="mode-toggle">
-          <button
-            className={`mode-btn${!isKatakana ? " active" : ""}`}
-            onClick={() => toggleMode(false)}
-          >
-            Hiragana &nbsp;あ
-          </button>
-          <button
-            className={`mode-btn${isKatakana ? " active" : ""}`}
-            onClick={() => toggleMode(true)}
-          >
-            Katakana &nbsp;ア
-          </button>
-        </div>
+        <div className="romaji-main-inner">
+          <div className="romaji-header">
+            <div className="romaji-title">Romaji → Kana</div>
+            <div className="romaji-subtitle">Type romaji and watch it convert as you go</div>
+          </div>
 
-        <div className="romaji-output-row">
-          <textarea
-            ref={textareaRef}
-            className="romaji-input romaji-single"
-            placeholder="Type romaji here… (e.g. kanji, nihongo)"
-            value={text}
-            onChange={handleChange}
-            autoFocus
-            spellCheck={false}
+          <ModeSwitch
+            className="spaced"
+            value={isKatakana ? "katakana" : "hiragana"}
+            onChange={toggleMode}
+            options={[
+              { value: "hiragana", label: "Hiragana あ" },
+              { value: "katakana", label: "Katakana ア" },
+            ]}
           />
-          <button
-            className={`copy-btn${copied ? " copied" : ""}`}
-            onClick={handleCopy}
-            disabled={!text}
-          >
-            {copied ? "✓ Copied" : "Copy"}
-          </button>
+
+          <div className="romaji-card">
+            <textarea
+              ref={textareaRef}
+              className="romaji-input"
+              placeholder="kanji, nihongo, konnichiwa…"
+              value={text}
+              onChange={handleChange}
+              autoFocus
+              spellCheck={false}
+            />
+            <div className="romaji-card-footer">
+              <span className="romaji-char-count">
+                {text.length} character{text.length !== 1 ? "s" : ""}
+              </span>
+              <button
+                className={`copy-btn${copied ? " copied" : ""}`}
+                onClick={handleCopy}
+                disabled={!text}
+              >
+                {copied ? "✓ Copied" : "⧉ Copy"}
+              </button>
+            </div>
+          </div>
+
+          <div className="romaji-hint">
+            Tip: type <kbd>n'</kbd> for ん before a vowel, <kbd>-</kbd> for a long vowel (ー)
+          </div>
         </div>
       </div>
 
       {/* ── Right: kanji assistant ── */}
       <aside className="romaji-assistant">
         <div className="assistant-header">
-          <div className="assistant-title">Kanji assistant</div>
+          <div className="assistant-title">
+            <span className="assistant-title-icon">漢</span>
+            Kanji assistant
+          </div>
           {kanaQuery ? (
             <>
               <div className="assistant-query">
-                Suggestions for: <span>{kanaQuery}</span>
+                Suggestions for <span>{kanaQuery}</span>
               </div>
               <div className="assistant-count">
                 {matches.length} match{matches.length !== 1 ? "es" : ""}
@@ -183,6 +199,7 @@ export default function RomajiKana({ onOpenKanji, onOpenKanjiNewTab }: Props) {
 
         {matches.length === 0 ? (
           <div className="assistant-empty">
+            <span className="assistant-empty-icon">{kanaQuery ? "😕" : "✎"}</span>
             {kanaQuery ? `No kanji found for "${kanaQuery}"` : "Start typing to see suggestions"}
           </div>
         ) : (

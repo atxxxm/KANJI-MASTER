@@ -10,104 +10,164 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  padding: 20px 24px;
-  gap: 14px;
+  align-items: center;
+  padding: 40px 24px;
   overflow-y: auto;
 }
 
-/* ── Mode toggle ─────────────────────────────────────────── */
-.mode-toggle {
+.romaji-main-inner {
+  width: 100%;
+  max-width: 640px;
   display: flex;
-  gap: 6px;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.romaji-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.romaji-title {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+
+.romaji-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+
+/* ── Mode switch (animated pill) ─────────────────────────── */
+.mode-toggle {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
   flex-shrink: 0;
+}
+
+.mode-toggle.spaced {
+  margin-bottom: 26px;
 }
 
 .mode-btn {
-  padding: 7px 18px;
-  border-radius: var(--radius-sm);
+  position: relative;
+  z-index: 1;
+  padding: 8px 22px;
+  border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
   font-family: var(--font);
-  border: 1px solid var(--border);
+  border: none;
   background: none;
   color: var(--text-muted);
   cursor: pointer;
-  transition: all var(--transition);
+  transition: color var(--transition);
 }
-.mode-btn:hover { color: var(--text); border-color: var(--border-hover); }
-.mode-btn.active {
+.mode-btn:hover { color: var(--text); }
+.mode-btn.active { color: #fff; }
+
+.mode-pill {
+  position: absolute;
+  inset: 3px;
+  width: calc(50% - 3px);
   background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  border-radius: 999px;
+  z-index: 0;
 }
 
-/* ── Input ───────────────────────────────────────────────── */
-.romaji-input {
+/* ── Converter card ──────────────────────────────────────── */
+.romaji-card {
   width: 100%;
-  min-height: 100px;
-  resize: vertical;
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+.romaji-card:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.romaji-input {
+  display: block;
+  width: 100%;
+  min-height: 220px;
+  resize: vertical;
+  padding: 22px 24px;
+  background: none;
   color: var(--text);
   font-family: var(--font);
-  font-size: 15px;
-  border: 1px solid var(--border);
-  transition: border-color var(--transition);
-  line-height: 1.6;
+  font-size: 26px;
+  line-height: 1.7;
+  border: none;
 }
-.romaji-input::placeholder { color: var(--text-muted); }
-.romaji-input:focus { border-color: var(--accent); outline: none; }
+.romaji-input::placeholder { color: var(--text-muted); font-size: 17px; }
+.romaji-input:focus { outline: none; }
 
-.romaji-single {
-  flex: 1;
-  width: auto;
-  font-size: 22px;
-  min-height: 160px;
-}
-
-/* ── Output ──────────────────────────────────────────────── */
-.romaji-output-row {
+.romaji-card-footer {
   display: flex;
-  gap: 10px;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
 }
 
-.romaji-output {
-  flex: 1;
-  min-height: 60px;
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  font-size: 20px;
-  color: var(--text);
-  line-height: 1.6;
-  user-select: text;
-  word-break: break-word;
+.romaji-char-count {
+  font-size: 12px;
+  color: var(--text-muted);
 }
-
-.romaji-output.empty { color: var(--text-muted); font-size: 14px; }
 
 .copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   flex-shrink: 0;
-  padding: 9px 16px;
+  padding: 7px 14px;
   border-radius: var(--radius-sm);
-  background: var(--surface-2);
+  background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text-muted);
   font-family: var(--font);
-  font-size: 13px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   transition: all var(--transition);
   white-space: nowrap;
 }
-.copy-btn:hover { color: var(--text); border-color: var(--border-hover); }
+.copy-btn:hover:not(:disabled) { color: var(--text); border-color: var(--border-hover); background: var(--surface-3); }
+.copy-btn:disabled { opacity: 0.4; cursor: default; }
 .copy-btn.copied { color: #4a9c4a; border-color: #4a9c4a; background: rgba(74,156,74,0.1); }
+
+.romaji-hint {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.romaji-hint kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-family: var(--font);
+  font-size: 11px;
+}
 
 /* ── Assistant panel ─────────────────────────────────────── */
 .romaji-assistant {
-  width: 290px;
+  width: 300px;
   flex-shrink: 0;
   border-left: 1px solid var(--border);
   background: var(--surface);
@@ -117,12 +177,15 @@
 }
 
 .assistant-header {
-  padding: 14px 16px 10px;
+  padding: 18px 18px 14px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .assistant-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -130,15 +193,20 @@
   color: var(--text-muted);
 }
 
+.assistant-title-icon {
+  font-size: 13px;
+}
+
 .assistant-query {
   font-size: 13px;
   color: var(--text);
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 .assistant-query span {
   color: var(--accent);
-  font-size: 15px;
+  font-size: 17px;
+  font-weight: 600;
 }
 
 .assistant-count {
@@ -159,12 +227,19 @@
 .assistant-empty {
   flex: 1;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   color: var(--text-muted);
   font-size: 13px;
   text-align: center;
   padding: 24px;
+}
+
+.assistant-empty-icon {
+  font-size: 28px;
+  opacity: 0.35;
 }
 
 .assistant-section-label {
@@ -216,7 +291,7 @@
   text-overflow: ellipsis;
 }
 
-.assistant-reading.exact { color: var(--accent); }
+.assistant-reading.exact { color: var(--accent); font-weight: 600; }
 
 .assistant-sub {
   font-size: 11px;
