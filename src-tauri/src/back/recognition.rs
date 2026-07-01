@@ -1,18 +1,36 @@
 use crate::back::core::Kanji;
 use crate::back::svg_cache::parse_svg_content;
 use rayon::prelude::*;
+use serde::{Deserialize, Serialize};
 use std::fs;
+use std::hash::{Hash, Hasher};
+use std::path::Path;
 use std::sync::Arc;
 
 // Number of points to which each stroke is reduced
 const POINTS_PER_STROKE: usize = 32;
 
+// Bump when the template format or normalization algorithm changes so old
+// on-disk caches are discarded instead of loaded with the wrong shape.
+const CACHE_VERSION: u32 = 1;
+
 // Simplified kanji caching struct
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct SimplifiedKanji {
     pub id: i32,
     // Normalized strokes (0.0..1.0)
     pub strokes: Vec<Vec<(f32, f32)>>,
+}
+
+// On-disk snapshot of the parsed templates, written after the first SVG parse
+// so subsequent launches skip parsing thousands of SVGs entirely.
+#[derive(Serialize, Deserialize)]
+struct CacheFile {
+    version: u32,
+    points_per_stroke: usize,
+    // Fingerprint of the kanji DB; a mismatch means the SVG set likely changed.
+    fingerprint: u64,
+    templates: Vec<SimplifiedKanji>,
 }
 
 // Recognition system
@@ -28,6 +46,49 @@ impl RecognitionSystem {
     /// True once the SVG templates have been parsed into the cache.
     pub fn is_loaded(&self) -> bool {
         !self.cache.is_empty()
+    }
+
+    /// Loads templates from the on-disk cache when it's valid, otherwise parses
+    /// the SVGs and writes the cache for next time. This is the fast path at
+    /// startup: a single deserialize instead of parsing 6700+ SVG files.
+    pub fn load_or_build(&mut self, kanji_db: &[Arc<Kanji>], svg_path: &str, cache_path: &Path) {
+        let fingerprint = fingerprint(kanji_db);
+        if self.try_load_cache(cache_path, fingerprint) {
+            return;
+        }
+        self.load_from_svgs(kanji_db, svg_path);
+        self.save_cache(cache_path, fingerprint);
+    }
+
+    /// Returns true and populates the cache if a matching snapshot is on disk.
+    fn try_load_cache(&mut self, cache_path: &Path, fingerprint: u64) -> bool {
+        let Ok(bytes) = fs::read(cache_path) else { return false };
+        let Ok(file) = bincode::deserialize::<CacheFile>(&bytes) else { return false };
+        if file.version != CACHE_VERSION
+            || file.points_per_stroke != POINTS_PER_STROKE
+            || file.fingerprint != fingerprint
+        {
+            return false;
+        }
+        self.cache = file.templates;
+        true
+    }
+
+    fn save_cache(&self, cache_path: &Path, fingerprint: u64) {
+        if self.cache.is_empty() {
+            return;
+        }
+        let file = CacheFile {
+            version: CACHE_VERSION,
+            points_per_stroke: POINTS_PER_STROKE,
+            fingerprint,
+            templates: self.cache.clone(),
+        };
+        let Ok(bytes) = bincode::serialize(&file) else { return };
+        if let Some(parent) = cache_path.parent() {
+            let _ = fs::create_dir_all(parent);
+        }
+        let _ = fs::write(cache_path, bytes);
     }
 
     pub fn load_from_svgs(&mut self, kanji_db: &[Arc<Kanji>], svg_path: &str) {
@@ -78,6 +139,18 @@ impl RecognitionSystem {
 }
 
 // Support functions
+
+// Cheap fingerprint of the kanji set (count + each id/unicode). Used to detect
+// when the underlying SVG data changed and the cached templates are stale.
+fn fingerprint(kanji_db: &[Arc<Kanji>]) -> u64 {
+    let mut h = std::collections::hash_map::DefaultHasher::new();
+    kanji_db.len().hash(&mut h);
+    for k in kanji_db {
+        k.id.hash(&mut h);
+        k.unicode.hash(&mut h);
+    }
+    h.finish()
+}
 
 // Resample a stroke to exactly `n` evenly-spaced points by arc length.
 // Uses the "insert pivot" technique: after placing an interpolated point q,

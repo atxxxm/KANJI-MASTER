@@ -288,8 +288,10 @@ pub fn run() {
             };
 
             std::thread::spawn(move || {
+                let cache_path =
+                    back::config::get_app_config_dir().join("recognition_cache.bin");
                 let mut recognition = RecognitionSystem::new();
-                recognition.load_from_svgs(&kanji, &svg_path);
+                recognition.load_or_build(&kanji, &svg_path, &cache_path);
 
                 {
                     let st = handle.state::<AppStateHandle>();
