@@ -327,6 +327,9 @@
   padding: 16px 16px 12px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-2);
+  /* Isolate the per-frame canvas repaints so they don't invalidate the
+     backdrops of nearby glass panels (e.g. the list toolbar) each frame. */
+  contain: paint;
 }
 
 .anim-kanji-wrapper canvas {

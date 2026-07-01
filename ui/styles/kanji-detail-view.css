@@ -20,9 +20,7 @@
 
 .kanji-detail-view .detail-header,
 .kanji-detail-view .detail-section {
-  background: var(--surface);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
+  background: var(--surface-solid);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
