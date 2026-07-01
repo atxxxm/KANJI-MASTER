@@ -35,7 +35,10 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "../data/localization/*": "localization/"
+      "../data/localization/*": "localization/",
+      "../data/db/*": "data/db/",
+      "../data/kanji-localization/*": "data/kanji-localization/",
+      "../data/kanji-svg/*": "data/kanji-svg/"
     }
   }
 }

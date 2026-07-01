@@ -3,7 +3,7 @@ use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
 use std::io::{Read, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
@@ -75,6 +75,65 @@ pub fn get_app_config_dir() -> PathBuf {
     }
 
     PathBuf::from(".")
+}
+
+/// Makes the app's data usable out of the box on a clean machine.
+///
+/// Read-only data (SQLite DB, KanjiVG SVGs) is pointed straight at the bundled
+/// resources when the configured path doesn't exist. Writable data (the
+/// per-kanji meanings the user can edit) is seeded into the config dir so edits
+/// persist and aren't attempted inside a read-only install directory.
+///
+/// Returns true if `config` was modified and should be persisted.
+pub fn ensure_data_available(config: &mut Config, resource_dir: &Path) -> bool {
+    let mut changed = false;
+    let app_dir = get_app_config_dir();
+    let data = resource_dir.join("data");
+
+    let bundled_db = data.join("db").join("core.db");
+    if !Path::new(&config.path_to_db_core).exists() && bundled_db.exists() {
+        config.path_to_db_core = bundled_db.to_string_lossy().into_owned();
+        changed = true;
+    }
+
+    let bundled_svg = data.join("kanji-svg");
+    if !Path::new(&config.path_to_svg_images).exists() && bundled_svg.is_dir() {
+        config.path_to_svg_images = bundled_svg.to_string_lossy().into_owned();
+        changed = true;
+    }
+
+    // Seed editable meanings into a writable location (never overwriting edits),
+    // then point the config there if it isn't already valid.
+    let bundled_loc = data.join("kanji-localization");
+    let local_loc = app_dir.join("kanji-localization");
+    if bundled_loc.is_dir() {
+        seed_dir_if_missing(&bundled_loc, &local_loc);
+    }
+    if !Path::new(&config.path_to_kanji_localization).exists() {
+        let en = local_loc.join("en.json");
+        if en.exists() {
+            config.path_to_kanji_localization = en.to_string_lossy().into_owned();
+            changed = true;
+        }
+    }
+
+    changed
+}
+
+/// Copies files from `src` into `dst`, skipping any that already exist so user
+/// edits are preserved across launches and upgrades.
+fn seed_dir_if_missing(src: &Path, dst: &Path) {
+    let Ok(entries) = fs::read_dir(src) else { return };
+    let _ = fs::create_dir_all(dst);
+    for entry in entries.flatten() {
+        let from = entry.path();
+        if from.is_file() {
+            let to = dst.join(entry.file_name());
+            if !to.exists() {
+                let _ = fs::copy(&from, &to);
+            }
+        }
+    }
 }
 
 // Load config (creates default if file doesn't exist)

@@ -9,6 +9,7 @@ use back::translation::TranslationFile;
 
 use serde::Serialize;
 use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter, Manager, State};
 
@@ -224,8 +225,16 @@ fn get_localization(app: AppHandle, lang: String) -> HashMap<String, String> {
 
 // ── Startup ──────────────────────────────────────────────────────────────────
 
-fn build_app_state() -> AppState {
-    let config = load_config().unwrap_or_default();
+fn build_app_state(resource_dir: &Path) -> AppState {
+    let mut config = load_config().unwrap_or_default();
+
+    // Repair data paths / seed editable files so the app works out of the box
+    // on a clean install, then persist any changes for the Settings UI.
+    if back::config::ensure_data_available(&mut config, resource_dir) {
+        if let Some(path) = get_config_path() {
+            let _ = save_config(&path, &config);
+        }
+    }
 
     let db = Database::new(&config.path_to_db_core);
     let kanji = db.get_kanji().unwrap_or_default();
@@ -268,14 +277,19 @@ fn build_app_state() -> AppState {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let state = build_app_state();
-
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
-        .manage(Mutex::new(state))
         .setup(|app| {
+            // Resolve the bundled resource dir so data paths work on any machine,
+            // then build and manage the app state before any command can run.
+            let resource_dir = app
+                .path()
+                .resource_dir()
+                .unwrap_or_else(|_| PathBuf::from("."));
+            app.manage(Mutex::new(build_app_state(&resource_dir)));
+
             let handle = app.handle().clone();
 
             // Snapshot the inputs the recognition cache needs (Arc clones + a

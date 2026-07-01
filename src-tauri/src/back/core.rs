@@ -1,5 +1,5 @@
 use anyhow;
-use rusqlite::Connection;
+use rusqlite::{Connection, OpenFlags};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -31,7 +31,12 @@ impl Database {
     }
 
     pub fn get_kanji(&self) -> anyhow::Result<Vec<Arc<Kanji>>> {
-        let conn = Connection::open(&self.path_to_db)?;
+        // Read-only: the DB is shipped as a bundled resource and never written.
+        // This also avoids silently creating an empty DB when the path is wrong.
+        let conn = Connection::open_with_flags(
+            &self.path_to_db,
+            OpenFlags::SQLITE_OPEN_READ_ONLY,
+        )?;
 
         let mut stmt = conn.prepare(
             "
