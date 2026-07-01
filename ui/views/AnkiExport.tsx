@@ -3,6 +3,7 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { useKanjiData } from "../contexts/KanjiDataContext";
 import { useSettings } from "../contexts/SettingsContext";
+import { useLocalization } from "../contexts/LocalizationContext";
 import "../styles/kanji-list.css";
 import "../styles/anki-export.css";
 
@@ -24,16 +25,17 @@ const DEFAULT_OPTIONS: ExportOptions = {
   examples: true,
 };
 
-const STEP_LABELS: Record<Step, string> = {
-  1: "Select Kanji",
-  2: "Review",
-  3: "Export Options",
-};
-
 export default function AnkiExport() {
   const { kanjiList: allKanji } = useKanjiData();
   const { config } = useSettings();
+  const { t } = useLocalization();
   const showMeaning = config?.show_kanji_meaning ?? false;
+
+  const STEP_LABELS: Record<Step, string> = {
+    1: t("anki_export_locale.step_selection"),
+    2: t("anki_export_locale.step_review"),
+    3: t("anki_export_locale.step_options"),
+  };
   const [step, setStep] = useState<Step>(1);
   const [search, setSearch] = useState("");
   const [jlpt, setJlpt] = useState<string>("all");
@@ -78,7 +80,7 @@ export default function AnkiExport() {
     setStatus(null);
     try {
       const path = await save({
-        title: "Export to Anki",
+        title: t("anki_export_locale.export_dialog_title"),
         defaultPath: "kanji-master-export.txt",
         filters: [{ name: "Tab-Separated Values", extensions: ["txt"] }],
       });
@@ -95,7 +97,12 @@ export default function AnkiExport() {
       });
 
       await writeTextFile(path, lines.join("\n"));
-      setStatus({ kind: "success", text: `Exported ${selected.length} kanji to ${path}` });
+      setStatus({
+        kind: "success",
+        text: t("anki_export_locale.exported_message")
+          .replace("{count}", String(selected.length))
+          .replace("{path}", path),
+      });
     } catch (e) {
       setStatus({ kind: "error", text: String(e) });
     }
@@ -121,7 +128,7 @@ export default function AnkiExport() {
             <div className="anki-toolbar">
               <input
                 className="search-input"
-                placeholder="Search kanji or meaning…"
+                placeholder={t("anki_export_locale.search_hint")}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />
@@ -132,11 +139,11 @@ export default function AnkiExport() {
                     className={`jlpt-btn f-${level}${jlpt === level ? " active" : ""}`}
                     onClick={() => setJlpt(level)}
                   >
-                    {level === "all" ? "All" : level}
+                    {level === "all" ? t("kanji_list.all_filter") : level}
                   </button>
                 ))}
               </div>
-              <span className="anki-selected-count">{selectedIds.size} selected</span>
+              <span className="anki-selected-count">{selectedIds.size} {t("anki_export_locale.selected_word")}</span>
             </div>
             <div className="anki-grid-scroll">
               <div className="kanji-grid">
@@ -164,7 +171,7 @@ export default function AnkiExport() {
           <div className="anki-review-scroll">
             {selected.length === 0 ? (
               <div className="view-placeholder">
-                <span>No kanji selected</span>
+                <span>{t("anki_export_locale.no_kanji_selected")}</span>
               </div>
             ) : (
               selected.map(k => (
@@ -189,20 +196,20 @@ export default function AnkiExport() {
           <div className="anki-options-scroll">
             {(
               [
-                ["meaning", "Meaning"],
-                ["onyomi", "Onyomi"],
-                ["kunyomi", "Kunyomi"],
-                ["jlpt", "JLPT Level"],
-                ["examples", "Examples (HTML)"],
+                ["meaning", "anki_export_locale.field_meaning"],
+                ["onyomi", "anki_export_locale.field_onyomi"],
+                ["kunyomi", "anki_export_locale.field_kunyomi"],
+                ["jlpt", "anki_export_locale.field_jlpt"],
+                ["examples", "anki_export_locale.field_examples"],
               ] as [keyof ExportOptions, string][]
-            ).map(([key, label]) => (
+            ).map(([key, labelKey]) => (
               <label key={key} className="anki-option-row">
                 <input
                   type="checkbox"
                   checked={options[key]}
                   onChange={e => setOptions(o => ({ ...o, [key]: e.target.checked }))}
                 />
-                <span className="anki-option-label">{label}</span>
+                <span className="anki-option-label">{t(labelKey)}</span>
               </label>
             ))}
           </div>
@@ -213,7 +220,7 @@ export default function AnkiExport() {
         <div>
           {step > 1 && (
             <button className="anki-footer-btn" onClick={() => setStep(s => (s - 1) as Step)}>
-              Back
+              {t("anki_export_locale.back_button")}
             </button>
           )}
         </div>
@@ -224,7 +231,7 @@ export default function AnkiExport() {
 
         <div style={{ display: "flex", gap: 8 }}>
           {step === 2 && selected.length > 0 && (
-            <button className="anki-footer-btn" onClick={clearAll}>Clear all</button>
+            <button className="anki-footer-btn" onClick={clearAll}>{t("anki_export_locale.clear_all")}</button>
           )}
           {step < 3 ? (
             <button
@@ -232,7 +239,7 @@ export default function AnkiExport() {
               disabled={step === 1 && selectedIds.size === 0}
               onClick={() => setStep(s => (s + 1) as Step)}
             >
-              Next
+              {t("anki_export_locale.next_button")}
             </button>
           ) : (
             <button
@@ -240,7 +247,7 @@ export default function AnkiExport() {
               disabled={selected.length === 0}
               onClick={handleExport}
             >
-              Export to TSV
+              {t("anki_export_locale.export_button")}
             </button>
           )}
         </div>

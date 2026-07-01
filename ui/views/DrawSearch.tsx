@@ -2,6 +2,7 @@ import { useRef, useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto } from "../api/types";
 import { useContextMenu } from "../contexts/ContextMenuContext";
+import { useLocalization } from "../contexts/LocalizationContext";
 import { kanjiMenuItems } from "../utils/kanjiMenu";
 import "../styles/kanji-list.css";
 import "../styles/draw-search.css";
@@ -18,6 +19,7 @@ interface Props {
 
 export default function DrawSearch({ onOpenKanji, onOpenKanjiNewTab, active }: Props) {
   const { open } = useContextMenu();
+  const { t } = useLocalization();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const strokesRef = useRef<Point[][]>([]);
   const drawingRef = useRef<Point[] | null>(null);
@@ -164,30 +166,34 @@ export default function DrawSearch({ onOpenKanji, onOpenKanjiNewTab, active }: P
             onPointerUp={handlePointerUp}
           />
           {strokeCount === 0 && (
-            <div className="draw-hint">Draw a kanji here with your mouse or stylus</div>
+            <div className="draw-hint">{t("draw_and_search.canvas_hint")}</div>
           )}
         </div>
 
         <div className="draw-toolbar">
           <button className="draw-btn" onClick={handleUndo} disabled={strokeCount === 0}>
-            ↺ Undo (Ctrl+Z)
+            ↺ {t("draw_and_search.undo_button")}
           </button>
           <button className="draw-btn" onClick={handleClear} disabled={strokeCount === 0}>
-            ✕ Clear
+            ✕ {t("draw_and_search.clear_button")}
           </button>
           <span className="draw-stroke-count">
-            {strokeCount} stroke{strokeCount !== 1 ? "s" : ""}
+            {strokeCount} {t(strokeCount !== 1 ? "draw_and_search.stroke_plural" : "draw_and_search.stroke_singular")}
           </span>
         </div>
 
         <div className="draw-results">
           <div className="draw-results-label">
-            {searching ? "Searching…" : strokeCount === 0 ? "Best matches" : `${results.length} matches`}
+            {searching
+              ? t("draw_and_search.searching")
+              : strokeCount === 0
+              ? t("draw_and_search.best_matches")
+              : `${results.length} ${t(results.length !== 1 ? "draw_and_search.match_plural" : "draw_and_search.match_singular")}`}
           </div>
           {results.length === 0 ? (
             <div className="view-placeholder" style={{ padding: "24px 0" }}>
               <span style={{ fontSize: 13 }}>
-                {strokeCount === 0 ? "Draw something to search" : "No matches yet"}
+                {strokeCount === 0 ? t("draw_and_search.draw_something") : t("draw_and_search.not_match_yet")}
               </span>
             </div>
           ) : (
@@ -199,7 +205,7 @@ export default function DrawSearch({ onOpenKanji, onOpenKanjiNewTab, active }: P
                   onClick={() => onOpenKanji(k)}
                   onContextMenu={e => {
                     e.preventDefault();
-                    open(e.clientX, e.clientY, kanjiMenuItems(k, onOpenKanji, onOpenKanjiNewTab));
+                    open(e.clientX, e.clientY, kanjiMenuItems(k, onOpenKanji, onOpenKanjiNewTab, t));
                   }}
                 >
                   <span className="draw-result-rank">#{i + 1}</span>

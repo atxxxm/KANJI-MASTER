@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto, TranslationFile, KanjiTranslation } from "../api/types";
 import { useSettings } from "../contexts/SettingsContext";
 import { useKanjiData } from "../contexts/KanjiDataContext";
+import { useLocalization } from "../contexts/LocalizationContext";
 import "../styles/kanji-list.css";
 import "../styles/translate.css";
 
@@ -16,6 +17,7 @@ function syncBuffers(kanji: KanjiDto, data: TranslationFile): { meaning: string;
 
 export default function TranslateKanji() {
   const { config } = useSettings();
+  const { t } = useLocalization();
   const path = config?.path_to_kanji_localization;
   const { kanjiList: allKanji, loading: kanjiLoading, refresh: refreshKanji } = useKanjiData();
 
@@ -109,7 +111,7 @@ export default function TranslateKanji() {
     goTo(idx);
     setJumpQuery("");
     setJumpFocused(false);
-    setStatus({ kind: "success", text: "Found" });
+    setStatus({ kind: "success", text: t("translate_kanji_locale.found") });
   };
 
   const handleSave = async () => {
@@ -118,7 +120,7 @@ export default function TranslateKanji() {
     setData(updated);
     try {
       await invoke("save_translations", { path, data: updated });
-      setStatus({ kind: "success", text: `Saved at ID ${updated.last_id}` });
+      setStatus({ kind: "success", text: `${t("translate_kanji_locale.saved_at_id")} ${updated.last_id}` });
       // Propagate the new meanings to every other tab's cached kanji list.
       await refreshKanji();
     } catch (e) {
@@ -129,7 +131,7 @@ export default function TranslateKanji() {
   if (!path) {
     return (
       <div className="view-placeholder">
-        <span>Set a "Kanji localization" path in Settings first</span>
+        <span>{t("translate_kanji_locale.set_path_first")}</span>
       </div>
     );
   }
@@ -137,7 +139,7 @@ export default function TranslateKanji() {
   if (kanjiLoading || !translationsLoaded) {
     return (
       <div className="view-placeholder">
-        <span>Loading…</span>
+        <span>{t("common.loading")}</span>
       </div>
     );
   }
@@ -150,7 +152,7 @@ export default function TranslateKanji() {
         <div className="translate-jump-wrap" ref={jumpWrapRef}>
           <input
             className="search-input"
-            placeholder="Jump to kanji (char, ID, or reading)…"
+            placeholder={t("translate_kanji_locale.jump_to")}
             value={jumpQuery}
             onChange={e => setJumpQuery(e.target.value)}
             onFocus={() => setJumpFocused(true)}
@@ -172,7 +174,7 @@ export default function TranslateKanji() {
         <div style={{ flex: 1 }} />
 
         <button className="translate-save-btn" onClick={handleSave} disabled={!currentKanji}>
-          💾 Save progress
+          💾 {t("translate_kanji_locale.save_progress_button")}
         </button>
 
         {status && <span className={`translate-status ${status.kind}`}>{status.text}</span>}
@@ -183,40 +185,40 @@ export default function TranslateKanji() {
           {allProcessed || !currentKanji ? (
             <div className="translate-header">
               <span style={{ fontSize: 48 }}>🎉</span>
-              <span className="translate-section-title">All kanji processed</span>
+              <span className="translate-section-title">{t("translate_kanji_locale.all_kanji_processed")}</span>
             </div>
           ) : (
             <>
               <div className="translate-header">
                 <span className="translate-kanji">{currentKanji.kanji}</span>
                 <div className="translate-chips">
-                  <span className="translate-chip">ID: {currentKanji.id}</span>
-                  <span className="translate-chip">Index: {currentIndex + 1} / {allKanji.length}</span>
+                  <span className="translate-chip">{t("translate_kanji_locale.id_label")}: {currentKanji.id}</span>
+                  <span className="translate-chip">{t("translate_kanji_locale.index_label")}: {currentIndex + 1} / {allKanji.length}</span>
                 </div>
               </div>
 
-              <div className="translate-section-title">Meaning</div>
+              <div className="translate-section-title">{t("translate_kanji_locale.meaning")}</div>
               <input
                 className="translate-meaning-input"
-                placeholder="English meaning…"
+                placeholder={t("translate_kanji_locale.hint_meaning_input")}
                 value={meaningBuffer}
                 onChange={e => setMeaningBuffer(e.target.value)}
               />
 
               <div className="translate-examples-header">
-                <span className="translate-section-title" style={{ margin: 0 }}>Examples</span>
+                <span className="translate-section-title" style={{ margin: 0 }}>{t("translate_kanji_locale.examples")}</span>
                 <span className="translate-examples-count">({currentKanji.examples.length})</span>
               </div>
 
               {currentKanji.examples.map((original, i) => (
                 <div key={i} className="translate-example-card">
-                  <span className="translate-example-original">Original:</span>
+                  <span className="translate-example-original">{t("translate_kanji_locale.original")}</span>
                   <span className="translate-example-original-text">{original}</span>
                   <div className="translate-example-divider" />
-                  <div className="translate-example-label">Translation:</div>
+                  <div className="translate-example-label">{t("translate_kanji_locale.translation")}</div>
                   <textarea
                     className="translate-example-textarea"
-                    placeholder="Translate this example…"
+                    placeholder={t("translate_kanji_locale.hint_examples_input")}
                     value={examplesBuffer[i] ?? ""}
                     onChange={e => {
                       const next = [...examplesBuffer];
@@ -233,13 +235,13 @@ export default function TranslateKanji() {
                   disabled={currentIndex === 0}
                   onClick={() => goTo(currentIndex - 1)}
                 >
-                  ← Previous
+                  ← {t("translate_kanji_locale.previous_button")}
                 </button>
                 <button
                   className="translate-nav-btn primary"
                   onClick={() => goTo(currentIndex + 1)}
                 >
-                  Next →
+                  {t("translate_kanji_locale.next_button")} →
                 </button>
               </div>
             </>

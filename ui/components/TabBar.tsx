@@ -2,6 +2,7 @@ import { motion, Reorder } from "framer-motion";
 import type { Tab } from "../api/tabs";
 import { NAV_BY_VIEW } from "../api/navMeta";
 import { useContextMenu } from "../contexts/ContextMenuContext";
+import { useLocalization } from "../contexts/LocalizationContext";
 
 interface Props {
   tabs: Tab[];
@@ -15,12 +16,14 @@ interface Props {
 
 export default function TabBar({ tabs, activeTabId, onSwitch, onClose, onReorder, onCloseOthers, onCloseAll }: Props) {
   const { open } = useContextMenu();
+  const { t } = useLocalization();
 
   return (
     <Reorder.Group as="div" axis="x" values={tabs} onReorder={onReorder} className="tab-bar">
       {tabs.map(tab => {
         const isKanjiTab = tab.kind === "kanji-detail";
         const meta = isKanjiTab ? null : NAV_BY_VIEW[tab.kind];
+        const label = meta ? t(`nav.${meta.view}`) : "";
         const active = tab.id === activeTabId;
         return (
           <Reorder.Item key={tab.id} value={tab} as="div" className="tab-chip-item">
@@ -37,13 +40,13 @@ export default function TabBar({ tabs, activeTabId, onSwitch, onClose, onReorder
               onContextMenu={e => {
                 e.preventDefault();
                 open(e.clientX, e.clientY, [
-                  { label: "Close", onClick: () => onClose(tab.id), disabled: tabs.length <= 1 },
-                  { label: "Close others", onClick: () => onCloseOthers(tab.id), disabled: tabs.length <= 1 },
+                  { label: t("context_menu.close"), onClick: () => onClose(tab.id), disabled: tabs.length <= 1 },
+                  { label: t("context_menu.close_others"), onClick: () => onCloseOthers(tab.id), disabled: tabs.length <= 1 },
                   "separator",
-                  { label: "Close all", onClick: onCloseAll, danger: true },
+                  { label: t("context_menu.close_all"), onClick: onCloseAll, danger: true },
                 ]);
               }}
-              title={isKanjiTab ? tab.kanjiChar : meta!.label}
+              title={isKanjiTab ? tab.kanjiChar : label}
             >
               {active && (
                 <motion.div
@@ -57,7 +60,7 @@ export default function TabBar({ tabs, activeTabId, onSwitch, onClose, onReorder
               ) : (
                 <>
                   <span className="tab-chip-icon">{meta!.icon}</span>
-                  <span className="tab-chip-label">{meta!.label}</span>
+                  <span className="tab-chip-label">{label}</span>
                 </>
               )}
               {tabs.length > 1 && (

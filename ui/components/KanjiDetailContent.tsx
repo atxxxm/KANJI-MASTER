@@ -4,6 +4,7 @@ import type { KanjiDto } from "../api/types";
 import AnimatedKanji from "./AnimatedKanji";
 import { useContextMenu } from "../contexts/ContextMenuContext";
 import { useKanjiData } from "../contexts/KanjiDataContext";
+import { useLocalization } from "../contexts/LocalizationContext";
 import { kanjiMenuItems } from "../utils/kanjiMenu";
 
 interface Props {
@@ -24,6 +25,7 @@ function ExampleText({ text, onKanjiClick, onKanjiClickNewTab }: {
   onKanjiClickNewTab: (k: KanjiDto) => void;
 }) {
   const { open } = useContextMenu();
+  const { t } = useLocalization();
 
   const resolve = async (ch: string): Promise<KanjiDto | null> =>
     invoke<KanjiDto | null>("get_kanji_by_char", { ch });
@@ -38,7 +40,7 @@ function ExampleText({ text, onKanjiClick, onKanjiClickNewTab }: {
     e.preventDefault();
     e.stopPropagation();
     const k = await resolve(ch);
-    if (k) open(e.clientX, e.clientY, kanjiMenuItems(k, onKanjiClick, onKanjiClickNewTab));
+    if (k) open(e.clientX, e.clientY, kanjiMenuItems(k, onKanjiClick, onKanjiClickNewTab, t));
   };
 
   return (
@@ -63,6 +65,7 @@ function ExampleText({ text, onKanjiClick, onKanjiClickNewTab }: {
 
 export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNewTab }: Props) {
   const { translationsByChar } = useKanjiData();
+  const { t } = useLocalization();
   const translations = translationsByChar[kanji.kanji]?.translate_examples;
 
   // Which example indices are currently showing their translation —
@@ -88,10 +91,10 @@ export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNe
               <span className={`detail-badge jlpt-${kanji.jlpt}`}>{kanji.jlpt}</span>
             )}
             {kanji.strokes > 0 && (
-              <span className="detail-badge">{kanji.strokes} strokes</span>
+              <span className="detail-badge">{kanji.strokes} {t("current_kanji.strokes")}</span>
             )}
             {kanji.grade && kanji.grade !== "0" && (
-              <span className="detail-badge">Grade {kanji.grade}</span>
+              <span className="detail-badge">{t("current_kanji.grade")} {kanji.grade}</span>
             )}
             {kanji.frequency && kanji.frequency !== "0" && (
               <span className="detail-badge">#{kanji.frequency}</span>
@@ -102,7 +105,7 @@ export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNe
 
       {kanji.onyomi && (
         <div className="detail-section">
-          <div className="detail-label">On-yomi</div>
+          <div className="detail-label">{t("current_kanji.onyomi")}</div>
           <div className="detail-reading">{kanji.onyomi}</div>
           {kanji.onyomi_romaji && (
             <div className="detail-reading-romaji">{kanji.onyomi_romaji}</div>
@@ -112,7 +115,7 @@ export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNe
 
       {kanji.kunyomi && (
         <div className="detail-section">
-          <div className="detail-label">Kun-yomi</div>
+          <div className="detail-label">{t("current_kanji.kunyomi")}</div>
           <div className="detail-reading">{kanji.kunyomi}</div>
           {kanji.kunyomi_romaji && (
             <div className="detail-reading-romaji">{kanji.kunyomi_romaji}</div>
@@ -122,14 +125,14 @@ export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNe
 
       {kanji.meaning && (
         <div className="detail-section">
-          <div className="detail-label">Meaning</div>
+          <div className="detail-label">{t("current_kanji.meaning")}</div>
           <div className="detail-meaning">{kanji.meaning}</div>
         </div>
       )}
 
       {kanji.examples.length > 0 && (
         <div className="detail-section">
-          <div className="detail-label">Examples</div>
+          <div className="detail-label">{t("current_kanji.examples")}</div>
           <div className="detail-examples">
             {kanji.examples.map((ex, i) => {
               const translation = translations?.[i];

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto } from "../api/types";
 import KanjiDetailContent from "../components/KanjiDetailContent";
+import { useLocalization } from "../contexts/LocalizationContext";
 import "../styles/kanji-list.css";
 import "../styles/kanji-detail-view.css";
 
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function KanjiDetailView({ kanjiChar, onOpenKanji, onOpenKanjiNewTab }: Props) {
+  const { t } = useLocalization();
   const [kanji, setKanji] = useState<KanjiDto | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -29,7 +31,7 @@ export default function KanjiDetailView({ kanjiChar, onOpenKanji, onOpenKanjiNew
         {loading ? null : kanji ? (
           <KanjiDetailContent kanji={kanji} onKanjiClick={onOpenKanji} onKanjiClickNewTab={onOpenKanjiNewTab} />
         ) : (
-          <div className="detail-not-found">Kanji not found</div>
+          <div className="detail-not-found">{t("home.kanji_not_found")}</div>
         )}
       </div>
     </div>

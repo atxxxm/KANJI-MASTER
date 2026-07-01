@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto } from "../api/types";
 import { useKanjiData } from "../contexts/KanjiDataContext";
 import { useContextMenu } from "../contexts/ContextMenuContext";
+import { useLocalization } from "../contexts/LocalizationContext";
 import { kanjiMenuItems } from "../utils/kanjiMenu";
 import ModeSwitch from "../components/ModeSwitch";
 import "../styles/kanji-list.css";
@@ -66,6 +67,7 @@ interface Props {
 
 export default function RomajiKana({ onOpenKanji, onOpenKanjiNewTab }: Props) {
   const { kanjiList: allKanji } = useKanjiData();
+  const { t } = useLocalization();
   const [text, setText]             = useState("");
   const [isKatakana, setIsKatakana] = useState(false);
   const [copied, setCopied]         = useState(false);
@@ -126,8 +128,8 @@ export default function RomajiKana({ onOpenKanji, onOpenKanjiNewTab }: Props) {
       <div className="romaji-main">
         <div className="romaji-main-inner">
           <div className="romaji-header">
-            <div className="romaji-title">Romaji → Kana</div>
-            <div className="romaji-subtitle">Type romaji and watch it convert as you go</div>
+            <div className="romaji-title">{t("romaji_to_kana_locale.title")}</div>
+            <div className="romaji-subtitle">{t("romaji_to_kana_locale.subtitle")}</div>
           </div>
 
           <ModeSwitch
@@ -135,8 +137,8 @@ export default function RomajiKana({ onOpenKanji, onOpenKanjiNewTab }: Props) {
             value={isKatakana ? "katakana" : "hiragana"}
             onChange={toggleMode}
             options={[
-              { value: "hiragana", label: "Hiragana あ" },
-              { value: "katakana", label: "Katakana ア" },
+              { value: "hiragana", label: `${t("romaji_to_kana_locale.output_hiragana")} あ` },
+              { value: "katakana", label: `${t("romaji_to_kana_locale.output_katakana")} ア` },
             ]}
           />
 
@@ -144,7 +146,7 @@ export default function RomajiKana({ onOpenKanji, onOpenKanjiNewTab }: Props) {
             <textarea
               ref={textareaRef}
               className="romaji-input"
-              placeholder="kanji, nihongo, konnichiwa…"
+              placeholder={t("romaji_to_kana_locale.hint_input")}
               value={text}
               onChange={handleChange}
               autoFocus
@@ -152,20 +154,20 @@ export default function RomajiKana({ onOpenKanji, onOpenKanjiNewTab }: Props) {
             />
             <div className="romaji-card-footer">
               <span className="romaji-char-count">
-                {text.length} character{text.length !== 1 ? "s" : ""}
+                {text.length} {t(text.length !== 1 ? "romaji_to_kana_locale.character_plural" : "romaji_to_kana_locale.character_singular")}
               </span>
               <button
                 className={`copy-btn${copied ? " copied" : ""}`}
                 onClick={handleCopy}
                 disabled={!text}
               >
-                {copied ? "✓ Copied" : "⧉ Copy"}
+                {copied ? `✓ ${t("romaji_to_kana_locale.copied")}` : `⧉ ${t("romaji_to_kana_locale.copy_button")}`}
               </button>
             </div>
           </div>
 
           <div className="romaji-hint">
-            Tip: type <kbd>n'</kbd> for ん before a vowel, <kbd>-</kbd> for a long vowel (ー)
+            {t("romaji_to_kana_locale.hint")}
           </div>
         </div>
       </div>
@@ -175,32 +177,32 @@ export default function RomajiKana({ onOpenKanji, onOpenKanjiNewTab }: Props) {
         <div className="assistant-header">
           <div className="assistant-title">
             <span className="assistant-title-icon">漢</span>
-            Kanji assistant
+            {t("romaji_to_kana_locale.assistant_title")}
           </div>
           {kanaQuery ? (
             <>
               <div className="assistant-query">
-                Suggestions for <span>{kanaQuery}</span>
+                {t("romaji_to_kana_locale.assistant_suggestions_for")} <span>{kanaQuery}</span>
               </div>
               <div className="assistant-count">
-                {matches.length} match{matches.length !== 1 ? "es" : ""}
+                {matches.length} {t(matches.length !== 1 ? "romaji_to_kana_locale.match_plural" : "romaji_to_kana_locale.match_singular")}
               </div>
             </>
           ) : (
-            <div className="assistant-query">Type romaji to see matches</div>
+            <div className="assistant-query">{t("romaji_to_kana_locale.type_to_see_matches")}</div>
           )}
         </div>
 
         {matches.length === 0 ? (
           <div className="assistant-empty">
             <span className="assistant-empty-icon">{kanaQuery ? "😕" : "✎"}</span>
-            {kanaQuery ? `No kanji found for "${kanaQuery}"` : "Start typing to see suggestions"}
+            {kanaQuery ? `${t("romaji_to_kana_locale.no_matches_for")} "${kanaQuery}"` : t("romaji_to_kana_locale.start_typing")}
           </div>
         ) : (
           <div className="assistant-list">
             {exactMatches.length > 0 && (
               <>
-                <div className="assistant-section-label">Exact</div>
+                <div className="assistant-section-label">{t("romaji_to_kana_locale.exact")}</div>
                 {exactMatches.map(m => (
                   <AssistantCard
                     key={m.kanji.id}
@@ -213,7 +215,7 @@ export default function RomajiKana({ onOpenKanji, onOpenKanjiNewTab }: Props) {
             )}
             {partialMatches.length > 0 && (
               <>
-                <div className="assistant-section-label">Partial</div>
+                <div className="assistant-section-label">{t("romaji_to_kana_locale.partial")}</div>
                 {partialMatches.map(m => (
                   <AssistantCard
                     key={m.kanji.id}
@@ -239,6 +241,7 @@ function AssistantCard({ match, onOpenKanji, onOpenKanjiNewTab }: {
   onOpenKanjiNewTab: (k: KanjiDto) => void;
 }) {
   const { open } = useContextMenu();
+  const { t } = useLocalization();
   const { kanji, reading, exact } = match;
   return (
     <button
@@ -246,7 +249,7 @@ function AssistantCard({ match, onOpenKanji, onOpenKanjiNewTab }: {
       onClick={() => onOpenKanji(kanji)}
       onContextMenu={e => {
         e.preventDefault();
-        open(e.clientX, e.clientY, kanjiMenuItems(kanji, onOpenKanji, onOpenKanjiNewTab));
+        open(e.clientX, e.clientY, kanjiMenuItems(kanji, onOpenKanji, onOpenKanjiNewTab, t));
       }}
     >
       <span className="assistant-kanji">{kanji.kanji}</span>

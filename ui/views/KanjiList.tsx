@@ -3,6 +3,7 @@ import type { KanjiDto } from "../api/types";
 import { useKanjiData } from "../contexts/KanjiDataContext";
 import { useContextMenu } from "../contexts/ContextMenuContext";
 import { useSettings } from "../contexts/SettingsContext";
+import { useLocalization } from "../contexts/LocalizationContext";
 import { kanjiMenuItems } from "../utils/kanjiMenu";
 import "../styles/kanji-list.css";
 
@@ -20,6 +21,7 @@ interface Props {
 export default function KanjiList({ onOpenKanji, onOpenKanjiNewTab, active, focusSearchAt }: Props) {
   const { open } = useContextMenu();
   const { config } = useSettings();
+  const { t } = useLocalization();
   const showMeaning = config?.show_kanji_meaning ?? false;
   const { kanjiList, loading } = useKanjiData();
   const [search, setSearch]   = useState("");
@@ -63,7 +65,7 @@ export default function KanjiList({ onOpenKanji, onOpenKanjiNewTab, active, focu
         <input
           ref={searchRef}
           className="search-input"
-          placeholder="Search kanji, readings, meaning…"
+          placeholder={t("kanji_list.search_hint")}
           value={search}
           onChange={e => setSearch(e.target.value)}
           autoFocus
@@ -75,7 +77,7 @@ export default function KanjiList({ onOpenKanji, onOpenKanjiNewTab, active, focu
               className={`jlpt-btn f-${level}${jlpt === level ? " active" : ""}`}
               onClick={() => setJlpt(level)}
             >
-              {level === "all" ? "All" : level}
+              {level === "all" ? t("kanji_list.all_filter") : level}
             </button>
           ))}
         </div>
@@ -85,7 +87,7 @@ export default function KanjiList({ onOpenKanji, onOpenKanjiNewTab, active, focu
       {loading ? (
         <div className="view-placeholder">
           <span className="view-placeholder-icon">漢</span>
-          <span>Loading kanji…</span>
+          <span>{t("kanji_list.loading")}</span>
         </div>
       ) : (
         <div className="kanji-grid">
@@ -96,7 +98,7 @@ export default function KanjiList({ onOpenKanji, onOpenKanjiNewTab, active, focu
               onClick={() => onOpenKanji(k)}
               onContextMenu={e => {
                 e.preventDefault();
-                open(e.clientX, e.clientY, kanjiMenuItems(k, onOpenKanji, onOpenKanjiNewTab));
+                open(e.clientX, e.clientY, kanjiMenuItems(k, onOpenKanji, onOpenKanjiNewTab, t));
               }}
             >
               <span className="kanji-char">{k.kanji}</span>

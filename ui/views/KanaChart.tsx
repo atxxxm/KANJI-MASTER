@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { GOJUON, DAKUTEN, HANDAKUTEN, YOON, type KanaCell } from "../api/kanaData";
 import ModeSwitch from "../components/ModeSwitch";
+import { useLocalization } from "../contexts/LocalizationContext";
 import "../styles/romaji-kana.css";
 import "../styles/kana-chart.css";
 
@@ -26,6 +27,7 @@ function Grid({ rows, script, yoon = false }: { rows: KanaCell[][]; script: Scri
 
 export default function KanaChart() {
   const [script, setScript] = useState<Script>("hiragana");
+  const { t } = useLocalization();
 
   return (
     <div className="kana-chart-view">
@@ -34,30 +36,30 @@ export default function KanaChart() {
           value={script}
           onChange={v => setScript(v as Script)}
           options={[
-            { value: "hiragana", label: "Hiragana あ" },
-            { value: "katakana", label: "Katakana ア" },
+            { value: "hiragana", label: `${t("kana.hiragana")} あ` },
+            { value: "katakana", label: `${t("kana.katakana")} ア` },
           ]}
         />
       </div>
 
       <div className="kana-chart-scroll">
         <div className="kana-section">
-          <div className="kana-section-title">Gojūon</div>
+          <div className="kana-section-title">{t("kana.gojuon")}</div>
           <Grid rows={GOJUON} script={script} />
         </div>
 
         <div className="kana-section">
-          <div className="kana-section-title">Dakuten</div>
+          <div className="kana-section-title">{t("kana.dakuten")}</div>
           <Grid rows={DAKUTEN} script={script} />
         </div>
 
         <div className="kana-section">
-          <div className="kana-section-title">Handakuten</div>
+          <div className="kana-section-title">{t("kana.handakuten")}</div>
           <Grid rows={HANDAKUTEN} script={script} />
         </div>
 
         <div className="kana-section">
-          <div className="kana-section-title">Yōon</div>
+          <div className="kana-section-title">{t("kana.yoon")}</div>
           <Grid rows={YOON} script={script} yoon />
         </div>
       </div>

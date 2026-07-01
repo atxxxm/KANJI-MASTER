@@ -3,6 +3,7 @@ import type { KanjiDto } from "../api/types";
 import { useKanjiData } from "../contexts/KanjiDataContext";
 import { useContextMenu } from "../contexts/ContextMenuContext";
 import { useSettings } from "../contexts/SettingsContext";
+import { useLocalization } from "../contexts/LocalizationContext";
 import { kanjiMenuItems } from "../utils/kanjiMenu";
 import "../styles/kanji-list.css";
 import "../styles/home.css";
@@ -18,6 +19,7 @@ export default function Home({ onOpenKanji, onOpenKanjiNewTab }: Props) {
   const { kanjiList } = useKanjiData();
   const { open } = useContextMenu();
   const { config } = useSettings();
+  const { t } = useLocalization();
   const showMeaning = config?.show_kanji_meaning ?? false;
   const [randomKanjiId, setRandomKanjiId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
@@ -61,7 +63,7 @@ export default function Home({ onOpenKanji, onOpenKanjiNewTab }: Props) {
 
         {!hasQuery && (
           <>
-            <div className="home-subtitle">Learn, search, and review Japanese kanji</div>
+            <div className="home-subtitle">{t("home.subtitle")}</div>
 
             {randomKanji && (
               <button
@@ -69,10 +71,10 @@ export default function Home({ onOpenKanji, onOpenKanjiNewTab }: Props) {
                 onClick={() => onOpenKanji(randomKanji)}
                 onContextMenu={e => {
                   e.preventDefault();
-                  open(e.clientX, e.clientY, kanjiMenuItems(randomKanji, onOpenKanji, onOpenKanjiNewTab));
+                  open(e.clientX, e.clientY, kanjiMenuItems(randomKanji, onOpenKanji, onOpenKanjiNewTab, t));
                 }}
               >
-                <span className="home-random-label">Kanji of the session</span>
+                <span className="home-random-label">{t("home.random_label")}</span>
                 <span className="home-random-char">{randomKanji.kanji}</span>
                 <span className="home-random-reading">
                   {[randomKanji.onyomi, randomKanji.kunyomi].filter(Boolean).join(" · ") || randomKanji.meaning}
@@ -86,7 +88,7 @@ export default function Home({ onOpenKanji, onOpenKanjiNewTab }: Props) {
           <span className="home-search-icon">🔍</span>
           <input
             className="home-search-input"
-            placeholder="Search kanji, readings, meaning…"
+            placeholder={t("home.kanji_search_hint")}
             value={search}
             onChange={e => setSearch(e.target.value)}
             autoFocus
@@ -97,7 +99,7 @@ export default function Home({ onOpenKanji, onOpenKanjiNewTab }: Props) {
       {hasQuery && (
         <div className="home-results">
           {results.length === 0 ? (
-            <div className="home-results-empty">No kanji found for "{search.trim()}"</div>
+            <div className="home-results-empty">{t("home.no_results_for")} "{search.trim()}"</div>
           ) : (
             <div className="kanji-grid" style={{ padding: 0 }}>
               {results.map(k => (
@@ -107,7 +109,7 @@ export default function Home({ onOpenKanji, onOpenKanjiNewTab }: Props) {
                   onClick={() => onOpenKanji(k)}
                   onContextMenu={e => {
                     e.preventDefault();
-                    open(e.clientX, e.clientY, kanjiMenuItems(k, onOpenKanji, onOpenKanjiNewTab));
+                    open(e.clientX, e.clientY, kanjiMenuItems(k, onOpenKanji, onOpenKanjiNewTab, t));
                   }}
                 >
                   <span className="kanji-char">{k.kanji}</span>
