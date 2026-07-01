@@ -65,9 +65,7 @@
   justify-content: center;
   gap: 4px;
   border-radius: var(--radius-lg);
-  background: var(--surface);
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
+  background: var(--surface-solid);
   border: 1px solid var(--border);
   cursor: pointer;
   transition: border-color var(--transition), background var(--transition), transform 0.22s var(--spring), box-shadow 0.22s var(--spring-soft);

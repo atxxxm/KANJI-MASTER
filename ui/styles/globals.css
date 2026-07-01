@@ -27,6 +27,11 @@
   --surface:     rgba(38,38,46,0.6);
   --surface-2:   rgba(52,52,62,0.55);
   --surface-3:   rgba(66,66,78,0.55);
+  /* Opaque equivalents of the surfaces above — used by elements that render
+     in bulk (kanji cards, kana cells) so they don't each pay for a separate
+     backdrop-filter blur layer. Visually near-identical over the app bg. */
+  --surface-solid:   #26262e;
+  --surface-2-solid: #34343e;
   --border:      rgba(255,255,255,0.09);
   --border-hover:rgba(255,255,255,0.2);
 
@@ -52,6 +57,8 @@
   --surface:     rgba(255,255,255,0.6);
   --surface-2:   rgba(255,255,255,0.42);
   --surface-3:   rgba(255,255,255,0.65);
+  --surface-solid:   #f7f5f1;
+  --surface-2-solid: #efece5;
   --border:      rgba(0,0,0,0.08);
   --border-hover:rgba(0,0,0,0.18);
 
