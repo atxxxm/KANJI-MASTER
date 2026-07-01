@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { save } from "@tauri-apps/plugin-dialog";
 import { writeTextFile } from "@tauri-apps/plugin-fs";
 import { useKanjiData } from "../contexts/KanjiDataContext";
+import { useSettings } from "../contexts/SettingsContext";
 import "../styles/kanji-list.css";
 import "../styles/anki-export.css";
 
@@ -31,6 +32,8 @@ const STEP_LABELS: Record<Step, string> = {
 
 export default function AnkiExport() {
   const { kanjiList: allKanji } = useKanjiData();
+  const { config } = useSettings();
+  const showMeaning = config?.show_kanji_meaning ?? false;
   const [step, setStep] = useState<Step>(1);
   const [search, setSearch] = useState("");
   const [jlpt, setJlpt] = useState<string>("all");
@@ -140,13 +143,16 @@ export default function AnkiExport() {
                 {filtered.map(k => (
                   <button
                     key={k.id}
-                    className={`kanji-card${selectedIds.has(k.id) ? " selected" : ""}`}
+                    className={`kanji-card${selectedIds.has(k.id) ? " selected" : ""}${showMeaning && k.meaning ? " with-meaning" : ""}`}
                     onClick={() => toggleSelect(k.id)}
                   >
                     <span className="kanji-char">{k.kanji}</span>
                     <div className="kanji-card-meta">
                       {k.jlpt && <span className={`jlpt-badge ${k.jlpt}`}>{k.jlpt}</span>}
                     </div>
+                    {showMeaning && k.meaning && (
+                      <span className="kanji-card-meaning">{k.meaning}</span>
+                    )}
                   </button>
                 ))}
               </div>

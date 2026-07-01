@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import type { KanjiDto } from "../api/types";
 import { useKanjiData } from "../contexts/KanjiDataContext";
 import { useContextMenu } from "../contexts/ContextMenuContext";
+import { useSettings } from "../contexts/SettingsContext";
 import { kanjiMenuItems } from "../utils/kanjiMenu";
 import "../styles/kanji-list.css";
 import "../styles/home.css";
@@ -16,6 +17,8 @@ interface Props {
 export default function Home({ onOpenKanji, onOpenKanjiNewTab }: Props) {
   const { kanjiList } = useKanjiData();
   const { open } = useContextMenu();
+  const { config } = useSettings();
+  const showMeaning = config?.show_kanji_meaning ?? false;
   const [randomKanjiId, setRandomKanjiId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
 
@@ -100,7 +103,7 @@ export default function Home({ onOpenKanji, onOpenKanjiNewTab }: Props) {
               {results.map(k => (
                 <button
                   key={k.id}
-                  className="kanji-card"
+                  className={`kanji-card${showMeaning && k.meaning ? " with-meaning" : ""}`}
                   onClick={() => onOpenKanji(k)}
                   onContextMenu={e => {
                     e.preventDefault();
@@ -108,6 +111,9 @@ export default function Home({ onOpenKanji, onOpenKanjiNewTab }: Props) {
                   }}
                 >
                   <span className="kanji-char">{k.kanji}</span>
+                  {showMeaning && k.meaning && (
+                    <span className="kanji-card-meaning">{k.meaning}</span>
+                  )}
                 </button>
               ))}
             </div>
