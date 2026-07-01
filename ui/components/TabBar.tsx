@@ -1,6 +1,7 @@
 import { motion, Reorder } from "framer-motion";
 import type { Tab } from "../api/tabs";
 import { NAV_BY_VIEW } from "../api/navMeta";
+import { useContextMenu } from "../contexts/ContextMenuContext";
 
 interface Props {
   tabs: Tab[];
@@ -8,9 +9,13 @@ interface Props {
   onSwitch: (id: string) => void;
   onClose: (id: string) => void;
   onReorder: (tabs: Tab[]) => void;
+  onCloseOthers: (id: string) => void;
+  onCloseAll: () => void;
 }
 
-export default function TabBar({ tabs, activeTabId, onSwitch, onClose, onReorder }: Props) {
+export default function TabBar({ tabs, activeTabId, onSwitch, onClose, onReorder, onCloseOthers, onCloseAll }: Props) {
+  const { open } = useContextMenu();
+
   return (
     <Reorder.Group as="div" axis="x" values={tabs} onReorder={onReorder} className="tab-bar">
       {tabs.map(tab => {
@@ -28,6 +33,15 @@ export default function TabBar({ tabs, activeTabId, onSwitch, onClose, onReorder
                   e.preventDefault();
                   onClose(tab.id);
                 }
+              }}
+              onContextMenu={e => {
+                e.preventDefault();
+                open(e.clientX, e.clientY, [
+                  { label: "Close", onClick: () => onClose(tab.id), disabled: tabs.length <= 1 },
+                  { label: "Close others", onClick: () => onCloseOthers(tab.id), disabled: tabs.length <= 1 },
+                  "separator",
+                  { label: "Close all", onClick: onCloseAll, danger: true },
+                ]);
               }}
               title={isKanjiTab ? tab.kanjiChar : meta!.label}
             >

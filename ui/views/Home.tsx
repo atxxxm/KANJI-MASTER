@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import type { KanjiDto } from "../api/types";
 import { useKanjiData } from "../contexts/KanjiDataContext";
+import { useContextMenu } from "../contexts/ContextMenuContext";
+import { kanjiMenuItems } from "../utils/kanjiMenu";
 import "../styles/kanji-list.css";
 import "../styles/home.css";
 
@@ -8,10 +10,12 @@ const RANDOM_KANJI_KEY = "home_random_kanji_id";
 
 interface Props {
   onOpenKanji: (k: KanjiDto) => void;
+  onOpenKanjiNewTab: (k: KanjiDto) => void;
 }
 
-export default function Home({ onOpenKanji }: Props) {
+export default function Home({ onOpenKanji, onOpenKanjiNewTab }: Props) {
   const { kanjiList } = useKanjiData();
+  const { open } = useContextMenu();
   const [randomKanjiId, setRandomKanjiId] = useState<number | null>(null);
   const [search, setSearch] = useState("");
 
@@ -57,7 +61,14 @@ export default function Home({ onOpenKanji }: Props) {
             <div className="home-subtitle">Learn, search, and review Japanese kanji</div>
 
             {randomKanji && (
-              <button className="home-random" onClick={() => onOpenKanji(randomKanji)}>
+              <button
+                className="home-random"
+                onClick={() => onOpenKanji(randomKanji)}
+                onContextMenu={e => {
+                  e.preventDefault();
+                  open(e.clientX, e.clientY, kanjiMenuItems(randomKanji, onOpenKanji, onOpenKanjiNewTab));
+                }}
+              >
                 <span className="home-random-label">Kanji of the session</span>
                 <span className="home-random-char">{randomKanji.kanji}</span>
                 <span className="home-random-reading">
@@ -91,6 +102,10 @@ export default function Home({ onOpenKanji }: Props) {
                   key={k.id}
                   className="kanji-card"
                   onClick={() => onOpenKanji(k)}
+                  onContextMenu={e => {
+                    e.preventDefault();
+                    open(e.clientX, e.clientY, kanjiMenuItems(k, onOpenKanji, onOpenKanjiNewTab));
+                  }}
                 >
                   <span className="kanji-char">{k.kanji}</span>
                 </button>

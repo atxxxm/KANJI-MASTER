@@ -1,6 +1,8 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto } from "../api/types";
+import { useContextMenu } from "../contexts/ContextMenuContext";
+import { kanjiMenuItems } from "../utils/kanjiMenu";
 import "../styles/kanji-list.css";
 import "../styles/draw-search.css";
 
@@ -10,10 +12,12 @@ type Point = [number, number];
 
 interface Props {
   onOpenKanji: (k: KanjiDto) => void;
+  onOpenKanjiNewTab: (k: KanjiDto) => void;
   active?: boolean;
 }
 
-export default function DrawSearch({ onOpenKanji, active }: Props) {
+export default function DrawSearch({ onOpenKanji, onOpenKanjiNewTab, active }: Props) {
+  const { open } = useContextMenu();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const strokesRef = useRef<Point[][]>([]);
   const drawingRef = useRef<Point[] | null>(null);
@@ -193,6 +197,10 @@ export default function DrawSearch({ onOpenKanji, active }: Props) {
                   key={k.id}
                   className="draw-result-card"
                   onClick={() => onOpenKanji(k)}
+                  onContextMenu={e => {
+                    e.preventDefault();
+                    open(e.clientX, e.clientY, kanjiMenuItems(k, onOpenKanji, onOpenKanjiNewTab));
+                  }}
                 >
                   <span className="draw-result-rank">#{i + 1}</span>
                   <span className="draw-result-char">{k.kanji}</span>

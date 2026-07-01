@@ -1,10 +1,13 @@
 import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto } from "../api/types";
 import AnimatedKanji from "./AnimatedKanji";
+import { useContextMenu } from "../contexts/ContextMenuContext";
+import { kanjiMenuItems } from "../utils/kanjiMenu";
 
 interface Props {
   kanji: KanjiDto;
   onKanjiClick: (k: KanjiDto) => void;
+  onKanjiClickNewTab: (k: KanjiDto) => void;
 }
 
 // CJK Unified Ideographs range
@@ -13,10 +16,25 @@ const isCjk = (ch: string) => {
   return c >= 0x4e00 && c <= 0x9faf;
 };
 
-function ExampleText({ text, onKanjiClick }: { text: string; onKanjiClick: (k: KanjiDto) => void }) {
+function ExampleText({ text, onKanjiClick, onKanjiClickNewTab }: {
+  text: string;
+  onKanjiClick: (k: KanjiDto) => void;
+  onKanjiClickNewTab: (k: KanjiDto) => void;
+}) {
+  const { open } = useContextMenu();
+
+  const resolve = async (ch: string): Promise<KanjiDto | null> =>
+    invoke<KanjiDto | null>("get_kanji_by_char", { ch });
+
   const handleClick = async (ch: string) => {
-    const k = await invoke<KanjiDto | null>("get_kanji_by_char", { ch });
+    const k = await resolve(ch);
     if (k) onKanjiClick(k);
+  };
+
+  const handleContextMenu = async (e: React.MouseEvent, ch: string) => {
+    e.preventDefault();
+    const k = await resolve(ch);
+    if (k) open(e.clientX, e.clientY, kanjiMenuItems(k, onKanjiClick, onKanjiClickNewTab));
   };
 
   return (
@@ -27,6 +45,7 @@ function ExampleText({ text, onKanjiClick }: { text: string; onKanjiClick: (k: K
             key={i}
             className="example-kanji-link"
             onClick={() => handleClick(ch)}
+            onContextMenu={e => handleContextMenu(e, ch)}
           >
             {ch}
           </span>
@@ -38,7 +57,7 @@ function ExampleText({ text, onKanjiClick }: { text: string; onKanjiClick: (k: K
   );
 }
 
-export default function KanjiDetailContent({ kanji, onKanjiClick }: Props) {
+export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNewTab }: Props) {
   return (
     <>
       {/* Stroke animation */}
@@ -98,7 +117,7 @@ export default function KanjiDetailContent({ kanji, onKanjiClick }: Props) {
           <div className="detail-examples">
             {kanji.examples.map((ex, i) => (
               <div key={i} className="detail-example">
-                <ExampleText text={ex} onKanjiClick={onKanjiClick} />
+                <ExampleText text={ex} onKanjiClick={onKanjiClick} onKanjiClickNewTab={onKanjiClickNewTab} />
               </div>
             ))}
           </div>

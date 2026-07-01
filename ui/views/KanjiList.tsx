@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import type { KanjiDto } from "../api/types";
 import { useKanjiData } from "../contexts/KanjiDataContext";
+import { useContextMenu } from "../contexts/ContextMenuContext";
+import { kanjiMenuItems } from "../utils/kanjiMenu";
 import "../styles/kanji-list.css";
 
 type JlptFilter = "all" | "N5" | "N4" | "N3" | "N2" | "N1";
@@ -8,12 +10,14 @@ const JLPT_LEVELS: JlptFilter[] = ["all", "N5", "N4", "N3", "N2", "N1"];
 
 interface Props {
   onOpenKanji: (k: KanjiDto) => void;
+  onOpenKanjiNewTab: (k: KanjiDto) => void;
   active?: boolean;
   /** Bumped (to a new timestamp) by App when Ctrl+F focuses this tab. */
   focusSearchAt?: number;
 }
 
-export default function KanjiList({ onOpenKanji, active, focusSearchAt }: Props) {
+export default function KanjiList({ onOpenKanji, onOpenKanjiNewTab, active, focusSearchAt }: Props) {
+  const { open } = useContextMenu();
   const { kanjiList, loading } = useKanjiData();
   const [search, setSearch]   = useState("");
   const [jlpt, setJlpt]       = useState<JlptFilter>("all");
@@ -87,6 +91,10 @@ export default function KanjiList({ onOpenKanji, active, focusSearchAt }: Props)
               key={k.id}
               className="kanji-card"
               onClick={() => onOpenKanji(k)}
+              onContextMenu={e => {
+                e.preventDefault();
+                open(e.clientX, e.clientY, kanjiMenuItems(k, onOpenKanji, onOpenKanjiNewTab));
+              }}
             >
               <span className="kanji-char">{k.kanji}</span>
             </button>

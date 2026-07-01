@@ -8,9 +8,10 @@ import "../styles/kanji-detail-view.css";
 interface Props {
   kanjiChar: string;
   onOpenKanji: (k: KanjiDto) => void;
+  onOpenKanjiNewTab: (k: KanjiDto) => void;
 }
 
-export default function KanjiDetailView({ kanjiChar, onOpenKanji }: Props) {
+export default function KanjiDetailView({ kanjiChar, onOpenKanji, onOpenKanjiNewTab }: Props) {
   const [kanji, setKanji] = useState<KanjiDto | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -26,7 +27,7 @@ export default function KanjiDetailView({ kanjiChar, onOpenKanji }: Props) {
     <div className="kanji-detail-view">
       <div className="kanji-detail-view-inner">
         {loading ? null : kanji ? (
-          <KanjiDetailContent kanji={kanji} onKanjiClick={onOpenKanji} />
+          <KanjiDetailContent kanji={kanji} onKanjiClick={onOpenKanji} onKanjiClickNewTab={onOpenKanjiNewTab} />
         ) : (
           <div className="detail-not-found">Kanji not found</div>
         )}

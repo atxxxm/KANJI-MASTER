@@ -5,6 +5,7 @@ import "./styles/layout.css";
 import "./styles/tabbar.css";
 import Sidebar from "./components/Sidebar";
 import TabBar from "./components/TabBar";
+import ContextMenuProvider from "./components/ContextMenu";
 import Home from "./views/Home";
 import KanjiList from "./views/KanjiList";
 import KanaChart from "./views/KanaChart";
@@ -113,12 +114,28 @@ export default function App() {
     setActiveTabId(tab.id);
   };
 
+  // Always creates a fresh tab, bypassing the singleton dedupe above —
+  // used by Ctrl+T and the "Open in new tab" context menu action.
+  const forceOpenTab = (kind: View) => {
+    const tab = createTab(kind);
+    setTabs(prev => [...prev, tab]);
+    setActiveTabId(tab.id);
+  };
+
   const openKanjiTab = (kanji: KanjiDto) => {
     const existing = tabs.find(t => t.kind === "kanji-detail" && t.kanjiId === kanji.id);
     if (existing) {
       setActiveTabId(existing.id);
       return;
     }
+    const tab = createKanjiTab(kanji.id, kanji.kanji);
+    setTabs(prev => [...prev, tab]);
+    setActiveTabId(tab.id);
+  };
+
+  // Always creates a new kanji-detail tab, even if that kanji is already
+  // open elsewhere — "Open in new tab" from a right-click.
+  const openKanjiTabForce = (kanji: KanjiDto) => {
     const tab = createKanjiTab(kanji.id, kanji.kanji);
     setTabs(prev => [...prev, tab]);
     setActiveTabId(tab.id);
@@ -143,6 +160,17 @@ export default function App() {
     });
   };
 
+  const closeOtherTabs = (id: string) => {
+    setTabs(prev => prev.filter(t => t.id === id));
+    setActiveTabId(id);
+  };
+
+  const closeAllTabs = () => {
+    const home = createTab("home");
+    setTabs([home]);
+    setActiveTabId(home.id);
+  };
+
   // Global shortcuts: Ctrl+T new tab, Ctrl+W close active tab, Ctrl+F
   // open/focus the Kanji tab's search field. Escape (clear search) is
   // handled per-view via the `active` prop instead, since only that view
@@ -154,9 +182,7 @@ export default function App() {
 
       if (key === "t") {
         e.preventDefault();
-        const tab = createTab("home");
-        setTabs(prev => [...prev, tab]);
-        setActiveTabId(tab.id);
+        forceOpenTab("home");
       } else if (key === "w") {
         e.preventDefault();
         closeTab(activeTabId);
@@ -175,6 +201,7 @@ export default function App() {
   const buildProps = (tab: Tab): Record<string, unknown> => {
     const props: Record<string, unknown> = {
       onOpenKanji: openKanjiTab,
+      onOpenKanjiNewTab: openKanjiTabForce,
       active: tab.id === activeTabId,
     };
     if (tab.kind === "settings") {
@@ -193,10 +220,12 @@ export default function App() {
   return (
     <SettingsContext.Provider value={{ config, updateConfig }}>
     <KanjiDataContext.Provider value={{ kanjiList, loading: kanjiLoading, refresh: refreshKanji }}>
+    <ContextMenuProvider>
       <div className="app-layout">
         <Sidebar
           activeKind={tabs.find(t => t.id === activeTabId)?.kind ?? "home"}
           onOpenTab={openOrFocusTab}
+          onOpenNewTab={forceOpenTab}
           theme={theme}
           onToggleTheme={toggleTheme}
           collapsed={collapsed}
@@ -209,6 +238,8 @@ export default function App() {
             onSwitch={setActiveTabId}
             onClose={closeTab}
             onReorder={setTabs}
+            onCloseOthers={closeOtherTabs}
+            onCloseAll={closeAllTabs}
           />
           {/* All open tabs stay mounted so each keeps its own state (search
               text, filters, draw canvas, scroll position, ...) when the user
@@ -228,6 +259,7 @@ export default function App() {
           </div>
         </main>
       </div>
+    </ContextMenuProvider>
     </KanjiDataContext.Provider>
     </SettingsContext.Provider>
   );

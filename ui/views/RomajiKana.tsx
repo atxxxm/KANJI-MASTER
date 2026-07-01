@@ -2,6 +2,8 @@ import { useState, useMemo, useRef, useLayoutEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto } from "../api/types";
 import { useKanjiData } from "../contexts/KanjiDataContext";
+import { useContextMenu } from "../contexts/ContextMenuContext";
+import { kanjiMenuItems } from "../utils/kanjiMenu";
 import "../styles/kanji-list.css";
 import "../styles/romaji-kana.css";
 
@@ -64,9 +66,10 @@ function findMatches(allKanji: KanjiDto[], kana: string): Match[] {
 
 interface Props {
   onOpenKanji: (k: KanjiDto) => void;
+  onOpenKanjiNewTab: (k: KanjiDto) => void;
 }
 
-export default function RomajiKana({ onOpenKanji }: Props) {
+export default function RomajiKana({ onOpenKanji, onOpenKanjiNewTab }: Props) {
   const { kanjiList: allKanji } = useKanjiData();
   const [text, setText]             = useState("");
   const [isKatakana, setIsKatakana] = useState(false);
@@ -191,7 +194,8 @@ export default function RomajiKana({ onOpenKanji }: Props) {
                   <AssistantCard
                     key={m.kanji.id}
                     match={m}
-                    onClick={() => onOpenKanji(m.kanji)}
+                    onOpenKanji={onOpenKanji}
+                    onOpenKanjiNewTab={onOpenKanjiNewTab}
                   />
                 ))}
               </>
@@ -203,7 +207,8 @@ export default function RomajiKana({ onOpenKanji }: Props) {
                   <AssistantCard
                     key={m.kanji.id}
                     match={m}
-                    onClick={() => onOpenKanji(m.kanji)}
+                    onOpenKanji={onOpenKanji}
+                    onOpenKanjiNewTab={onOpenKanjiNewTab}
                   />
                 ))}
               </>
@@ -217,15 +222,21 @@ export default function RomajiKana({ onOpenKanji }: Props) {
 
 // ── Assistant card ────────────────────────────────────────────────────────────
 
-function AssistantCard({ match, onClick }: {
+function AssistantCard({ match, onOpenKanji, onOpenKanjiNewTab }: {
   match: Match;
-  onClick: () => void;
+  onOpenKanji: (k: KanjiDto) => void;
+  onOpenKanjiNewTab: (k: KanjiDto) => void;
 }) {
+  const { open } = useContextMenu();
   const { kanji, reading, exact } = match;
   return (
     <button
       className="assistant-card"
-      onClick={onClick}
+      onClick={() => onOpenKanji(kanji)}
+      onContextMenu={e => {
+        e.preventDefault();
+        open(e.clientX, e.clientY, kanjiMenuItems(kanji, onOpenKanji, onOpenKanjiNewTab));
+      }}
     >
       <span className="assistant-kanji">{kanji.kanji}</span>
       <div className="assistant-info">
