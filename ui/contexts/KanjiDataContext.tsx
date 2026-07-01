@@ -1,12 +1,15 @@
 import { createContext, useContext } from "react";
-import type { KanjiDto } from "../api/types";
+import type { KanjiDto, KanjiTranslation } from "../api/types";
 
 export interface KanjiDataContextValue {
   kanjiList: KanjiDto[];
   loading: boolean;
+  /** kanji char → its full translation entry (meaning + translate_examples). */
+  translationsByChar: Record<string, KanjiTranslation>;
+  translationsLoading: boolean;
   /** Re-fetches from the backend — call after anything that changes
-   * meanings (Translate Kanji save, Settings "Reload" button) so every
-   * tab's cached copy picks up the change. */
+   * meanings or example translations (Translate Kanji save, Settings
+   * "Reload" button) so every tab's cached copy picks up the change. */
   refresh: () => Promise<void>;
 }
 

@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { KanjiDto } from "../api/types";
 import AnimatedKanji from "./AnimatedKanji";
 import { useContextMenu } from "../contexts/ContextMenuContext";
+import { useKanjiData } from "../contexts/KanjiDataContext";
 import { kanjiMenuItems } from "../utils/kanjiMenu";
 
 interface Props {
@@ -26,13 +28,15 @@ function ExampleText({ text, onKanjiClick, onKanjiClickNewTab }: {
   const resolve = async (ch: string): Promise<KanjiDto | null> =>
     invoke<KanjiDto | null>("get_kanji_by_char", { ch });
 
-  const handleClick = async (ch: string) => {
+  const handleClick = async (e: React.MouseEvent, ch: string) => {
+    e.stopPropagation();
     const k = await resolve(ch);
     if (k) onKanjiClick(k);
   };
 
   const handleContextMenu = async (e: React.MouseEvent, ch: string) => {
     e.preventDefault();
+    e.stopPropagation();
     const k = await resolve(ch);
     if (k) open(e.clientX, e.clientY, kanjiMenuItems(k, onKanjiClick, onKanjiClickNewTab));
   };
@@ -44,7 +48,7 @@ function ExampleText({ text, onKanjiClick, onKanjiClickNewTab }: {
           <span
             key={i}
             className="example-kanji-link"
-            onClick={() => handleClick(ch)}
+            onClick={e => handleClick(e, ch)}
             onContextMenu={e => handleContextMenu(e, ch)}
           >
             {ch}
@@ -58,6 +62,18 @@ function ExampleText({ text, onKanjiClick, onKanjiClickNewTab }: {
 }
 
 export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNewTab }: Props) {
+  const { translationsByChar } = useKanjiData();
+  const translations = translationsByChar[kanji.kanji]?.translate_examples;
+
+  // Which example indices are currently showing their translation —
+  // keyed per-kanji so switching to a different kanji in the same tab
+  // (via a clicked example link) starts collapsed again.
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  useEffect(() => setExpanded({}), [kanji.id]);
+
+  const toggleExample = (i: number) =>
+    setExpanded(prev => ({ ...prev, [i]: !prev[i] }));
+
   return (
     <>
       {/* Stroke animation */}
@@ -115,11 +131,26 @@ export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNe
         <div className="detail-section">
           <div className="detail-label">Examples</div>
           <div className="detail-examples">
-            {kanji.examples.map((ex, i) => (
-              <div key={i} className="detail-example">
-                <ExampleText text={ex} onKanjiClick={onKanjiClick} onKanjiClickNewTab={onKanjiClickNewTab} />
-              </div>
-            ))}
+            {kanji.examples.map((ex, i) => {
+              const translation = translations?.[i];
+              const isOpen = !!expanded[i] && !!translation;
+              return (
+                <div
+                  key={i}
+                  className={`detail-example${translation ? " has-translation" : ""}${isOpen ? " expanded" : ""}`}
+                  onClick={() => translation && toggleExample(i)}
+                >
+                  <div className="detail-example-original">
+                    <ExampleText text={ex} onKanjiClick={onKanjiClick} onKanjiClickNewTab={onKanjiClickNewTab} />
+                  </div>
+                  {translation && (
+                    <div className="detail-example-translation-wrap">
+                      <div className="detail-example-translation">{translation}</div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

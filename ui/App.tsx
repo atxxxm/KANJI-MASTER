@@ -16,7 +16,7 @@ import Settings from "./views/Settings";
 import KanjiDetailView from "./views/KanjiDetailView";
 import TranslateKanji from "./views/TranslateKanji";
 import { type Tab, createTab, createKanjiTab } from "./api/tabs";
-import type { KanjiDto, Config } from "./api/types";
+import type { KanjiDto, Config, TranslationFile, KanjiTranslation } from "./api/types";
 import { SettingsContext } from "./contexts/SettingsContext";
 import { KanjiDataContext } from "./contexts/KanjiDataContext";
 
@@ -62,6 +62,8 @@ export default function App() {
 
   const [kanjiList, setKanjiList] = useState<KanjiDto[]>([]);
   const [kanjiLoading, setKanjiLoading] = useState(true);
+  const [translationsByChar, setTranslationsByChar] = useState<Record<string, KanjiTranslation>>({});
+  const [translationsLoading, setTranslationsLoading] = useState(true);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -85,6 +87,25 @@ export default function App() {
   useEffect(() => {
     refreshKanji().finally(() => setKanjiLoading(false));
   }, [refreshKanji]);
+
+  // Example translations (for the Kanji Detail view's translation toggle),
+  // fetched from the same localization file as meanings but kept separately
+  // since get_kanji_list only carries the flattened `meaning` string.
+  const path_to_kanji_localization = config?.path_to_kanji_localization;
+  const refreshTranslations = useCallback(async () => {
+    if (!path_to_kanji_localization) return;
+    const tf = await invoke<TranslationFile>("get_translations", { path: path_to_kanji_localization });
+    setTranslationsByChar(tf.entries);
+  }, [path_to_kanji_localization]);
+
+  useEffect(() => {
+    if (!path_to_kanji_localization) return;
+    refreshTranslations().finally(() => setTranslationsLoading(false));
+  }, [path_to_kanji_localization, refreshTranslations]);
+
+  const refreshAll = useCallback(async () => {
+    await Promise.all([refreshKanji(), refreshTranslations()]);
+  }, [refreshKanji, refreshTranslations]);
 
   // Apply live-tunable appearance settings as CSS so every view picks them
   // up without prop drilling. `zoom` (Chromium/WebView2-only, which is all
@@ -219,7 +240,7 @@ export default function App() {
 
   return (
     <SettingsContext.Provider value={{ config, updateConfig }}>
-    <KanjiDataContext.Provider value={{ kanjiList, loading: kanjiLoading, refresh: refreshKanji }}>
+    <KanjiDataContext.Provider value={{ kanjiList, loading: kanjiLoading, translationsByChar, translationsLoading, refresh: refreshAll }}>
     <ContextMenuProvider>
       <div className="app-layout">
         <Sidebar

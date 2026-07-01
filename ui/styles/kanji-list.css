@@ -246,6 +246,39 @@
   user-select: text;
 }
 
+.detail-example.has-translation {
+  cursor: pointer;
+}
+
+.detail-example.has-translation:hover {
+  background: var(--surface-3, var(--surface-2));
+}
+
+.detail-example-translation-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.2s ease;
+}
+
+.detail-example.expanded .detail-example-translation-wrap {
+  grid-template-rows: 1fr;
+}
+
+.detail-example-translation {
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-top: 1px dashed var(--border);
+  margin-top: 0;
+  padding-top: 0;
+  transition: padding-top 0.2s ease, margin-top 0.2s ease;
+}
+
+.detail-example.expanded .detail-example-translation {
+  margin-top: 6px;
+  padding-top: 6px;
+}
+
 /* ── Stroke animation ────────────────────────────────────── */
 .anim-kanji-wrapper {
   display: flex;
