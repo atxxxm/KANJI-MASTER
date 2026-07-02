@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import type { KanjiDto } from "../api/types";
+import type { KanjiDto, WordDto } from "../api/types";
 import AnimatedKanji from "./AnimatedKanji";
 import { useContextMenu } from "../contexts/ContextMenuContext";
 import { useKanjiData } from "../contexts/KanjiDataContext";
 import { useLocalization } from "../contexts/LocalizationContext";
+import { useSettings } from "../contexts/SettingsContext";
 import { kanjiMenuItems } from "../utils/kanjiMenu";
+import { pickGloss, ClickableWord } from "../views/Words";
 
 interface Props {
   kanji: KanjiDto;
@@ -117,6 +119,53 @@ function ComponentsRow({ kanji, kanjiByChar, onKanjiClick, onKanjiClickNewTab }:
   );
 }
 
+// Common JMdict words containing this kanji, most frequent first.
+function WordsSection({ kanji, kanjiByChar, onKanjiClick, onKanjiClickNewTab }: {
+  kanji: KanjiDto;
+  kanjiByChar: Map<string, KanjiDto>;
+  onKanjiClick: (k: KanjiDto) => void;
+  onKanjiClickNewTab: (k: KanjiDto) => void;
+}) {
+  const { t } = useLocalization();
+  const { config } = useSettings();
+  const [words, setWords] = useState<WordDto[]>([]);
+  const preferRu = config?.interface_language === "Русский";
+
+  useEffect(() => {
+    let cancelled = false;
+    invoke<WordDto[]>("get_words_for_kanji", { ch: kanji.kanji }).then(ws => {
+      if (!cancelled) setWords(ws);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [kanji.kanji]);
+
+  if (words.length === 0) return null;
+
+  return (
+    <div className="detail-section">
+      <div className="detail-label">{t("current_kanji.words")}</div>
+      <div className="detail-words">
+        {words.map(w => (
+          <div key={w.id} className="detail-word-row">
+            <span className="detail-word-text">
+              <ClickableWord
+                text={w.kanji ?? w.reading}
+                kanjiByChar={kanjiByChar}
+                onOpenKanji={onKanjiClick}
+                onOpenKanjiNewTab={onKanjiClickNewTab}
+              />
+            </span>
+            {w.kanji && <span className="detail-word-reading">{w.reading}</span>}
+            <span className="detail-word-gloss">{pickGloss(w, preferRu)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNewTab }: Props) {
   const { translationsByChar, kanjiList } = useKanjiData();
   const { t } = useLocalization();
@@ -219,6 +268,13 @@ export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNe
           </div>
         </div>
       )}
+
+      <WordsSection
+        kanji={kanji}
+        kanjiByChar={kanjiByChar}
+        onKanjiClick={onKanjiClick}
+        onKanjiClickNewTab={onKanjiClickNewTab}
+      />
     </>
   );
 }

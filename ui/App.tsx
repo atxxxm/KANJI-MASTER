@@ -15,13 +15,15 @@ import AnkiExport from "./views/AnkiExport";
 import Settings from "./views/Settings";
 import KanjiDetailView from "./views/KanjiDetailView";
 import TranslateKanji from "./views/TranslateKanji";
+import Review from "./views/Review";
+import Words from "./views/Words";
 import { type Tab, createTab, createKanjiTab } from "./api/tabs";
 import type { KanjiDto, Config, TranslationFile, KanjiTranslation } from "./api/types";
 import { SettingsContext } from "./contexts/SettingsContext";
 import { KanjiDataContext } from "./contexts/KanjiDataContext";
 import { LocalizationContext } from "./contexts/LocalizationContext";
 
-export type View = "home" | "kanji" | "kana" | "romaji" | "draw" | "translate" | "anki" | "settings" | "kanji-detail";
+export type View = "home" | "kanji" | "words" | "kana" | "review" | "romaji" | "draw" | "translate" | "anki" | "settings" | "kanji-detail";
 
 type Theme = "dark" | "light";
 
@@ -39,6 +41,8 @@ const VIEWS: Record<View, React.ComponentType<any>> = {
   kana: KanaChart,
   romaji: RomajiKana,
   draw: DrawSearch,
+  words: Words,
+  review: Review,
   translate: TranslateKanji,
   anki: AnkiExport,
   settings: Settings,
@@ -47,7 +51,7 @@ const VIEWS: Record<View, React.ComponentType<any>> = {
 
 // Views that should never have more than one open tab at a time —
 // reopening from the sidebar focuses the existing tab instead of duplicating it.
-const SINGLETON_KINDS = new Set<View>(["home", "kanji", "kana", "romaji", "draw", "translate", "anki", "settings"]);
+const SINGLETON_KINDS = new Set<View>(["home", "kanji", "words", "kana", "review", "romaji", "draw", "translate", "anki", "settings"]);
 
 export default function App() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);

@@ -11,9 +11,11 @@ export interface NavMeta {
 export const NAV_ITEMS: NavMeta[] = [
   { view: "home",   icon: "⌂",  label: "Home",          closable: true },
   { view: "kanji",  icon: "漢", label: "Kanji",          closable: true },
+  { view: "words",  icon: "詞", label: "Words",          closable: true },
   { view: "kana",   icon: "あ", label: "Kana",           closable: true },
   { view: "romaji", icon: "Aa", label: "Romaji → Kana", closable: true },
   { view: "draw",   icon: "✍", label: "Draw Search",    closable: true },
+  { view: "review", icon: "学", label: "Review", closable: true },
   { view: "translate", icon: "訳", label: "Translate Kanji", closable: true },
   { view: "anki",   icon: "↗", label: "Anki Export",    closable: true },
 ];

@@ -24,6 +24,34 @@ export interface TranslationFile {
   entries: Record<string, KanjiTranslation>;
 }
 
+export interface SrsSettings {
+  levels: string[];
+  new_per_day: number;
+}
+
+export interface SrsSummary {
+  due_count: number;
+  new_remaining_today: number;
+  new_available: number;
+  total_cards: number;
+  mature_count: number;
+  settings: SrsSettings;
+}
+
+export interface ReviewCard {
+  kanji: KanjiDto;
+  is_new: boolean;
+}
+
+export interface WordDto {
+  id: number;
+  kanji: string | null;
+  reading: string;
+  gloss_en: string | null;
+  gloss_ru: string | null;
+  rank: number;
+}
+
 export interface Config {
   interface_font_size: number;
   kanji_font_size: number;

@@ -95,7 +95,7 @@ Distributed under the **[GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)** l
 ## Credits
 
 - Font: [Noto Sans JP](https://fonts.google.com/noto/specimen/Noto+Sans+JP) (Google, OFL license)
-- Dictionary data based on **EDICT / JMdict** and **KANJIDIC**
+- Dictionary data based on **EDICT / JMdict** and **KANJIDIC** — property of the [EDRDG](https://www.edrdg.org/), used under the [CC BY-SA 4.0](https://www.edrdg.org/edrdg/licence.html) licence (the word dictionary is built from JMdict)
 - Stroke-order and handwriting-recognition data from the [KanjiVG](https://kanjivg.tagaini.net/) project
 - Built with [Tauri](https://tauri.app/), [React](https://react.dev/), and the wider Rust/npm ecosystems
 

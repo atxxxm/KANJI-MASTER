@@ -449,6 +449,41 @@
   transform: translateY(0) scale(0.97);
 }
 
+/* ── Common words with this kanji ────────────────────────── */
+.detail-words {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-word-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.detail-word-text {
+  font-size: 17px;
+  color: var(--text);
+  user-select: text;
+}
+
+.detail-word-reading {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.detail-word-gloss {
+  font-size: 12px;
+  color: var(--text);
+  opacity: 0.75;
+  flex-basis: 100%;
+  margin-top: -2px;
+}
+
 /* ── Clickable kanji in examples ─────────────────────────── */
 .example-kanji-link {
   color: var(--accent);

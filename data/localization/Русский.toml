@@ -6,7 +6,9 @@ loading = "Загрузка…"
 [local.nav]
 home = "Главная"
 kanji = "Кандзи"
+words = "Слова"
 kana = "Кана"
+review = "Повторение"
 romaji = "Ромадзи → Кана"
 draw = "Поиск рисованием"
 translate = "Перевод кандзи"
@@ -117,6 +119,30 @@ no_kanji_selected = "Кандзи не выбраны"
 export_dialog_title = "Экспорт в Anki"
 exported_message = "Экспортировано {count} кандзи в {path}"
 
+[local.review]
+due_today = "К повторению"
+new_today = "Новых сегодня"
+total_cards = "Отслеживается"
+mature_cards = "Освоено"
+levels_label = "Уровни изучения"
+new_per_day_label = "Новых карточек в день"
+start_button = "Начать повторение"
+all_done_today = "На сегодня всё!"
+session_done = "Сессия завершена"
+answers_count = "ответов"
+cards_left = "карточек осталось"
+new_badge = "Новая"
+show_answer = "Показать ответ"
+rate_again = "Снова"
+rate_hard = "Трудно"
+rate_good = "Хорошо"
+rate_easy = "Легко"
+
+[local.words]
+search_hint = "Поиск слов по кандзи, чтению или значению…"
+start_typing = "Начните вводить для поиска по словарю"
+no_results = "Слова не найдены"
+
 [local.settings]
 title = "Настройки"
 loading = "Загрузка настроек…"
@@ -145,6 +171,7 @@ kunyomi = "Кунъёми"
 strokes = "черт"
 grade = "Класс"
 components = "Компоненты"
+words = "Частые слова"
 examples = "Примеры"
 
 [local.kana]

@@ -5,8 +5,10 @@ use back::core::{Database, Kanji};
 use back::radicals::RadicalCache;
 use back::recognition::RecognitionSystem;
 use back::romaji_kana::to_kana;
+use back::srs::{today_epoch_day, Rating, SrsSettings, SrsState};
 use back::svg_cache::SvgCache;
 use back::translation::TranslationFile;
+use back::words::Word;
 
 use serde::Serialize;
 use std::collections::HashMap;
@@ -30,6 +32,10 @@ struct AppState {
     config: Config,
     // kanji char → meaning string (loaded from user's localization JSON)
     kanji_meanings: HashMap<String, String>,
+    // Spaced-repetition progress, persisted to srs.json in the config dir
+    // after every answer/settings change.
+    srs: SrsState,
+    srs_path: PathBuf,
 }
 
 type AppStateHandle = Mutex<AppState>;
@@ -236,6 +242,119 @@ fn get_localization(app: AppHandle, lang: String) -> HashMap<String, String> {
     back::localization::load_language(&app, &lang).unwrap_or_default()
 }
 
+// ── Word dictionary commands ─────────────────────────────────────────────────
+
+/// Searches the bundled JMdict common-words table by word, reading, or gloss.
+#[tauri::command]
+fn search_words(state: State<AppStateHandle>, query: String) -> Vec<Word> {
+    let st = state.lock().unwrap();
+    back::words::search_words(&st.config.path_to_db_core, query.trim(), 100)
+}
+
+/// Common words containing the given kanji, for the Kanji Detail view.
+#[tauri::command]
+fn get_words_for_kanji(state: State<AppStateHandle>, ch: String) -> Vec<Word> {
+    let st = state.lock().unwrap();
+    back::words::words_for_kanji(&st.config.path_to_db_core, &ch, 8)
+}
+
+// ── SRS commands ─────────────────────────────────────────────────────────────
+
+#[derive(Serialize)]
+struct SrsSummary {
+    due_count: usize,
+    new_remaining_today: u32,
+    /// Untracked kanji in the selected JLPT levels (the pool new cards come from).
+    new_available: usize,
+    total_cards: usize,
+    mature_count: usize,
+    settings: SrsSettings,
+}
+
+#[derive(Serialize)]
+struct ReviewCardDto {
+    kanji: KanjiDto,
+    is_new: bool,
+}
+
+#[tauri::command]
+fn srs_get_summary(state: State<AppStateHandle>) -> SrsSummary {
+    let mut st = state.lock().unwrap();
+    let today = today_epoch_day();
+    st.srs.roll_day(today);
+
+    let new_available = st
+        .kanji
+        .iter()
+        .filter(|k| st.srs.settings.levels.contains(&k.jlpt) && !st.srs.cards.contains_key(&k.kanji))
+        .count();
+
+    SrsSummary {
+        due_count: st.srs.due_cards(today).len(),
+        new_remaining_today: st.srs.new_remaining_today(),
+        new_available,
+        total_cards: st.srs.cards.len(),
+        mature_count: st.srs.mature_count(),
+        settings: st.srs.settings.clone(),
+    }
+}
+
+/// Builds today's study queue: due reviews first (learning cards up front),
+/// then up to the daily allowance of new cards from the selected JLPT levels,
+/// most frequent kanji first so common characters are learned early.
+#[tauri::command]
+fn srs_get_queue(state: State<AppStateHandle>) -> Vec<ReviewCardDto> {
+    let mut st = state.lock().unwrap();
+    let today = today_epoch_day();
+    st.srs.roll_day(today);
+
+    let mut out = Vec::new();
+    for ch in st.srs.due_cards(today) {
+        if let Some(k) = st.kanji_by_char.get(&ch) {
+            let meaning = st.kanji_meanings.get(&k.kanji).cloned();
+            out.push(ReviewCardDto { kanji: to_dto(k, meaning), is_new: false });
+        }
+    }
+
+    let mut candidates: Vec<&Arc<Kanji>> = st
+        .kanji
+        .iter()
+        .filter(|k| st.srs.settings.levels.contains(&k.jlpt) && !st.srs.cards.contains_key(&k.kanji))
+        .collect();
+    candidates.sort_by_key(|k| {
+        k.frequency
+            .parse::<i32>()
+            .map(|f| (0, f))
+            .unwrap_or((1, k.id))
+    });
+
+    for k in candidates.into_iter().take(st.srs.new_remaining_today() as usize) {
+        let meaning = st.kanji_meanings.get(&k.kanji).cloned();
+        out.push(ReviewCardDto { kanji: to_dto(k, meaning), is_new: true });
+    }
+    out
+}
+
+/// Applies an answer and persists progress. Returns true when the card
+/// should be re-shown later in the same session (Again / still learning).
+#[tauri::command]
+fn srs_answer(state: State<AppStateHandle>, kanji: String, rating: u8) -> Result<bool, String> {
+    let rating = Rating::from_u8(rating).ok_or_else(|| "Invalid rating".to_string())?;
+    let mut st = state.lock().unwrap();
+    let requeue = st.srs.answer(&kanji, rating, today_epoch_day());
+    let path = st.srs_path.clone();
+    st.srs.save(&path);
+    Ok(requeue)
+}
+
+#[tauri::command]
+fn srs_save_settings(state: State<AppStateHandle>, levels: Vec<String>, new_per_day: u32) {
+    let mut st = state.lock().unwrap();
+    st.srs.settings = SrsSettings { levels, new_per_day };
+    let path = st.srs_path.clone();
+    st.srs.save(&path);
+}
+
 // ── Startup ──────────────────────────────────────────────────────────────────
 
 fn build_app_state(resource_dir: &Path) -> AppState {
@@ -279,6 +398,9 @@ fn build_app_state(resource_dir: &Path) -> AppState {
             HashMap::new()
         };
 
+    let srs_path = back::config::get_app_config_dir().join("srs.json");
+    let srs = SrsState::load(&srs_path);
+
     AppState {
         kanji,
         kanji_by_char,
@@ -287,6 +409,8 @@ fn build_app_state(resource_dir: &Path) -> AppState {
         recognition,
         config,
         kanji_meanings,
+        srs,
+        srs_path,
     }
 }
 
@@ -351,6 +475,12 @@ pub fn run() {
             save_translations,
             list_languages,
             get_localization,
+            srs_get_summary,
+            srs_get_queue,
+            srs_answer,
+            srs_save_settings,
+            search_words,
+            get_words_for_kanji,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

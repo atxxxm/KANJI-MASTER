@@ -6,7 +6,9 @@ loading = "Loading…"
 [local.nav]
 home = "Home"
 kanji = "Kanji"
+words = "Words"
 kana = "Kana"
+review = "Review"
 romaji = "Romaji → Kana"
 draw = "Draw Search"
 translate = "Translate Kanji"
@@ -117,6 +119,30 @@ no_kanji_selected = "No kanji selected"
 export_dialog_title = "Export to Anki"
 exported_message = "Exported {count} kanji to {path}"
 
+[local.review]
+due_today = "Due today"
+new_today = "New today"
+total_cards = "Tracked"
+mature_cards = "Mastered"
+levels_label = "Study levels"
+new_per_day_label = "New cards per day"
+start_button = "Start review"
+all_done_today = "All done for today!"
+session_done = "Session complete"
+answers_count = "answers"
+cards_left = "cards left"
+new_badge = "New"
+show_answer = "Show answer"
+rate_again = "Again"
+rate_hard = "Hard"
+rate_good = "Good"
+rate_easy = "Easy"
+
+[local.words]
+search_hint = "Search words by kanji, reading, or meaning…"
+start_typing = "Type to search the word dictionary"
+no_results = "No words found"
+
 [local.settings]
 title = "Settings"
 loading = "Loading settings…"
@@ -145,6 +171,7 @@ kunyomi = "Kun-yomi"
 strokes = "strokes"
 grade = "Grade"
 components = "Components"
+words = "Common words"
 examples = "Examples"
 
 [local.kana]
