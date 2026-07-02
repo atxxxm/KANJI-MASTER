@@ -12,6 +12,7 @@ import "../styles/words.css";
 interface Props {
   onOpenKanji: (k: KanjiDto) => void;
   onOpenKanjiNewTab: (k: KanjiDto) => void;
+  onOpenWord: (wordId: number, wordLabel: string) => void;
   active?: boolean;
 }
 
@@ -123,7 +124,11 @@ export default function Words({ onOpenKanji, onOpenKanjiNewTab, active }: Props)
       ) : (
         <div className="words-list">
           {results.map(w => (
-            <div key={w.id} className="word-row">
+            <div
+              key={w.id}
+              className="word-row clickable"
+              onClick={() => onOpenWord(w.id, w.kanji ?? w.reading)}
+            >
               <div className="word-row-main">
                 <span className="word-text">
                   <ClickableWord

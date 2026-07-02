@@ -13,6 +13,7 @@ interface Props {
   kanji: KanjiDto;
   onKanjiClick: (k: KanjiDto) => void;
   onKanjiClickNewTab: (k: KanjiDto) => void;
+  onWordClick?: (wordId: number, wordLabel: string) => void;
 }
 
 // CJK Unified Ideographs range
@@ -120,11 +121,12 @@ function ComponentsRow({ kanji, kanjiByChar, onKanjiClick, onKanjiClickNewTab }:
 }
 
 // Common JMdict words containing this kanji, most frequent first.
-function WordsSection({ kanji, kanjiByChar, onKanjiClick, onKanjiClickNewTab }: {
+function WordsSection({ kanji, kanjiByChar, onKanjiClick, onKanjiClickNewTab, onWordClick }: {
   kanji: KanjiDto;
   kanjiByChar: Map<string, KanjiDto>;
   onKanjiClick: (k: KanjiDto) => void;
   onKanjiClickNewTab: (k: KanjiDto) => void;
+  onWordClick?: (wordId: number, wordLabel: string) => void;
 }) {
   const { t } = useLocalization();
   const { config } = useSettings();
@@ -148,7 +150,11 @@ function WordsSection({ kanji, kanjiByChar, onKanjiClick, onKanjiClickNewTab }: 
       <div className="detail-label">{t("current_kanji.words")}</div>
       <div className="detail-words">
         {words.map(w => (
-          <div key={w.id} className="detail-word-row">
+          <div
+            key={w.id}
+            className={`detail-word-row${onWordClick ? " clickable" : ""}`}
+            onClick={onWordClick ? () => onWordClick(w.id, w.kanji ?? w.reading) : undefined}
+          >
             <span className="detail-word-text">
               <ClickableWord
                 text={w.kanji ?? w.reading}
@@ -166,7 +172,7 @@ function WordsSection({ kanji, kanjiByChar, onKanjiClick, onKanjiClickNewTab }: 
   );
 }
 
-export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNewTab }: Props) {
+export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNewTab, onWordClick }: Props) {
   const { translationsByChar, kanjiList } = useKanjiData();
   const { t } = useLocalization();
   const translations = translationsByChar[kanji.kanji]?.translate_examples;
@@ -274,6 +280,7 @@ export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNe
         kanjiByChar={kanjiByChar}
         onKanjiClick={onKanjiClick}
         onKanjiClickNewTab={onKanjiClickNewTab}
+        onWordClick={onWordClick}
       />
     </>
   );

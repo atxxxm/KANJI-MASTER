@@ -258,6 +258,13 @@ fn get_words_for_kanji(state: State<AppStateHandle>, ch: String) -> Vec<Word> {
     back::words::words_for_kanji(&st.config.path_to_db_core, &ch, 8)
 }
 
+/// A single word by row id, for the word detail page.
+#[tauri::command]
+fn get_word(state: State<AppStateHandle>, id: i32) -> Option<Word> {
+    let st = state.lock().unwrap();
+    back::words::get_word(&st.config.path_to_db_core, id)
+}
+
 // ── SRS commands ─────────────────────────────────────────────────────────────
 
 #[derive(Serialize)]
@@ -353,6 +360,14 @@ fn srs_save_settings(state: State<AppStateHandle>, levels: Vec<String>, new_per_
     st.srs.settings = SrsSettings { levels, new_per_day };
     let path = st.srs_path.clone();
     st.srs.save(&path);
+}
+
+/// Predicted next-review intervals (in days; 0 = same session) for the four
+/// ratings on the given kanji, for labelling the answer buttons.
+#[tauri::command]
+fn srs_preview(state: State<AppStateHandle>, kanji: String) -> [f32; 4] {
+    let st = state.lock().unwrap();
+    st.srs.preview(&kanji, today_epoch_day())
 }
 
 // ── Startup ──────────────────────────────────────────────────────────────────
@@ -479,8 +494,10 @@ pub fn run() {
             srs_get_queue,
             srs_answer,
             srs_save_settings,
+            srs_preview,
             search_words,
             get_words_for_kanji,
+            get_word,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -30,7 +30,7 @@ directories = "6.0"
 kurbo = "0.13"
 rayon = "1.10"
 roxmltree = "0.21"
-rusqlite = { version = "0.38", features = ["bundled"] }
+rusqlite = { version = "0.38", features = ["bundled", "functions"] }
 svgtypes = "0.16"
 toml = "0.9"
 

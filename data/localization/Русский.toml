@@ -137,6 +137,11 @@ rate_again = "Снова"
 rate_hard = "Трудно"
 rate_good = "Хорошо"
 rate_easy = "Легко"
+interval_soon = "<1д"
+unit_day = "д"
+unit_week = "н"
+unit_month = "мес"
+unit_year = "г"
 
 [local.words]
 search_hint = "Поиск слов по кандзи, чтению или значению…"

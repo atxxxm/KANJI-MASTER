@@ -22,7 +22,8 @@ export default function TabBar({ tabs, activeTabId, onSwitch, onClose, onReorder
     <Reorder.Group as="div" axis="x" values={tabs} onReorder={onReorder} className="tab-bar">
       {tabs.map(tab => {
         const isKanjiTab = tab.kind === "kanji-detail";
-        const meta = isKanjiTab ? null : NAV_BY_VIEW[tab.kind];
+        const isWordTab = tab.kind === "word-detail";
+        const meta = isKanjiTab || isWordTab ? null : NAV_BY_VIEW[tab.kind];
         const label = meta ? t(`nav.${meta.view}`) : "";
         const active = tab.id === activeTabId;
         return (
@@ -46,7 +47,7 @@ export default function TabBar({ tabs, activeTabId, onSwitch, onClose, onReorder
                   { label: t("context_menu.close_all"), onClick: onCloseAll, danger: true },
                 ]);
               }}
-              title={isKanjiTab ? tab.kanjiChar : label}
+              title={isKanjiTab ? tab.kanjiChar : isWordTab ? tab.wordLabel : label}
             >
               {active && (
                 <motion.div
@@ -57,6 +58,8 @@ export default function TabBar({ tabs, activeTabId, onSwitch, onClose, onReorder
               )}
               {isKanjiTab ? (
                 <span className="tab-chip-kanji">{tab.kanjiChar}</span>
+              ) : isWordTab ? (
+                <span className="tab-chip-kanji">{tab.wordLabel}</span>
               ) : (
                 <>
                   <span className="tab-chip-icon">{meta!.icon}</span>

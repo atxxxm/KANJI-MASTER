@@ -14,6 +14,17 @@ const RATINGS = [
 
 type Phase = "setup" | "question" | "answer" | "done";
 
+// Compact interval label for a rating button: 0 means the card repeats
+// later in the same session (< 1 day). Units come from localization so
+// "d/w/mo/y" translate.
+function formatInterval(days: number, t: (k: string) => string): string {
+  if (days < 1) return t("review.interval_soon");
+  if (days < 7) return `${Math.round(days)}${t("review.unit_day")}`;
+  if (days < 30) return `${Math.round(days / 7)}${t("review.unit_week")}`;
+  if (days < 365) return `${Math.round(days / 30)}${t("review.unit_month")}`;
+  return `${(days / 365).toFixed(1)}${t("review.unit_year")}`;
+}
+
 interface Props {
   active?: boolean;
 }
@@ -25,6 +36,7 @@ export default function Review({ active }: Props) {
   const [phase, setPhase] = useState<Phase>("setup");
   const [queue, setQueue] = useState<ReviewCard[]>([]);
   const [reviewedCount, setReviewedCount] = useState(0);
+  const [previews, setPreviews] = useState<number[] | null>(null);
 
   const refreshSummary = useCallback(async () => {
     const s = await invoke<SrsSummary>("srs_get_summary");
@@ -61,6 +73,16 @@ export default function Review({ active }: Props) {
   const currentCard = queue[0] ?? null;
   const answering = useRef(false);
 
+  // Reveals the answer and fetches the four predicted intervals for the
+  // current card so the rating buttons can show "when you'll see it next".
+  const reveal = useCallback(() => {
+    setPhase("answer");
+    const card = queue[0];
+    if (!card) return;
+    setPreviews(null);
+    invoke<number[]>("srs_preview", { kanji: card.kanji.kanji }).then(setPreviews);
+  }, [queue]);
+
   const answer = useCallback(async (rating: number) => {
     if (!currentCard || answering.current) return;
     answering.current = true;
@@ -91,7 +113,7 @@ export default function Review({ active }: Props) {
     const onKeyDown = (e: KeyboardEvent) => {
       if (phase === "question" && (e.key === " " || e.key === "Enter")) {
         e.preventDefault();
-        setPhase("answer");
+        reveal();
       } else if (phase === "answer" && e.key >= "1" && e.key <= "4") {
         e.preventDefault();
         answer(Number(e.key) - 1);
@@ -99,7 +121,7 @@ export default function Review({ active }: Props) {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [active, phase, answer]);
+  }, [active, phase, answer, reveal]);
 
   if (!summary) {
     return (
@@ -223,7 +245,7 @@ export default function Review({ active }: Props) {
         </div>
 
         {phase === "question" ? (
-          <button className="review-reveal-btn" onClick={() => setPhase("answer")}>
+          <button className="review-reveal-btn" onClick={reveal}>
             {t("review.show_answer")}
           </button>
         ) : (
@@ -234,7 +256,10 @@ export default function Review({ active }: Props) {
                 className={`review-rate-btn ${r.className}`}
                 onClick={() => answer(r.value)}
               >
-                {t(r.key)}
+                <span className="review-rate-label">{t(r.key)}</span>
+                {previews && (
+                  <span className="review-rate-interval">{formatInterval(previews[r.value], t)}</span>
+                )}
               </button>
             ))}
           </div>

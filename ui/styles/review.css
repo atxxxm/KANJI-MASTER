@@ -236,7 +236,11 @@
 }
 
 .review-rate-btn {
-  padding: 13px 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 11px 4px;
   border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 700;
@@ -245,6 +249,12 @@
   background: var(--surface-2);
   cursor: pointer;
   transition: all 0.2s var(--spring);
+}
+
+.review-rate-interval {
+  font-size: 10px;
+  font-weight: 600;
+  opacity: 0.7;
 }
 .review-rate-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
 .review-rate-btn:active { transform: translateY(0) scale(0.96); }

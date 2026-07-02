@@ -133,50 +133,29 @@ impl SrsState {
             self.new_introduced_today += 1;
         }
 
-        card.reps += 1;
+        apply_rating(card, rating, today)
+    }
 
-        if card.learning {
-            match rating {
-                Rating::Again | Rating::Hard => {
-                    // Stay in learning; repeat this session.
-                    card.due_day = today;
-                    return true;
-                }
-                Rating::Good => {
-                    card.learning = false;
-                    card.interval_days = 1.0;
-                }
-                Rating::Easy => {
-                    card.learning = false;
-                    card.interval_days = 4.0;
-                }
-            }
-        } else {
-            match rating {
-                Rating::Again => {
-                    card.lapses += 1;
-                    card.ease = (card.ease - 0.2).max(1.3);
-                    card.learning = true;
-                    card.interval_days = 0.0;
-                    card.due_day = today;
-                    return true;
-                }
-                Rating::Hard => {
-                    card.ease = (card.ease - 0.15).max(1.3);
-                    card.interval_days = (card.interval_days * 1.2).max(card.interval_days + 1.0);
-                }
-                Rating::Good => {
-                    card.interval_days *= card.ease;
-                }
-                Rating::Easy => {
-                    card.interval_days *= card.ease * 1.3;
-                    card.ease += 0.15;
-                }
-            }
+    /// Predicted next-review intervals (in days) for each of the four ratings,
+    /// without mutating anything — used to label the answer buttons. A value
+    /// of 0 means the card repeats later in the same session (Again / still
+    /// learning), i.e. under a day.
+    pub fn preview(&self, kanji: &str, today: i64) -> [f32; 4] {
+        let base = self
+            .cards
+            .get(kanji)
+            .cloned()
+            .unwrap_or_else(|| CardState::new(today));
+        let mut out = [0.0f32; 4];
+        for (i, rating) in [Rating::Again, Rating::Hard, Rating::Good, Rating::Easy]
+            .into_iter()
+            .enumerate()
+        {
+            let mut card = base.clone();
+            let requeue = apply_rating(&mut card, rating, today);
+            out[i] = if requeue { 0.0 } else { (card.due_day - today) as f32 };
         }
-
-        card.due_day = today + (card.interval_days.round() as i64).max(1);
-        false
+        out
     }
 
     /// Kanji chars due for review today, learning cards first, then oldest due.
@@ -194,6 +173,56 @@ impl SrsState {
     pub fn mature_count(&self) -> usize {
         self.cards.values().filter(|c| !c.learning && c.interval_days >= 21.0).count()
     }
+}
+
+/// Core SM-2 state transition, shared by `answer` (mutates the stored card)
+/// and `preview` (runs it on a throwaway clone). Returns true when the card
+/// should be shown again in the same session.
+fn apply_rating(card: &mut CardState, rating: Rating, today: i64) -> bool {
+    card.reps += 1;
+
+    if card.learning {
+        match rating {
+            Rating::Again | Rating::Hard => {
+                // Stay in learning; repeat this session.
+                card.due_day = today;
+                return true;
+            }
+            Rating::Good => {
+                card.learning = false;
+                card.interval_days = 1.0;
+            }
+            Rating::Easy => {
+                card.learning = false;
+                card.interval_days = 4.0;
+            }
+        }
+    } else {
+        match rating {
+            Rating::Again => {
+                card.lapses += 1;
+                card.ease = (card.ease - 0.2).max(1.3);
+                card.learning = true;
+                card.interval_days = 0.0;
+                card.due_day = today;
+                return true;
+            }
+            Rating::Hard => {
+                card.ease = (card.ease - 0.15).max(1.3);
+                card.interval_days = (card.interval_days * 1.2).max(card.interval_days + 1.0);
+            }
+            Rating::Good => {
+                card.interval_days *= card.ease;
+            }
+            Rating::Easy => {
+                card.interval_days *= card.ease * 1.3;
+                card.ease += 0.15;
+            }
+        }
+    }
+
+    card.due_day = today + (card.interval_days.round() as i64).max(1);
+    false
 }
 
 #[cfg(test)]
@@ -262,5 +291,20 @@ mod tests {
         s.answer("火", Rating::Again, DAY);    // learning card, due DAY
         let due = s.due_cards(DAY);
         assert_eq!(due, vec!["火".to_string(), "水".to_string()]);
+    }
+
+    #[test]
+    fn preview_matches_actual_answer_and_does_not_mutate() {
+        let mut s = SrsState::default();
+        let p = s.preview("水", DAY); // brand-new card
+        // Again/Hard requeue this session (0); Good graduates to 1d, Easy 4d.
+        assert_eq!(p, [0.0, 0.0, 1.0, 4.0]);
+        // Preview must not have created or altered any card state.
+        assert!(s.cards.is_empty());
+
+        // The Good preview should equal what actually answering Good does.
+        let requeue = s.answer("水", Rating::Good, DAY);
+        assert!(!requeue);
+        assert_eq!(s.cards["水"].due_day - DAY, p[2] as i64);
     }
 }

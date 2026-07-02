@@ -10,9 +10,10 @@ interface Props {
   kanjiChar: string;
   onOpenKanji: (k: KanjiDto) => void;
   onOpenKanjiNewTab: (k: KanjiDto) => void;
+  onOpenWord: (wordId: number, wordLabel: string) => void;
 }
 
-export default function KanjiDetailView({ kanjiChar, onOpenKanji, onOpenKanjiNewTab }: Props) {
+export default function KanjiDetailView({ kanjiChar, onOpenKanji, onOpenKanjiNewTab, onOpenWord }: Props) {
   const { t } = useLocalization();
   const [kanji, setKanji] = useState<KanjiDto | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +30,12 @@ export default function KanjiDetailView({ kanjiChar, onOpenKanji, onOpenKanjiNew
     <div className="kanji-detail-view">
       <div className="kanji-detail-view-inner">
         {loading ? null : kanji ? (
-          <KanjiDetailContent kanji={kanji} onKanjiClick={onOpenKanji} onKanjiClickNewTab={onOpenKanjiNewTab} />
+          <KanjiDetailContent
+            kanji={kanji}
+            onKanjiClick={onOpenKanji}
+            onKanjiClickNewTab={onOpenKanjiNewTab}
+            onWordClick={onOpenWord}
+          />
         ) : (
           <div className="detail-not-found">{t("home.kanji_not_found")}</div>
         )}

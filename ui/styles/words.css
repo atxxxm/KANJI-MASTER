@@ -27,9 +27,11 @@
   animation: rise-in 0.3s var(--spring-soft) backwards;
   transition: transform 0.2s var(--spring), box-shadow 0.2s var(--spring-soft);
 }
+.word-row.clickable { cursor: pointer; }
 .word-row:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-sm);
+  border-color: var(--border-hover);
 }
 
 .words-list .word-row:nth-child(1)  { animation-delay: 0ms; }

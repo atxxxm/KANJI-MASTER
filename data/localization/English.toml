@@ -137,6 +137,11 @@ rate_again = "Again"
 rate_hard = "Hard"
 rate_good = "Good"
 rate_easy = "Easy"
+interval_soon = "<1d"
+unit_day = "d"
+unit_week = "w"
+unit_month = "mo"
+unit_year = "y"
 
 [local.words]
 search_hint = "Search words by kanji, reading, or meaning…"

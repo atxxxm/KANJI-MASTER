@@ -6,6 +6,9 @@ export interface Tab {
   /** Only set for kind === "kanji-detail" */
   kanjiId?: number;
   kanjiChar?: string;
+  /** Only set for kind === "word-detail" */
+  wordId?: number;
+  wordLabel?: string;
 }
 
 let counter = 0;
@@ -20,4 +23,8 @@ export function createTab(kind: View): Tab {
 
 export function createKanjiTab(kanjiId: number, kanjiChar: string): Tab {
   return { id: makeTabId(), kind: "kanji-detail", kanjiId, kanjiChar };
+}
+
+export function createWordTab(wordId: number, wordLabel: string): Tab {
+  return { id: makeTabId(), kind: "word-detail", wordId, wordLabel };
 }

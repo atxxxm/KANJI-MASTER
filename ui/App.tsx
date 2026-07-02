@@ -17,13 +17,14 @@ import KanjiDetailView from "./views/KanjiDetailView";
 import TranslateKanji from "./views/TranslateKanji";
 import Review from "./views/Review";
 import Words from "./views/Words";
-import { type Tab, createTab, createKanjiTab } from "./api/tabs";
+import WordDetailView from "./views/WordDetailView";
+import { type Tab, createTab, createKanjiTab, createWordTab } from "./api/tabs";
 import type { KanjiDto, Config, TranslationFile, KanjiTranslation } from "./api/types";
 import { SettingsContext } from "./contexts/SettingsContext";
 import { KanjiDataContext } from "./contexts/KanjiDataContext";
 import { LocalizationContext } from "./contexts/LocalizationContext";
 
-export type View = "home" | "kanji" | "words" | "kana" | "review" | "romaji" | "draw" | "translate" | "anki" | "settings" | "kanji-detail";
+export type View = "home" | "kanji" | "words" | "kana" | "review" | "romaji" | "draw" | "translate" | "anki" | "settings" | "kanji-detail" | "word-detail";
 
 type Theme = "dark" | "light";
 
@@ -47,6 +48,7 @@ const VIEWS: Record<View, React.ComponentType<any>> = {
   anki: AnkiExport,
   settings: Settings,
   "kanji-detail": KanjiDetailView,
+  "word-detail": WordDetailView,
 };
 
 // Views that should never have more than one open tab at a time —
@@ -207,6 +209,17 @@ export default function App() {
     setActiveTabId(tab.id);
   };
 
+  const openWordTab = (wordId: number, wordLabel: string) => {
+    const existing = tabs.find(t => t.kind === "word-detail" && t.wordId === wordId);
+    if (existing) {
+      setActiveTabId(existing.id);
+      return;
+    }
+    const tab = createWordTab(wordId, wordLabel);
+    setTabs(prev => [...prev, tab]);
+    setActiveTabId(tab.id);
+  };
+
   const closeTab = (id: string) => {
     setTabs(prev => {
       const idx = prev.findIndex(t => t.id === id);
@@ -268,6 +281,7 @@ export default function App() {
     const props: Record<string, unknown> = {
       onOpenKanji: openKanjiTab,
       onOpenKanjiNewTab: openKanjiTabForce,
+      onOpenWord: openWordTab,
       active: tab.id === activeTabId,
     };
     if (tab.kind === "settings") {
@@ -276,6 +290,9 @@ export default function App() {
     }
     if (tab.kind === "kanji-detail") {
       props.kanjiChar = tab.kanjiChar;
+    }
+    if (tab.kind === "word-detail") {
+      props.wordId = tab.wordId;
     }
     if (tab.kind === "kanji") {
       props.focusSearchAt = focusKanjiSearchAt;
