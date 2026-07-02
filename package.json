@@ -1,7 +1,7 @@
 {
   "name": "kanji-master",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.4.5",
   "description": "Simple App For Learning Kanji",
   "author": "atxxxm",
   "type": "module",
