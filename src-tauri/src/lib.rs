@@ -370,6 +370,27 @@ fn srs_preview(state: State<AppStateHandle>, kanji: String) -> [f32; 4] {
     st.srs.preview(&kanji, today_epoch_day())
 }
 
+/// Serializes the full review progress (settings + every card's scheduling
+/// state) as pretty JSON, for the Settings "Export progress" button.
+#[tauri::command]
+fn srs_export(state: State<AppStateHandle>) -> Result<String, String> {
+    let st = state.lock().unwrap();
+    serde_json::to_string_pretty(&st.srs).map_err(|e| e.to_string())
+}
+
+/// Replaces review progress from a previously exported JSON blob and
+/// persists it immediately. Rejects anything that doesn't parse as a valid
+/// SrsState so a corrupt/foreign file can't silently wipe real progress.
+#[tauri::command]
+fn srs_import(state: State<AppStateHandle>, data: String) -> Result<(), String> {
+    let parsed: SrsState = serde_json::from_str(&data).map_err(|e| e.to_string())?;
+    let mut st = state.lock().unwrap();
+    st.srs = parsed;
+    let path = st.srs_path.clone();
+    st.srs.save(&path);
+    Ok(())
+}
+
 // ── Startup ──────────────────────────────────────────────────────────────────
 
 fn build_app_state(resource_dir: &Path) -> AppState {
@@ -495,6 +516,8 @@ pub fn run() {
             srs_answer,
             srs_save_settings,
             srs_preview,
+            srs_export,
+            srs_import,
             search_words,
             get_words_for_kanji,
             get_word,

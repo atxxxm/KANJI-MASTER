@@ -168,6 +168,12 @@ svg_folder = "SVG stroke data folder"
 save_button = "Save settings"
 saved_status = "Settings saved"
 license = "Licensed under GPL-3.0"
+progress = "Progress"
+export_progress = "Export progress"
+import_progress = "Import progress"
+progress_exported = "Progress exported"
+progress_imported = "Progress imported"
+confirm_import_progress = "This replaces your current review progress with the contents of the imported file. Continue?"
 
 [local.current_kanji]
 meaning = "Meaning"

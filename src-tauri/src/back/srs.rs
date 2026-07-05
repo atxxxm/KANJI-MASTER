@@ -307,4 +307,24 @@ mod tests {
         assert!(!requeue);
         assert_eq!(s.cards["水"].due_day - DAY, p[2] as i64);
     }
+
+    /// Guards the Settings export/import round-trip: whatever `srs_export`
+    /// serializes must deserialize back to an identical state, since that's
+    /// the only correctness check a user gets before trusting their backup.
+    #[test]
+    fn state_survives_json_round_trip() {
+        let mut s = SrsState::default();
+        s.settings = SrsSettings { levels: vec!["N5".into(), "N4".into()], new_per_day: 25 };
+        s.answer("水", Rating::Good, DAY);
+        s.answer("火", Rating::Again, DAY);
+
+        let json = serde_json::to_string(&s).unwrap();
+        let restored: SrsState = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(restored.settings.levels, s.settings.levels);
+        assert_eq!(restored.settings.new_per_day, s.settings.new_per_day);
+        assert_eq!(restored.cards.len(), s.cards.len());
+        assert_eq!(restored.cards["水"].due_day, s.cards["水"].due_day);
+        assert_eq!(restored.cards["火"].learning, s.cards["火"].learning);
+    }
 }

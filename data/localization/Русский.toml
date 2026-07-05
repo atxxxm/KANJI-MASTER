@@ -168,6 +168,12 @@ svg_folder = "Папка с данными штрихов SVG"
 save_button = "Сохранить настройки"
 saved_status = "Настройки сохранены"
 license = "Лицензия GPL-3.0"
+progress = "Прогресс"
+export_progress = "Экспортировать прогресс"
+import_progress = "Импортировать прогресс"
+progress_exported = "Прогресс экспортирован"
+progress_imported = "Прогресс импортирован"
+confirm_import_progress = "Это заменит текущий прогресс повторений содержимым импортируемого файла. Продолжить?"
 
 [local.current_kanji]
 meaning = "Значение"

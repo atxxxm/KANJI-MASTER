@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { save, open } from "@tauri-apps/plugin-dialog";
+import { writeTextFile, readTextFile } from "@tauri-apps/plugin-fs";
 import { useSettings } from "../contexts/SettingsContext";
 import { useKanjiData } from "../contexts/KanjiDataContext";
 import { useLocalization } from "../contexts/LocalizationContext";
@@ -27,6 +29,7 @@ export default function Settings({ theme, onThemeChange }: Props) {
   const { languages, t } = useLocalization();
   const [status, setStatus] = useState<Status>(null);
   const [reloading, setReloading] = useState(false);
+  const [progressBusy, setProgressBusy] = useState(false);
 
   if (!config) {
     return (
@@ -58,6 +61,47 @@ export default function Settings({ theme, onThemeChange }: Props) {
       setStatus({ kind: "error", text: String(e) });
     } finally {
       setReloading(false);
+    }
+  };
+
+  const handleExportProgress = async () => {
+    setProgressBusy(true);
+    setStatus(null);
+    try {
+      const data = await invoke<string>("srs_export");
+      const path = await save({
+        title: t("settings.export_progress"),
+        defaultPath: "kanji-master-progress.json",
+        filters: [{ name: "JSON", extensions: ["json"] }],
+      });
+      if (!path) return;
+      await writeTextFile(path, data);
+      setStatus({ kind: "success", text: t("settings.progress_exported") });
+    } catch (e) {
+      setStatus({ kind: "error", text: String(e) });
+    } finally {
+      setProgressBusy(false);
+    }
+  };
+
+  const handleImportProgress = async () => {
+    if (!window.confirm(t("settings.confirm_import_progress"))) return;
+    setProgressBusy(true);
+    setStatus(null);
+    try {
+      const path = await open({
+        title: t("settings.import_progress"),
+        multiple: false,
+        filters: [{ name: "JSON", extensions: ["json"] }],
+      });
+      if (!path) return;
+      const data = await readTextFile(path);
+      await invoke("srs_import", { data });
+      setStatus({ kind: "success", text: t("settings.progress_imported") });
+    } catch (e) {
+      setStatus({ kind: "error", text: String(e) });
+    } finally {
+      setProgressBusy(false);
     }
   };
 
@@ -145,6 +189,28 @@ export default function Settings({ theme, onThemeChange }: Props) {
           <span className="settings-row-label">{t("settings.focus_on_search")}</span>
           <div className="settings-row-control">
             <Toggle on={config.focus_on_search} onChange={v => updateConfig({ focus_on_search: v })} />
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-section">
+        <div className="settings-section-title">{t("settings.progress")}</div>
+
+        <div className="settings-row">
+          <span className="settings-row-label">{t("settings.export_progress")}</span>
+          <div className="settings-row-control">
+            <button className="settings-secondary-btn" onClick={handleExportProgress} disabled={progressBusy}>
+              {t("settings.export_progress")}
+            </button>
+          </div>
+        </div>
+
+        <div className="settings-row">
+          <span className="settings-row-label">{t("settings.import_progress")}</span>
+          <div className="settings-row-control">
+            <button className="settings-secondary-btn" onClick={handleImportProgress} disabled={progressBusy}>
+              {t("settings.import_progress")}
+            </button>
           </div>
         </div>
       </div>
