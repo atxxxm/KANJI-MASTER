@@ -17,6 +17,9 @@ collapse_sidebar = "收起侧边栏"
 light_mode = "浅色模式"
 dark_mode = "深色模式"
 
+review = "复习"
+words = "词汇"
+
 [local.context_menu]
 open = "打开"
 open_new_tab = "在新标签页中打开"
@@ -28,6 +31,16 @@ close_all = "关闭全部"
 search_hint = "搜索汉字、读音、含义…"
 loading = "正在加载汉字…"
 all_filter = "全部"
+
+grade_label = "年级"
+grade_joyo = "常用"
+grade_names = "人名"
+strokes_label = "笔画"
+frequency_label = "频率"
+freq_top500 = "前500"
+freq_top1000 = "前1000"
+freq_top2000 = "前2000"
+freq_rare = "生僻"
 
 [local.home]
 kanji_search_hint = "搜索汉字、读音、含义…"
@@ -108,6 +121,35 @@ no_kanji_selected = "未选择汉字"
 export_dialog_title = "导出到Anki"
 exported_message = "已将{count}个汉字导出到{path}"
 
+[local.review]
+due_today = "今日到期"
+new_today = "今日新增"
+total_cards = "已跟踪"
+mature_cards = "已掌握"
+levels_label = "学习等级"
+new_per_day_label = "每日新卡数"
+start_button = "开始复习"
+all_done_today = "今天的都完成了！"
+session_done = "本次学习完成"
+answers_count = "个回答"
+cards_left = "张卡片剩余"
+new_badge = "新"
+show_answer = "显示答案"
+rate_again = "重来"
+rate_hard = "困难"
+rate_good = "良好"
+rate_easy = "简单"
+interval_soon = "<1天"
+unit_day = "天"
+unit_week = "周"
+unit_month = "月"
+unit_year = "年"
+
+[local.words]
+search_hint = "按汉字、读音或含义搜索词汇…"
+start_typing = "输入以搜索词典"
+no_results = "未找到词汇"
+
 [local.settings]
 title = "设置"
 loading = "正在加载设置…"
@@ -129,6 +171,13 @@ save_button = "保存设置"
 saved_status = "设置已保存"
 license = "遵循GPL-3.0许可"
 
+progress = "进度"
+export_progress = "导出进度"
+import_progress = "导入进度"
+progress_exported = "进度已导出"
+progress_imported = "进度已导入"
+confirm_import_progress = "这将用导入文件的内容替换您当前的复习进度。是否继续？"
+
 [local.current_kanji]
 meaning = "含义"
 onyomi = "音读"
@@ -136,6 +185,9 @@ kunyomi = "训读"
 strokes = "笔画"
 grade = "年级"
 examples = "例句"
+
+components = "部件"
+words = "常见词汇"
 
 [local.kana]
 hiragana = "平假名"

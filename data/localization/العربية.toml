@@ -17,6 +17,9 @@ collapse_sidebar = "طي الشريط الجانبي"
 light_mode = "الوضع الفاتح"
 dark_mode = "الوضع الداكن"
 
+review = "المراجعة"
+words = "الكلمات"
+
 [local.context_menu]
 open = "فتح"
 open_new_tab = "فتح في تبويب جديد"
@@ -28,6 +31,16 @@ close_all = "إغلاق الكل"
 search_hint = "ابحث بالكانجي أو القراءة أو المعنى…"
 loading = "جارٍ تحميل الكانجي…"
 all_filter = "الكل"
+
+grade_label = "الصف"
+grade_joyo = "جويو"
+grade_names = "أسماء"
+strokes_label = "الخطوط"
+frequency_label = "التكرار"
+freq_top500 = "أفضل 500"
+freq_top1000 = "أفضل 1000"
+freq_top2000 = "أفضل 2000"
+freq_rare = "نادر"
 
 [local.home]
 kanji_search_hint = "ابحث بالكانجي أو القراءة أو المعنى…"
@@ -108,6 +121,35 @@ no_kanji_selected = "لم يُحدَّد أي كانجي"
 export_dialog_title = "تصدير إلى Anki"
 exported_message = "تم تصدير {count} كانجي إلى {path}"
 
+[local.review]
+due_today = "مستحق اليوم"
+new_today = "جديد اليوم"
+total_cards = "متابَع"
+mature_cards = "متقَن"
+levels_label = "مستويات الدراسة"
+new_per_day_label = "بطاقات جديدة يوميًا"
+start_button = "بدء المراجعة"
+all_done_today = "انتهى كل شيء لليوم!"
+session_done = "اكتملت الجلسة"
+answers_count = "إجابات"
+cards_left = "بطاقة متبقية"
+new_badge = "جديد"
+show_answer = "إظهار الإجابة"
+rate_again = "مرة أخرى"
+rate_hard = "صعب"
+rate_good = "جيد"
+rate_easy = "سهل"
+interval_soon = "<يوم"
+unit_day = "ي"
+unit_week = "أ"
+unit_month = "ش"
+unit_year = "س"
+
+[local.words]
+search_hint = "ابحث عن الكلمات بالكانجي أو القراءة أو المعنى…"
+start_typing = "اكتب للبحث في قاموس الكلمات"
+no_results = "لم يُعثر على كلمات"
+
 [local.settings]
 title = "الإعدادات"
 loading = "جارٍ تحميل الإعدادات…"
@@ -129,6 +171,13 @@ save_button = "حفظ الإعدادات"
 saved_status = "تم حفظ الإعدادات"
 license = "مرخّص بموجب GPL-3.0"
 
+progress = "التقدّم"
+export_progress = "تصدير التقدّم"
+import_progress = "استيراد التقدّم"
+progress_exported = "تم تصدير التقدّم"
+progress_imported = "تم استيراد التقدّم"
+confirm_import_progress = "سيؤدي هذا إلى استبدال تقدّم المراجعة الحالي بمحتوى الملف المستورد. المتابعة؟"
+
 [local.current_kanji]
 meaning = "المعنى"
 onyomi = "أونيومي"
@@ -136,6 +185,9 @@ kunyomi = "كونيومي"
 strokes = "خطوط"
 grade = "الصف"
 examples = "أمثلة"
+
+components = "المكوّنات"
+words = "كلمات شائعة"
 
 [local.kana]
 hiragana = "هيراغانا"

@@ -17,6 +17,9 @@ collapse_sidebar = "Kenar çubuğunu daralt"
 light_mode = "Açık mod"
 dark_mode = "Koyu mod"
 
+review = "Tekrar"
+words = "Kelimeler"
+
 [local.context_menu]
 open = "Aç"
 open_new_tab = "Yeni sekmede aç"
@@ -28,6 +31,16 @@ close_all = "Tümünü kapat"
 search_hint = "Kanji, okunuş veya anlam ara…"
 loading = "Kanji yükleniyor…"
 all_filter = "Tümü"
+
+grade_label = "Sınıf"
+grade_joyo = "Jōyō"
+grade_names = "İsimler"
+strokes_label = "Vuruş"
+frequency_label = "Sıklık"
+freq_top500 = "İlk 500"
+freq_top1000 = "İlk 1000"
+freq_top2000 = "İlk 2000"
+freq_rare = "Nadir"
 
 [local.home]
 kanji_search_hint = "Kanji, okunuş veya anlam ara…"
@@ -108,6 +121,35 @@ no_kanji_selected = "Seçili kanji yok"
 export_dialog_title = "Anki'ye Aktar"
 exported_message = "{count} kanji {path} konumuna aktarıldı"
 
+[local.review]
+due_today = "Bugün tekrar"
+new_today = "Bugün yeni"
+total_cards = "İzlenen"
+mature_cards = "Ustalaşılan"
+levels_label = "Çalışma seviyeleri"
+new_per_day_label = "Günlük yeni kart"
+start_button = "Tekrarı başlat"
+all_done_today = "Bugünlük hepsi tamam!"
+session_done = "Oturum tamamlandı"
+answers_count = "cevap"
+cards_left = "kart kaldı"
+new_badge = "Yeni"
+show_answer = "Cevabı göster"
+rate_again = "Tekrar"
+rate_hard = "Zor"
+rate_good = "İyi"
+rate_easy = "Kolay"
+interval_soon = "<1g"
+unit_day = "g"
+unit_week = "h"
+unit_month = "ay"
+unit_year = "y"
+
+[local.words]
+search_hint = "Kanji, okunuş veya anlama göre kelime ara…"
+start_typing = "Kelime sözlüğünde aramak için yazın"
+no_results = "Kelime bulunamadı"
+
 [local.settings]
 title = "Ayarlar"
 loading = "Ayarlar yükleniyor…"
@@ -129,6 +171,13 @@ save_button = "Ayarları kaydet"
 saved_status = "Ayarlar kaydedildi"
 license = "GPL-3.0 lisansı altındadır"
 
+progress = "İlerleme"
+export_progress = "İlerlemeyi dışa aktar"
+import_progress = "İlerlemeyi içe aktar"
+progress_exported = "İlerleme dışa aktarıldı"
+progress_imported = "İlerleme içe aktarıldı"
+confirm_import_progress = "Bu, mevcut tekrar ilerlemenizin yerine içe aktarılan dosyanın içeriğini koyar. Devam edilsin mi?"
+
 [local.current_kanji]
 meaning = "Anlam"
 onyomi = "Onyomi"
@@ -136,6 +185,9 @@ kunyomi = "Kunyomi"
 strokes = "vuruş"
 grade = "Sınıf"
 examples = "Örnekler"
+
+components = "Bileşenler"
+words = "Sık kullanılan kelimeler"
 
 [local.kana]
 hiragana = "Hiragana"

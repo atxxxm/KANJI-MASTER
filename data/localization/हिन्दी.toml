@@ -17,6 +17,9 @@ collapse_sidebar = "साइडबार सिकोड़ें"
 light_mode = "लाइट मोड"
 dark_mode = "डार्क मोड"
 
+review = "पुनरावृत्ति"
+words = "शब्द"
+
 [local.context_menu]
 open = "खोलें"
 open_new_tab = "नए टैब में खोलें"
@@ -28,6 +31,16 @@ close_all = "सभी बंद करें"
 search_hint = "कांजी, वाचन, अर्थ खोजें…"
 loading = "कांजी लोड हो रहे हैं…"
 all_filter = "सभी"
+
+grade_label = "कक्षा"
+grade_joyo = "जोयो"
+grade_names = "नाम"
+strokes_label = "स्ट्रोक"
+frequency_label = "आवृत्ति"
+freq_top500 = "शीर्ष 500"
+freq_top1000 = "शीर्ष 1000"
+freq_top2000 = "शीर्ष 2000"
+freq_rare = "दुर्लभ"
 
 [local.home]
 kanji_search_hint = "कांजी, वाचन, अर्थ खोजें…"
@@ -108,6 +121,35 @@ no_kanji_selected = "कोई कांजी चयनित नहीं"
 export_dialog_title = "Anki में निर्यात करें"
 exported_message = "{count} कांजी {path} में निर्यात की गईं"
 
+[local.review]
+due_today = "आज देय"
+new_today = "आज नई"
+total_cards = "ट्रैक किया गया"
+mature_cards = "महारत हासिल"
+levels_label = "अध्ययन स्तर"
+new_per_day_label = "प्रतिदिन नई कार्ड"
+start_button = "पुनरावृत्ति शुरू करें"
+all_done_today = "आज के लिए सब पूरा हुआ!"
+session_done = "सत्र पूर्ण"
+answers_count = "उत्तर"
+cards_left = "कार्ड शेष"
+new_badge = "नई"
+show_answer = "उत्तर दिखाएं"
+rate_again = "फिर से"
+rate_hard = "कठिन"
+rate_good = "अच्छा"
+rate_easy = "आसान"
+interval_soon = "<1दिन"
+unit_day = "दि"
+unit_week = "सप्ताह"
+unit_month = "माह"
+unit_year = "वर्ष"
+
+[local.words]
+search_hint = "कांजी, वाचन या अर्थ से शब्द खोजें…"
+start_typing = "शब्दकोश में खोजने के लिए टाइप करें"
+no_results = "कोई शब्द नहीं मिला"
+
 [local.settings]
 title = "सेटिंग्स"
 loading = "सेटिंग्स लोड हो रही हैं…"
@@ -129,6 +171,13 @@ save_button = "सेटिंग्स सहेजें"
 saved_status = "सेटिंग्स सहेजी गईं"
 license = "GPL-3.0 के तहत लाइसेंस प्राप्त"
 
+progress = "प्रगति"
+export_progress = "प्रगति निर्यात करें"
+import_progress = "प्रगति आयात करें"
+progress_exported = "प्रगति निर्यात की गई"
+progress_imported = "प्रगति आयात की गई"
+confirm_import_progress = "यह आपकी वर्तमान पुनरावृत्ति प्रगति को आयातित फ़ाइल की सामग्री से बदल देगा। जारी रखें?"
+
 [local.current_kanji]
 meaning = "अर्थ"
 onyomi = "ओन्योमी"
@@ -136,6 +185,9 @@ kunyomi = "कुन्योमी"
 strokes = "स्ट्रोक"
 grade = "कक्षा"
 examples = "उदाहरण"
+
+components = "घटक"
+words = "सामान्य शब्द"
 
 [local.kana]
 hiragana = "हिरागाना"

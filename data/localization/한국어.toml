@@ -17,6 +17,9 @@ collapse_sidebar = "사이드바 접기"
 light_mode = "라이트 모드"
 dark_mode = "다크 모드"
 
+review = "복습"
+words = "단어"
+
 [local.context_menu]
 open = "열기"
 open_new_tab = "새 탭에서 열기"
@@ -28,6 +31,16 @@ close_all = "모두 닫기"
 search_hint = "한자, 읽기, 의미로 검색…"
 loading = "한자 불러오는 중…"
 all_filter = "전체"
+
+grade_label = "학년"
+grade_joyo = "조요"
+grade_names = "이름"
+strokes_label = "획수"
+frequency_label = "빈도"
+freq_top500 = "상위 500"
+freq_top1000 = "상위 1000"
+freq_top2000 = "상위 2000"
+freq_rare = "희귀"
 
 [local.home]
 kanji_search_hint = "한자, 읽기, 의미로 검색…"
@@ -108,6 +121,35 @@ no_kanji_selected = "선택된 한자가 없습니다"
 export_dialog_title = "Anki 내보내기"
 exported_message = "한자 {count}개를 {path}(으)로 내보냈습니다"
 
+[local.review]
+due_today = "오늘 복습"
+new_today = "오늘 신규"
+total_cards = "추적 중"
+mature_cards = "숙달됨"
+levels_label = "학습 레벨"
+new_per_day_label = "하루 새 카드 수"
+start_button = "복습 시작"
+all_done_today = "오늘 할 일 완료!"
+session_done = "세션 완료"
+answers_count = "개 답변"
+cards_left = "장 남음"
+new_badge = "신규"
+show_answer = "답 보기"
+rate_again = "다시"
+rate_hard = "어려움"
+rate_good = "좋음"
+rate_easy = "쉬움"
+interval_soon = "<1일"
+unit_day = "일"
+unit_week = "주"
+unit_month = "개월"
+unit_year = "년"
+
+[local.words]
+search_hint = "한자, 독음 또는 의미로 단어 검색…"
+start_typing = "입력하여 단어 사전 검색"
+no_results = "단어를 찾을 수 없습니다"
+
 [local.settings]
 title = "설정"
 loading = "설정 불러오는 중…"
@@ -129,6 +171,13 @@ save_button = "설정 저장"
 saved_status = "설정이 저장되었습니다"
 license = "GPL-3.0 라이선스"
 
+progress = "진행 상황"
+export_progress = "진행 상황 내보내기"
+import_progress = "진행 상황 가져오기"
+progress_exported = "진행 상황을 내보냈습니다"
+progress_imported = "진행 상황을 가져왔습니다"
+confirm_import_progress = "현재 복습 진행 상황이 가져온 파일의 내용으로 대체됩니다. 계속하시겠습니까?"
+
 [local.current_kanji]
 meaning = "의미"
 onyomi = "음독"
@@ -136,6 +185,9 @@ kunyomi = "훈독"
 strokes = "획"
 grade = "학년"
 examples = "예문"
+
+components = "구성 요소"
+words = "자주 쓰는 단어"
 
 [local.kana]
 hiragana = "히라가나"

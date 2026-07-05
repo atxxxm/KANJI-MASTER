@@ -17,6 +17,9 @@ collapse_sidebar = "Réduire la barre latérale"
 light_mode = "Mode clair"
 dark_mode = "Mode sombre"
 
+review = "Révision"
+words = "Mots"
+
 [local.context_menu]
 open = "Ouvrir"
 open_new_tab = "Ouvrir dans un nouvel onglet"
@@ -28,6 +31,16 @@ close_all = "Tout fermer"
 search_hint = "Rechercher kanji, lectures, signification…"
 loading = "Chargement des kanji…"
 all_filter = "Tous"
+
+grade_label = "Niveau"
+grade_joyo = "Jōyō"
+grade_names = "Noms"
+strokes_label = "Traits"
+frequency_label = "Fréquence"
+freq_top500 = "Top 500"
+freq_top1000 = "Top 1000"
+freq_top2000 = "Top 2000"
+freq_rare = "Rares"
 
 [local.home]
 kanji_search_hint = "Rechercher kanji, lectures, signification…"
@@ -108,6 +121,35 @@ no_kanji_selected = "Aucun kanji sélectionné"
 export_dialog_title = "Export Anki"
 exported_message = "{count} kanji exportés vers {path}"
 
+[local.review]
+due_today = "À réviser"
+new_today = "Nouveaux aujourd'hui"
+total_cards = "Suivis"
+mature_cards = "Maîtrisés"
+levels_label = "Niveaux d'étude"
+new_per_day_label = "Nouvelles cartes par jour"
+start_button = "Commencer la révision"
+all_done_today = "Tout est fait pour aujourd'hui !"
+session_done = "Session terminée"
+answers_count = "réponses"
+cards_left = "cartes restantes"
+new_badge = "Nouveau"
+show_answer = "Afficher la réponse"
+rate_again = "À revoir"
+rate_hard = "Difficile"
+rate_good = "Bien"
+rate_easy = "Facile"
+interval_soon = "<1j"
+unit_day = "j"
+unit_week = "sem"
+unit_month = "mois"
+unit_year = "an"
+
+[local.words]
+search_hint = "Rechercher des mots par kanji, lecture ou signification…"
+start_typing = "Tapez pour rechercher dans le dictionnaire de mots"
+no_results = "Aucun mot trouvé"
+
 [local.settings]
 title = "Paramètres"
 loading = "Chargement des paramètres…"
@@ -129,6 +171,13 @@ save_button = "Enregistrer les paramètres"
 saved_status = "Paramètres enregistrés"
 license = "Sous licence GPL-3.0"
 
+progress = "Progression"
+export_progress = "Exporter la progression"
+import_progress = "Importer la progression"
+progress_exported = "Progression exportée"
+progress_imported = "Progression importée"
+confirm_import_progress = "Cela remplacera votre progression de révision actuelle par le contenu du fichier importé. Continuer ?"
+
 [local.current_kanji]
 meaning = "Signification"
 onyomi = "Onyomi"
@@ -136,6 +185,9 @@ kunyomi = "Kunyomi"
 strokes = "traits"
 grade = "Niveau"
 examples = "Exemples"
+
+components = "Composants"
+words = "Mots courants"
 
 [local.kana]
 hiragana = "Hiragana"

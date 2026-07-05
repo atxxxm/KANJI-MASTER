@@ -17,6 +17,9 @@ collapse_sidebar = "Thu gọn thanh bên"
 light_mode = "Chế độ sáng"
 dark_mode = "Chế độ tối"
 
+review = "Ôn tập"
+words = "Từ vựng"
+
 [local.context_menu]
 open = "Mở"
 open_new_tab = "Mở trong tab mới"
@@ -28,6 +31,16 @@ close_all = "Đóng tất cả"
 search_hint = "Tìm kanji, cách đọc, ý nghĩa…"
 loading = "Đang tải kanji…"
 all_filter = "Tất cả"
+
+grade_label = "Lớp"
+grade_joyo = "Jōyō"
+grade_names = "Tên riêng"
+strokes_label = "Nét"
+frequency_label = "Tần suất"
+freq_top500 = "Top 500"
+freq_top1000 = "Top 1000"
+freq_top2000 = "Top 2000"
+freq_rare = "Hiếm"
 
 [local.home]
 kanji_search_hint = "Tìm kanji, cách đọc, ý nghĩa…"
@@ -108,6 +121,35 @@ no_kanji_selected = "Chưa chọn kanji nào"
 export_dialog_title = "Xuất sang Anki"
 exported_message = "Đã xuất {count} kanji sang {path}"
 
+[local.review]
+due_today = "Đến hạn hôm nay"
+new_today = "Mới hôm nay"
+total_cards = "Đang theo dõi"
+mature_cards = "Đã thành thạo"
+levels_label = "Cấp độ học"
+new_per_day_label = "Thẻ mới mỗi ngày"
+start_button = "Bắt đầu ôn tập"
+all_done_today = "Hôm nay xong hết rồi!"
+session_done = "Hoàn thành phiên học"
+answers_count = "câu trả lời"
+cards_left = "thẻ còn lại"
+new_badge = "Mới"
+show_answer = "Hiện đáp án"
+rate_again = "Lại"
+rate_hard = "Khó"
+rate_good = "Tốt"
+rate_easy = "Dễ"
+interval_soon = "<1n"
+unit_day = "n"
+unit_week = "tuần"
+unit_month = "th"
+unit_year = "năm"
+
+[local.words]
+search_hint = "Tìm từ theo kanji, cách đọc hoặc ý nghĩa…"
+start_typing = "Gõ để tìm trong từ điển"
+no_results = "Không tìm thấy từ nào"
+
 [local.settings]
 title = "Cài đặt"
 loading = "Đang tải cài đặt…"
@@ -129,6 +171,13 @@ save_button = "Lưu cài đặt"
 saved_status = "Đã lưu cài đặt"
 license = "Được cấp phép theo GPL-3.0"
 
+progress = "Tiến trình"
+export_progress = "Xuất tiến trình"
+import_progress = "Nhập tiến trình"
+progress_exported = "Đã xuất tiến trình"
+progress_imported = "Đã nhập tiến trình"
+confirm_import_progress = "Thao tác này sẽ thay thế tiến trình ôn tập hiện tại bằng nội dung của tệp đã nhập. Tiếp tục?"
+
 [local.current_kanji]
 meaning = "Ý nghĩa"
 onyomi = "Onyomi"
@@ -136,6 +185,9 @@ kunyomi = "Kunyomi"
 strokes = "nét"
 grade = "Lớp"
 examples = "Ví dụ"
+
+components = "Thành phần"
+words = "Từ thông dụng"
 
 [local.kana]
 hiragana = "Hiragana"

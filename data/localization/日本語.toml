@@ -17,6 +17,9 @@ collapse_sidebar = "サイドバーを折りたたむ"
 light_mode = "ライトモード"
 dark_mode = "ダークモード"
 
+review = "復習"
+words = "単語"
+
 [local.context_menu]
 open = "開く"
 open_new_tab = "新しいタブで開く"
@@ -28,6 +31,16 @@ close_all = "すべて閉じる"
 search_hint = "漢字・読み・意味で検索…"
 loading = "漢字を読み込み中…"
 all_filter = "すべて"
+
+grade_label = "学年"
+grade_joyo = "常用"
+grade_names = "人名"
+strokes_label = "画数"
+frequency_label = "頻度"
+freq_top500 = "上位500"
+freq_top1000 = "上位1000"
+freq_top2000 = "上位2000"
+freq_rare = "稀少"
 
 [local.home]
 kanji_search_hint = "漢字・読み・意味で検索…"
@@ -108,6 +121,35 @@ no_kanji_selected = "漢字が選択されていません"
 export_dialog_title = "Ankiエクスポート"
 exported_message = "{count} 件の漢字を {path} にエクスポートしました"
 
+[local.review]
+due_today = "本日の復習"
+new_today = "本日の新規"
+total_cards = "登録済み"
+mature_cards = "習得済み"
+levels_label = "学習レベル"
+new_per_day_label = "1日の新規カード数"
+start_button = "復習を開始"
+all_done_today = "今日の分は終わりました！"
+session_done = "セッション完了"
+answers_count = "回答"
+cards_left = "枚残り"
+new_badge = "新規"
+show_answer = "答えを表示"
+rate_again = "もう一度"
+rate_hard = "難しい"
+rate_good = "普通"
+rate_easy = "簡単"
+interval_soon = "<1日"
+unit_day = "日"
+unit_week = "週"
+unit_month = "ヶ月"
+unit_year = "年"
+
+[local.words]
+search_hint = "漢字・読み・意味で単語を検索…"
+start_typing = "入力して単語辞典を検索"
+no_results = "単語が見つかりません"
+
 [local.settings]
 title = "設定"
 loading = "設定を読み込み中…"
@@ -129,6 +171,13 @@ save_button = "設定を保存"
 saved_status = "設定を保存しました"
 license = "GPL-3.0ライセンス"
 
+progress = "進捗"
+export_progress = "進捗をエクスポート"
+import_progress = "進捗をインポート"
+progress_exported = "進捗をエクスポートしました"
+progress_imported = "進捗をインポートしました"
+confirm_import_progress = "現在の復習進捗がインポートしたファイルの内容で置き換えられます。続行しますか？"
+
 [local.current_kanji]
 meaning = "意味"
 onyomi = "音読み"
@@ -136,6 +185,9 @@ kunyomi = "訓読み"
 strokes = "画"
 grade = "学年"
 examples = "例文"
+
+components = "構成要素"
+words = "よく使う単語"
 
 [local.kana]
 hiragana = "ひらがな"

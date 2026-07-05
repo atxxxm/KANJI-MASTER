@@ -17,6 +17,9 @@ collapse_sidebar = "Ciutkan bilah sisi"
 light_mode = "Mode terang"
 dark_mode = "Mode gelap"
 
+review = "Ulasan"
+words = "Kata"
+
 [local.context_menu]
 open = "Buka"
 open_new_tab = "Buka di tab baru"
@@ -28,6 +31,16 @@ close_all = "Tutup semua"
 search_hint = "Cari kanji, cara baca, arti…"
 loading = "Memuat kanji…"
 all_filter = "Semua"
+
+grade_label = "Kelas"
+grade_joyo = "Jōyō"
+grade_names = "Nama"
+strokes_label = "Goresan"
+frequency_label = "Frekuensi"
+freq_top500 = "Top 500"
+freq_top1000 = "Top 1000"
+freq_top2000 = "Top 2000"
+freq_rare = "Langka"
 
 [local.home]
 kanji_search_hint = "Cari kanji, cara baca, arti…"
@@ -108,6 +121,35 @@ no_kanji_selected = "Tidak ada kanji yang dipilih"
 export_dialog_title = "Ekspor ke Anki"
 exported_message = "Berhasil mengekspor {count} kanji ke {path}"
 
+[local.review]
+due_today = "Jatuh tempo hari ini"
+new_today = "Baru hari ini"
+total_cards = "Dilacak"
+mature_cards = "Dikuasai"
+levels_label = "Tingkat belajar"
+new_per_day_label = "Kartu baru per hari"
+start_button = "Mulai ulasan"
+all_done_today = "Semua selesai untuk hari ini!"
+session_done = "Sesi selesai"
+answers_count = "jawaban"
+cards_left = "kartu tersisa"
+new_badge = "Baru"
+show_answer = "Tampilkan jawaban"
+rate_again = "Ulangi"
+rate_hard = "Sulit"
+rate_good = "Bagus"
+rate_easy = "Mudah"
+interval_soon = "<1h"
+unit_day = "h"
+unit_week = "mgg"
+unit_month = "bln"
+unit_year = "th"
+
+[local.words]
+search_hint = "Cari kata berdasarkan kanji, cara baca, atau arti…"
+start_typing = "Ketik untuk mencari di kamus kata"
+no_results = "Kata tidak ditemukan"
+
 [local.settings]
 title = "Pengaturan"
 loading = "Memuat pengaturan…"
@@ -129,6 +171,13 @@ save_button = "Simpan pengaturan"
 saved_status = "Pengaturan disimpan"
 license = "Dilisensikan di bawah GPL-3.0"
 
+progress = "Kemajuan"
+export_progress = "Ekspor kemajuan"
+import_progress = "Impor kemajuan"
+progress_exported = "Kemajuan diekspor"
+progress_imported = "Kemajuan diimpor"
+confirm_import_progress = "Ini akan mengganti kemajuan ulasan Anda saat ini dengan isi file yang diimpor. Lanjutkan?"
+
 [local.current_kanji]
 meaning = "Arti"
 onyomi = "Onyomi"
@@ -136,6 +185,9 @@ kunyomi = "Kunyomi"
 strokes = "goresan"
 grade = "Kelas"
 examples = "Contoh"
+
+components = "Komponen"
+words = "Kata umum"
 
 [local.kana]
 hiragana = "Hiragana"

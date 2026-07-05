@@ -17,6 +17,9 @@ collapse_sidebar = "Seitenleiste einklappen"
 light_mode = "Heller Modus"
 dark_mode = "Dunkler Modus"
 
+review = "Wiederholen"
+words = "Wörter"
+
 [local.context_menu]
 open = "Öffnen"
 open_new_tab = "In neuem Tab öffnen"
@@ -28,6 +31,16 @@ close_all = "Alle schließen"
 search_hint = "Kanji, Lesung oder Bedeutung suchen…"
 loading = "Kanji werden geladen…"
 all_filter = "Alle"
+
+grade_label = "Klasse"
+grade_joyo = "Jōyō"
+grade_names = "Namen"
+strokes_label = "Striche"
+frequency_label = "Häufigkeit"
+freq_top500 = "Top 500"
+freq_top1000 = "Top 1000"
+freq_top2000 = "Top 2000"
+freq_rare = "Selten"
 
 [local.home]
 kanji_search_hint = "Kanji, Lesung oder Bedeutung suchen…"
@@ -108,6 +121,35 @@ no_kanji_selected = "Keine Kanji ausgewählt"
 export_dialog_title = "Anki-Export"
 exported_message = "{count} Kanji nach {path} exportiert"
 
+[local.review]
+due_today = "Heute fällig"
+new_today = "Heute neu"
+total_cards = "Erfasst"
+mature_cards = "Gemeistert"
+levels_label = "Lernstufen"
+new_per_day_label = "Neue Karten pro Tag"
+start_button = "Wiederholung starten"
+all_done_today = "Für heute alles erledigt!"
+session_done = "Sitzung abgeschlossen"
+answers_count = "Antworten"
+cards_left = "Karten übrig"
+new_badge = "Neu"
+show_answer = "Antwort zeigen"
+rate_again = "Nochmal"
+rate_hard = "Schwer"
+rate_good = "Gut"
+rate_easy = "Leicht"
+interval_soon = "<1T"
+unit_day = "T"
+unit_week = "W"
+unit_month = "M"
+unit_year = "J"
+
+[local.words]
+search_hint = "Wörter nach Kanji, Lesung oder Bedeutung suchen…"
+start_typing = "Tippen, um im Wörterbuch zu suchen"
+no_results = "Keine Wörter gefunden"
+
 [local.settings]
 title = "Einstellungen"
 loading = "Einstellungen werden geladen…"
@@ -129,6 +171,13 @@ save_button = "Einstellungen speichern"
 saved_status = "Einstellungen gespeichert"
 license = "Lizenziert unter GPL-3.0"
 
+progress = "Fortschritt"
+export_progress = "Fortschritt exportieren"
+import_progress = "Fortschritt importieren"
+progress_exported = "Fortschritt exportiert"
+progress_imported = "Fortschritt importiert"
+confirm_import_progress = "Dadurch wird dein aktueller Wiederholungsfortschritt durch den Inhalt der importierten Datei ersetzt. Fortfahren?"
+
 [local.current_kanji]
 meaning = "Bedeutung"
 onyomi = "Onyomi"
@@ -136,6 +185,9 @@ kunyomi = "Kunyomi"
 strokes = "Striche"
 grade = "Klasse"
 examples = "Beispiele"
+
+components = "Bestandteile"
+words = "Häufige Wörter"
 
 [local.kana]
 hiragana = "Hiragana"
