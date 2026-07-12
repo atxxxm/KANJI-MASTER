@@ -153,6 +153,7 @@ export default function TranslateKanji() {
           <input
             className="search-input"
             placeholder={t("translate_kanji_locale.jump_to")}
+            aria-label={t("translate_kanji_locale.jump_to")}
             value={jumpQuery}
             onChange={e => setJumpQuery(e.target.value)}
             onFocus={() => setJumpFocused(true)}

@@ -16,6 +16,7 @@ expand_sidebar = "ขยายแถบด้านข้าง"
 collapse_sidebar = "ย่อแถบด้านข้าง"
 light_mode = "โหมดสว่าง"
 dark_mode = "โหมดมืด"
+open_tabs = "แท็บที่เปิดอยู่"
 
 review = "ทบทวน"
 words = "คำศัพท์"

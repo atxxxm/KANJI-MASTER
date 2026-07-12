@@ -16,6 +16,7 @@ expand_sidebar = "Zijbalk uitklappen"
 collapse_sidebar = "Zijbalk inklappen"
 light_mode = "Lichte modus"
 dark_mode = "Donkere modus"
+open_tabs = "Open tabbladen"
 
 review = "Herhalen"
 words = "Woorden"

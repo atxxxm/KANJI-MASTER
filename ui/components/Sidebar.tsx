@@ -27,6 +27,7 @@ function NavButton({ item, active, onClick, onOpenNewTab }: {
   return (
     <button
       className={`nav-item${active ? " active" : ""}`}
+      aria-current={active ? "page" : undefined}
       onClick={onClick}
       onContextMenu={e => {
         e.preventDefault();

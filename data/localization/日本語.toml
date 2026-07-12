@@ -16,6 +16,7 @@ expand_sidebar = "サイドバーを展開"
 collapse_sidebar = "サイドバーを折りたたむ"
 light_mode = "ライトモード"
 dark_mode = "ダークモード"
+open_tabs = "開いているタブ"
 
 review = "復習"
 words = "単語"

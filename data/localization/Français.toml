@@ -16,6 +16,7 @@ expand_sidebar = "Développer la barre latérale"
 collapse_sidebar = "Réduire la barre latérale"
 light_mode = "Mode clair"
 dark_mode = "Mode sombre"
+open_tabs = "Onglets ouverts"
 
 review = "Révision"
 words = "Mots"

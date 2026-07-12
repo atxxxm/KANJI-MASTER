@@ -16,6 +16,7 @@ expand_sidebar = "Розгорнути бічну панель"
 collapse_sidebar = "Згорнути бічну панель"
 light_mode = "Світла тема"
 dark_mode = "Темна тема"
+open_tabs = "Відкриті вкладки"
 
 review = "Повторення"
 words = "Слова"

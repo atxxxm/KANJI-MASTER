@@ -41,9 +41,19 @@ export function ClickableWord({ text, kanjiByChar, onOpenKanji, onOpenKanjiNewTa
           <span
             key={i}
             className="example-kanji-link"
+            role="button"
+            tabIndex={0}
+            aria-label={`${t("context_menu.open")} ${ch}`}
             onClick={e => {
               e.stopPropagation();
               onOpenKanji(match);
+            }}
+            onKeyDown={e => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                onOpenKanji(match);
+              }
             }}
             onContextMenu={e => {
               e.preventDefault();
@@ -108,6 +118,7 @@ export default function Words({ onOpenKanji, onOpenKanjiNewTab, active }: Props)
         <input
           className="search-input"
           placeholder={t("words.search_hint")}
+          aria-label={t("words.search_hint")}
           value={search}
           onChange={e => setSearch(e.target.value)}
           autoFocus
@@ -135,7 +146,15 @@ export default function Words({ onOpenKanji, onOpenKanjiNewTab, active }: Props)
             <div
               key={w.id}
               className="word-row clickable"
+              role="button"
+              tabIndex={0}
               onClick={() => onOpenWord(w.id, w.kanji ?? w.reading)}
+              onKeyDown={e => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onOpenWord(w.id, w.kanji ?? w.reading);
+                }
+              }}
             >
               <div className="word-row-main">
                 <span className="word-text">

@@ -16,6 +16,7 @@ expand_sidebar = "Mở rộng thanh bên"
 collapse_sidebar = "Thu gọn thanh bên"
 light_mode = "Chế độ sáng"
 dark_mode = "Chế độ tối"
+open_tabs = "Các tab đang mở"
 
 review = "Ôn tập"
 words = "Từ vựng"

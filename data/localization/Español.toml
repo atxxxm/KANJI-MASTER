@@ -16,6 +16,7 @@ expand_sidebar = "Expandir barra lateral"
 collapse_sidebar = "Contraer barra lateral"
 light_mode = "Modo claro"
 dark_mode = "Modo oscuro"
+open_tabs = "Pestañas abiertas"
 
 review = "Repaso"
 words = "Palabras"

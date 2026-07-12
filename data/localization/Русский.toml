@@ -18,6 +18,7 @@ expand_sidebar = "Развернуть боковую панель"
 collapse_sidebar = "Свернуть боковую панель"
 light_mode = "Светлая тема"
 dark_mode = "Тёмная тема"
+open_tabs = "Открытые вкладки"
 
 [local.context_menu]
 open = "Открыть"

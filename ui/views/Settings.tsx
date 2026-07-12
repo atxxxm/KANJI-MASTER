@@ -17,9 +17,16 @@ interface Props {
 
 type Status = { kind: "success" | "error"; text: string } | null;
 
-function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ on, onChange, labelId }: { on: boolean; onChange: (v: boolean) => void; labelId: string }) {
   return (
-    <div className={`settings-toggle${on ? " on" : ""}`} onClick={() => onChange(!on)} />
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-labelledby={labelId}
+      className={`settings-toggle${on ? " on" : ""}`}
+      onClick={() => onChange(!on)}
+    />
   );
 }
 
@@ -111,9 +118,10 @@ export default function Settings({ theme, onThemeChange }: Props) {
         <div className="settings-section-title">{t("settings.appearance")}</div>
 
         <div className="settings-row">
-          <span className="settings-row-label">{t("settings.interface_language")}</span>
+          <label className="settings-row-label" htmlFor="setting-interface-language">{t("settings.interface_language")}</label>
           <div className="settings-row-control">
             <select
+              id="setting-interface-language"
               className="settings-select"
               value={config.interface_language}
               onChange={e => updateConfig({ interface_language: e.target.value })}
@@ -126,9 +134,9 @@ export default function Settings({ theme, onThemeChange }: Props) {
         </div>
 
         <div className="settings-row">
-          <span className="settings-row-label">{t("settings.dark_mode")}</span>
+          <span className="settings-row-label" id="setting-dark-mode-label">{t("settings.dark_mode")}</span>
           <div className="settings-row-control">
-            <Toggle on={config.dark_mode} onChange={v => {
+            <Toggle labelId="setting-dark-mode-label" on={config.dark_mode} onChange={v => {
               updateConfig({ dark_mode: v });
               onThemeChange(v ? "dark" : "light");
             }} />
@@ -136,9 +144,10 @@ export default function Settings({ theme, onThemeChange }: Props) {
         </div>
 
         <div className="settings-row">
-          <span className="settings-row-label">{t("settings.interface_font_size")}</span>
+          <label className="settings-row-label" htmlFor="setting-interface-font-size">{t("settings.interface_font_size")}</label>
           <div className="settings-row-control">
             <input
+              id="setting-interface-font-size"
               type="range" min={10} max={22} step={1}
               className="settings-slider"
               value={config.interface_font_size}
@@ -149,9 +158,10 @@ export default function Settings({ theme, onThemeChange }: Props) {
         </div>
 
         <div className="settings-row">
-          <span className="settings-row-label">{t("settings.kanji_font_size")}</span>
+          <label className="settings-row-label" htmlFor="setting-kanji-font-size">{t("settings.kanji_font_size")}</label>
           <div className="settings-row-control">
             <input
+              id="setting-kanji-font-size"
               type="range" min={24} max={96} step={2}
               className="settings-slider"
               value={config.kanji_font_size}
@@ -162,9 +172,10 @@ export default function Settings({ theme, onThemeChange }: Props) {
         </div>
 
         <div className="settings-row">
-          <span className="settings-row-label">{t("settings.animation_speed")}</span>
+          <label className="settings-row-label" htmlFor="setting-animation-speed">{t("settings.animation_speed")}</label>
           <div className="settings-row-control">
             <input
+              id="setting-animation-speed"
               type="range" min={0.25} max={2} step={0.05}
               className="settings-slider"
               value={config.animation_speed}
@@ -179,16 +190,16 @@ export default function Settings({ theme, onThemeChange }: Props) {
         <div className="settings-section-title">{t("settings.behavior")}</div>
 
         <div className="settings-row">
-          <span className="settings-row-label">{t("settings.show_kanji_meaning")}</span>
+          <span className="settings-row-label" id="setting-show-kanji-meaning-label">{t("settings.show_kanji_meaning")}</span>
           <div className="settings-row-control">
-            <Toggle on={config.show_kanji_meaning} onChange={v => updateConfig({ show_kanji_meaning: v })} />
+            <Toggle labelId="setting-show-kanji-meaning-label" on={config.show_kanji_meaning} onChange={v => updateConfig({ show_kanji_meaning: v })} />
           </div>
         </div>
 
         <div className="settings-row">
-          <span className="settings-row-label">{t("settings.focus_on_search")}</span>
+          <span className="settings-row-label" id="setting-focus-on-search-label">{t("settings.focus_on_search")}</span>
           <div className="settings-row-control">
-            <Toggle on={config.focus_on_search} onChange={v => updateConfig({ focus_on_search: v })} />
+            <Toggle labelId="setting-focus-on-search-label" on={config.focus_on_search} onChange={v => updateConfig({ focus_on_search: v })} />
           </div>
         </div>
       </div>
@@ -219,9 +230,10 @@ export default function Settings({ theme, onThemeChange }: Props) {
         <div className="settings-section-title">{t("settings.files_and_data")}</div>
 
         <div className="settings-row settings-path-row">
-          <span className="settings-row-label">{t("settings.database_path")}</span>
+          <label className="settings-row-label" htmlFor="setting-db-path">{t("settings.database_path")}</label>
           <div className="settings-row-control">
             <input
+              id="setting-db-path"
               className="settings-path-input"
               value={config.path_to_db_core}
               onChange={e => updateConfig({ path_to_db_core: e.target.value })}
@@ -230,9 +242,10 @@ export default function Settings({ theme, onThemeChange }: Props) {
         </div>
 
         <div className="settings-row settings-path-row">
-          <span className="settings-row-label">{t("settings.kanji_localization")}</span>
+          <label className="settings-row-label" htmlFor="setting-kanji-localization-path">{t("settings.kanji_localization")}</label>
           <div className="settings-row-control">
             <input
+              id="setting-kanji-localization-path"
               className="settings-path-input"
               value={config.path_to_kanji_localization}
               onChange={e => updateConfig({ path_to_kanji_localization: e.target.value })}
@@ -244,9 +257,10 @@ export default function Settings({ theme, onThemeChange }: Props) {
         </div>
 
         <div className="settings-row settings-path-row">
-          <span className="settings-row-label">{t("settings.svg_folder")}</span>
+          <label className="settings-row-label" htmlFor="setting-svg-path">{t("settings.svg_folder")}</label>
           <div className="settings-row-control">
             <input
+              id="setting-svg-path"
               className="settings-path-input"
               value={config.path_to_svg_images}
               onChange={e => updateConfig({ path_to_svg_images: e.target.value })}

@@ -16,6 +16,7 @@ expand_sidebar = "사이드바 펼치기"
 collapse_sidebar = "사이드바 접기"
 light_mode = "라이트 모드"
 dark_mode = "다크 모드"
+open_tabs = "열린 탭"
 
 review = "복습"
 words = "단어"

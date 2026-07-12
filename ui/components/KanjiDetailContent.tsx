@@ -53,7 +53,18 @@ function ExampleText({ text, onKanjiClick, onKanjiClickNewTab }: {
           <span
             key={i}
             className="example-kanji-link"
+            role="button"
+            tabIndex={0}
+            aria-label={`${t("context_menu.open")} ${ch}`}
             onClick={e => handleClick(e, ch)}
+            onKeyDown={async e => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                const k = await resolve(ch);
+                if (k) onKanjiClick(k);
+              }
+            }}
             onContextMenu={e => handleContextMenu(e, ch)}
           >
             {ch}
@@ -153,7 +164,15 @@ function WordsSection({ kanji, kanjiByChar, onKanjiClick, onKanjiClickNewTab, on
           <div
             key={w.id}
             className={`detail-word-row${onWordClick ? " clickable" : ""}`}
+            role={onWordClick ? "button" : undefined}
+            tabIndex={onWordClick ? 0 : undefined}
             onClick={onWordClick ? () => onWordClick(w.id, w.kanji ?? w.reading) : undefined}
+            onKeyDown={onWordClick ? e => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onWordClick(w.id, w.kanji ?? w.reading);
+              }
+            } : undefined}
           >
             <span className="detail-word-text">
               <ClickableWord
@@ -258,7 +277,16 @@ export default function KanjiDetailContent({ kanji, onKanjiClick, onKanjiClickNe
                 <div
                   key={i}
                   className={`detail-example${translation ? " has-translation" : ""}${isOpen ? " expanded" : ""}`}
+                  role={translation ? "button" : undefined}
+                  tabIndex={translation ? 0 : undefined}
+                  aria-expanded={translation ? isOpen : undefined}
                   onClick={() => translation && toggleExample(i)}
+                  onKeyDown={e => {
+                    if (translation && (e.key === "Enter" || e.key === " ")) {
+                      e.preventDefault();
+                      toggleExample(i);
+                    }
+                  }}
                 >
                   <div className="detail-example-original">
                     <ExampleText text={ex} onKanjiClick={onKanjiClick} onKanjiClickNewTab={onKanjiClickNewTab} />

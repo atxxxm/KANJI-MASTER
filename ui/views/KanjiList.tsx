@@ -105,6 +105,7 @@ export default function KanjiList({ onOpenKanji, onOpenKanjiNewTab, active, focu
           ref={searchRef}
           className="search-input"
           placeholder={t("kanji_list.search_hint")}
+          aria-label={t("kanji_list.search_hint")}
           value={search}
           onChange={e => setSearch(e.target.value)}
           autoFocus

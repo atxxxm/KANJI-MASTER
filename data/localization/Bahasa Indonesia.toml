@@ -16,6 +16,7 @@ expand_sidebar = "Perluas bilah sisi"
 collapse_sidebar = "Ciutkan bilah sisi"
 light_mode = "Mode terang"
 dark_mode = "Mode gelap"
+open_tabs = "Tab yang terbuka"
 
 review = "Ulasan"
 words = "Kata"

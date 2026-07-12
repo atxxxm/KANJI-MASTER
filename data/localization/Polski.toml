@@ -16,6 +16,7 @@ expand_sidebar = "Rozwiń pasek boczny"
 collapse_sidebar = "Zwiń pasek boczny"
 light_mode = "Tryb jasny"
 dark_mode = "Tryb ciemny"
+open_tabs = "Otwarte karty"
 
 review = "Powtórki"
 words = "Słowa"

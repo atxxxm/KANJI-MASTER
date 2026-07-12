@@ -129,6 +129,7 @@ export default function AnkiExport() {
               <input
                 className="search-input"
                 placeholder={t("anki_export_locale.search_hint")}
+                aria-label={t("anki_export_locale.search_hint")}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
               />

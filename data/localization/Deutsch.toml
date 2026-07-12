@@ -16,6 +16,7 @@ expand_sidebar = "Seitenleiste ausklappen"
 collapse_sidebar = "Seitenleiste einklappen"
 light_mode = "Heller Modus"
 dark_mode = "Dunkler Modus"
+open_tabs = "Offene Tabs"
 
 review = "Wiederholen"
 words = "Wörter"

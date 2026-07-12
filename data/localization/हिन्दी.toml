@@ -16,6 +16,7 @@ expand_sidebar = "साइडबार विस्तृत करें"
 collapse_sidebar = "साइडबार सिकोड़ें"
 light_mode = "लाइट मोड"
 dark_mode = "डार्क मोड"
+open_tabs = "खुले टैब"
 
 review = "पुनरावृत्ति"
 words = "शब्द"

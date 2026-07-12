@@ -32,13 +32,37 @@ export default function ContextMenuProvider({ children }: { children: ReactNode 
     return () => window.removeEventListener("contextmenu", onContextMenu);
   }, []);
 
+  const menuItemEls = () =>
+    menuRef.current
+      ? Array.from(menuRef.current.querySelectorAll<HTMLButtonElement>(".context-menu-item:not(:disabled)"))
+      : [];
+
+  // Move focus into the menu as soon as it opens, so arrow keys work without
+  // requiring a prior Tab press.
+  useEffect(() => {
+    if (!menu) return;
+    menuItemEls()[0]?.focus();
+  }, [menu]);
+
   useEffect(() => {
     if (!menu) return;
     const onMouseDown = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) close();
     };
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key === "Escape") {
+        close();
+        return;
+      }
+      if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+      const items = menuItemEls();
+      if (items.length === 0) return;
+      e.preventDefault();
+      const current = items.indexOf(document.activeElement as HTMLButtonElement);
+      const next = e.key === "ArrowDown"
+        ? (current + 1) % items.length
+        : (current - 1 + items.length) % items.length;
+      items[next]?.focus();
     };
     window.addEventListener("mousedown", onMouseDown);
     window.addEventListener("keydown", onKeyDown);
@@ -58,13 +82,14 @@ export default function ContextMenuProvider({ children }: { children: ReactNode 
     <ContextMenuContext.Provider value={{ open }}>
       {children}
       {menu && (
-        <div ref={menuRef} className="context-menu" style={style}>
+        <div ref={menuRef} className="context-menu" role="menu" style={style}>
           {menu.items.map((item, i) =>
             item === "separator" ? (
-              <div key={i} className="context-menu-separator" />
+              <div key={i} className="context-menu-separator" role="separator" />
             ) : (
               <button
                 key={i}
+                role="menuitem"
                 className={`context-menu-item${item.danger ? " danger" : ""}`}
                 disabled={item.disabled}
                 onClick={() => {

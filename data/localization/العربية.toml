@@ -16,6 +16,7 @@ expand_sidebar = "توسيع الشريط الجانبي"
 collapse_sidebar = "طي الشريط الجانبي"
 light_mode = "الوضع الفاتح"
 dark_mode = "الوضع الداكن"
+open_tabs = "علامات التبويب المفتوحة"
 
 review = "المراجعة"
 words = "الكلمات"

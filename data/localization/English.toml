@@ -18,6 +18,7 @@ expand_sidebar = "Expand sidebar"
 collapse_sidebar = "Collapse sidebar"
 light_mode = "Light mode"
 dark_mode = "Dark mode"
+open_tabs = "Open tabs"
 
 [local.context_menu]
 open = "Open"

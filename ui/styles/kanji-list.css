@@ -348,6 +348,10 @@
 .detail-example.has-translation:hover {
   background: var(--surface-3, var(--surface-2));
 }
+.detail-example.has-translation:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
 
 .detail-example-translation-wrap {
   display: grid;
@@ -474,6 +478,10 @@
 .detail-word-row.clickable:hover {
   background: var(--surface-2);
 }
+.detail-word-row.clickable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
 
 .detail-word-text {
   font-size: 17px;
@@ -504,4 +512,8 @@
 }
 .example-kanji-link:hover {
   background: var(--accent-dim);
+}
+.example-kanji-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
