@@ -3,6 +3,24 @@ lang = "ko"
 [local.common]
 loading = "불러오는 중…"
 
+[local.onboarding]
+step1_title = "Kanji Master에 오신 것을 환영합니다"
+step1_body = "짧은 둘러보기 — 다섯 단계이며 언제든 건너뛸 수 있습니다."
+step2_title = "한자 사전 둘러보기"
+step2_body = "JLPT 등급으로 필터링하고, 한자를 부수로 분해하고, 각 글자의 획순 애니메이션을 확인하세요."
+step3_title = "실제 단어 찾아보기"
+step3_body = "내장 사전은 한자, 읽기 또는 뜻으로 검색할 수 있습니다 — 영어 또는 러시아어로."
+step4_title = "간격 반복으로 복습하기"
+step4_body = "각 카드를 얼마나 잘 알고 있는지 평가하면 앱이 다음 복습을 자동으로 예약합니다."
+step5_title = "더 많은 검색 방법"
+step5_body = "손으로 한자를 그려서 검색하거나, 로마자를 즉시 가나로 변환하세요."
+step6_title = "나에게 맞게 설정하기"
+step6_body = "글꼴 크기, 테마, 인터페이스 언어를 조정하고 설정에서 학습 진행 상황을 백업하세요."
+skip = "건너뛰기"
+back = "뒤로"
+next = "다음"
+finish = "시작하기"
+
 [local.nav]
 home = "홈"
 kanji = "한자"

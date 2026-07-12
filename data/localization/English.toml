@@ -3,6 +3,24 @@ lang = "en"
 [local.common]
 loading = "Loading…"
 
+[local.onboarding]
+step1_title = "Welcome to Kanji Master"
+step1_body = "A quick tour of what's here — five stops, skip anytime."
+step2_title = "Browse the kanji dictionary"
+step2_body = "Filter by JLPT level, break kanji down into radicals, and watch animated stroke order for every character."
+step3_title = "Look up real words"
+step3_body = "Search the built-in dictionary by kanji, reading, or meaning — in English or Russian."
+step4_title = "Review with spaced repetition"
+step4_body = "Rate how well you knew each card and the app schedules the next review automatically."
+step5_title = "More ways in"
+step5_body = "Draw a kanji by hand to search for it, or convert romaji to kana on the fly."
+step6_title = "Make it yours"
+step6_body = "Tune font size, theme, interface language, and back up your review progress from Settings."
+skip = "Skip"
+back = "Back"
+next = "Next"
+finish = "Get started"
+
 [local.nav]
 home = "Home"
 kanji = "Kanji"

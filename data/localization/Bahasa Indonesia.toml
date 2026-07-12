@@ -3,6 +3,24 @@ lang = "id"
 [local.common]
 loading = "Memuat…"
 
+[local.onboarding]
+step1_title = "Selamat datang di Kanji Master"
+step1_body = "Tur singkat — lima langkah, bisa dilewati kapan saja."
+step2_title = "Jelajahi kamus kanji"
+step2_body = "Filter berdasarkan level JLPT, uraikan kanji menjadi radikal, dan lihat animasi urutan goresan setiap karakter."
+step3_title = "Cari kata sungguhan"
+step3_body = "Kamus bawaan mencari berdasarkan kanji, bacaan, atau arti — dalam bahasa Inggris atau Rusia."
+step4_title = "Ulangi dengan pengulangan berjarak"
+step4_body = "Nilai seberapa baik Anda mengenal setiap kartu, dan aplikasi akan menjadwalkan ulasan berikutnya secara otomatis."
+step5_title = "Cara lain untuk mencari"
+step5_body = "Gambar kanji dengan tangan untuk mencarinya, atau ubah romaji menjadi kana secara instan."
+step6_title = "Sesuaikan dengan gaya Anda"
+step6_body = "Atur ukuran font, tema, bahasa antarmuka, dan cadangkan progres ulasan Anda dari Pengaturan."
+skip = "Lewati"
+back = "Kembali"
+next = "Berikutnya"
+finish = "Mulai"
+
 [local.nav]
 home = "Beranda"
 kanji = "Kanji"

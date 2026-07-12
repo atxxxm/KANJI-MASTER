@@ -19,6 +19,13 @@ pub struct Config {
     pub dark_mode: bool,
     #[serde(default = "default_interface_language")]
     pub interface_language: String,
+    /// Whether the first-run onboarding tour has been shown. Defaults to
+    /// `true` when missing from an existing config.toml (an upgrading user
+    /// has already found their way around), but `Config::default()` — used
+    /// only when no config file exists yet — sets it to `false` explicitly
+    /// so genuinely new installs see the tour once.
+    #[serde(default = "default_onboarding_seen")]
+    pub onboarding_seen: bool,
 }
 
 fn default_dark_mode() -> bool {
@@ -27,6 +34,10 @@ fn default_dark_mode() -> bool {
 
 fn default_interface_language() -> String {
     "English".to_string()
+}
+
+fn default_onboarding_seen() -> bool {
+    true
 }
 
 impl Default for Config {
@@ -48,6 +59,7 @@ impl Default for Config {
             focus_on_search: true,
             dark_mode: true,
             interface_language: default_interface_language(),
+            onboarding_seen: false,
         }
     }
 }

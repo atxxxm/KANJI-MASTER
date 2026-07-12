@@ -3,6 +3,24 @@ lang = "vi"
 [local.common]
 loading = "Đang tải…"
 
+[local.onboarding]
+step1_title = "Chào mừng đến với Kanji Master"
+step1_body = "Một vòng giới thiệu nhanh — năm bước, có thể bỏ qua bất cứ lúc nào."
+step2_title = "Duyệt từ điển kanji"
+step2_body = "Lọc theo cấp độ JLPT, phân tích kanji thành các bộ thủ, và xem hoạt ảnh thứ tự nét của từng chữ."
+step3_title = "Tra cứu từ vựng thực tế"
+step3_body = "Từ điển tích hợp tìm theo kanji, cách đọc hoặc nghĩa — bằng tiếng Anh hoặc tiếng Nga."
+step4_title = "Ôn tập theo phương pháp lặp lại ngắt quãng"
+step4_body = "Đánh giá mức độ bạn nhớ mỗi thẻ, ứng dụng sẽ tự lên lịch cho lần ôn tập tiếp theo."
+step5_title = "Nhiều cách tra cứu khác"
+step5_body = "Vẽ một chữ kanji bằng tay để tìm kiếm, hoặc chuyển đổi romaji sang kana ngay lập tức."
+step6_title = "Tùy chỉnh theo ý bạn"
+step6_body = "Điều chỉnh cỡ chữ, giao diện, ngôn ngữ và sao lưu tiến trình ôn tập trong Cài đặt."
+skip = "Bỏ qua"
+back = "Quay lại"
+next = "Tiếp theo"
+finish = "Bắt đầu"
+
 [local.nav]
 home = "Trang chủ"
 kanji = "Kanji"

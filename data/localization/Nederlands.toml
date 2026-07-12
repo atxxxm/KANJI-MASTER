@@ -3,6 +3,24 @@ lang = "nl"
 [local.common]
 loading = "Laden…"
 
+[local.onboarding]
+step1_title = "Welkom bij Kanji Master"
+step1_body = "Een korte rondleiding — vijf stappen, op elk moment over te slaan."
+step2_title = "Blader door het kanji-woordenboek"
+step2_body = "Filter op JLPT-niveau, ontleed kanji in radicalen en bekijk de geanimeerde streekvolgorde van elk teken."
+step3_title = "Zoek echte woorden op"
+step3_body = "Het ingebouwde woordenboek doorzoekt kanji, lezing of betekenis — in het Engels of Russisch."
+step4_title = "Herhaal met spaced repetition"
+step4_body = "Beoordeel hoe goed je elke kaart kende en de app plant automatisch de volgende herhaling."
+step5_title = "Meer manieren om te zoeken"
+step5_body = "Teken een kanji met de hand om ernaar te zoeken, of zet romaji direct om naar kana."
+step6_title = "Maak het jouw eigen"
+step6_body = "Pas lettergrootte, thema en interfacetaal aan en maak een back-up van je voortgang in Instellingen."
+skip = "Overslaan"
+back = "Terug"
+next = "Volgende"
+finish = "Beginnen"
+
 [local.nav]
 home = "Start"
 kanji = "Kanji"

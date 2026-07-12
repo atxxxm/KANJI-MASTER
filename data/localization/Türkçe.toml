@@ -3,6 +3,24 @@ lang = "tr"
 [local.common]
 loading = "Yükleniyor…"
 
+[local.onboarding]
+step1_title = "Kanji Master'a hoş geldiniz"
+step1_body = "Kısa bir tur — beş durak, istediğiniz zaman atlayabilirsiniz."
+step2_title = "Kanji sözlüğüne göz atın"
+step2_body = "JLPT seviyesine göre filtreleyin, kanjileri köklerine ayırın ve her karakterin animasyonlu vuruş sırasını izleyin."
+step3_title = "Gerçek kelimeleri arayın"
+step3_body = "Yerleşik sözlük kanji, okunuş veya anlama göre arar — İngilizce veya Rusça."
+step4_title = "Aralıklı tekrarla çalışın"
+step4_body = "Her kartı ne kadar iyi bildiğinizi değerlendirin, uygulama bir sonraki tekrarı otomatik olarak planlar."
+step5_title = "Daha fazla arama yolu"
+step5_body = "Aramak için bir kanjiyi elle çizin veya romajiyi anında kanaya dönüştürün."
+step6_title = "Kendinize göre uyarlayın"
+step6_body = "Yazı boyutunu, temayı, arayüz dilini ayarlayın ve ilerlemenizi Ayarlar'dan yedekleyin."
+skip = "Atla"
+back = "Geri"
+next = "İleri"
+finish = "Başla"
+
 [local.nav]
 home = "Ana Sayfa"
 kanji = "Kanji"

@@ -3,6 +3,24 @@ lang = "ja"
 [local.common]
 loading = "読み込み中…"
 
+[local.onboarding]
+step1_title = "Kanji Master へようこそ"
+step1_body = "簡単なツアーです — 全5ステップ、いつでもスキップできます。"
+step2_title = "漢字辞書を見る"
+step2_body = "JLPTレベルで絞り込み、漢字を部首に分解し、各文字のアニメーション筆順を確認できます。"
+step3_title = "実際の単語を調べる"
+step3_body = "内蔵辞書は漢字・読み・意味で検索できます（英語またはロシア語）。"
+step4_title = "間隔反復で復習する"
+step4_body = "各カードの理解度を評価すると、次の復習が自動的にスケジュールされます。"
+step5_title = "他の検索方法"
+step5_body = "手書きで漢字を描いて検索したり、ローマ字をその場でかなに変換したりできます。"
+step6_title = "自分好みにカスタマイズ"
+step6_body = "設定でフォントサイズ、テーマ、表示言語を調整し、復習の進捗をバックアップできます。"
+skip = "スキップ"
+back = "戻る"
+next = "次へ"
+finish = "はじめる"
+
 [local.nav]
 home = "ホーム"
 kanji = "漢字"

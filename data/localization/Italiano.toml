@@ -3,6 +3,24 @@ lang = "it"
 [local.common]
 loading = "Caricamento…"
 
+[local.onboarding]
+step1_title = "Benvenuto in Kanji Master"
+step1_body = "Un breve tour — cinque passaggi, puoi saltarlo in qualsiasi momento."
+step2_title = "Esplora il dizionario dei kanji"
+step2_body = "Filtra per livello JLPT, scomponi i kanji in radicali e guarda l'animazione dell'ordine dei tratti di ogni carattere."
+step3_title = "Cerca parole reali"
+step3_body = "Il dizionario integrato cerca per kanji, lettura o significato, in inglese o russo."
+step4_title = "Ripassa con la ripetizione dilazionata"
+step4_body = "Valuta quanto conoscevi ogni carta e l'app pianifica automaticamente il prossimo ripasso."
+step5_title = "Altri modi per cercare"
+step5_body = "Disegna un kanji a mano per cercarlo, oppure converti il romaji in kana al volo."
+step6_title = "Personalizzalo"
+step6_body = "Regola dimensione del testo, tema, lingua dell'interfaccia e fai il backup dei progressi dalle Impostazioni."
+skip = "Salta"
+back = "Indietro"
+next = "Avanti"
+finish = "Inizia"
+
 [local.nav]
 home = "Home"
 kanji = "Kanji"

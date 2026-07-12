@@ -3,6 +3,24 @@ lang = "pl"
 [local.common]
 loading = "Ładowanie…"
 
+[local.onboarding]
+step1_title = "Witamy w Kanji Master"
+step1_body = "Krótkie oprowadzenie — pięć kroków, można pominąć w każdej chwili."
+step2_title = "Przeglądaj słownik kanji"
+step2_body = "Filtruj według poziomu JLPT, rozkładaj kanji na radykały i oglądaj animowaną kolejność kresek każdego znaku."
+step3_title = "Szukaj prawdziwych słów"
+step3_body = "Wbudowany słownik wyszukuje po kanji, odczycie lub znaczeniu — po angielsku lub rosyjsku."
+step4_title = "Powtarzaj z powtórkami rozłożonymi w czasie"
+step4_body = "Oceń, jak dobrze znałeś każdą kartę, a aplikacja sama zaplanuje kolejną powtórkę."
+step5_title = "Więcej sposobów wyszukiwania"
+step5_body = "Narysuj kanji ręcznie, aby je wyszukać, albo zamień romaji na kanę na bieżąco."
+step6_title = "Dostosuj do siebie"
+step6_body = "Zmień rozmiar czcionki, motyw, język interfejsu i utwórz kopię zapasową postępów w Ustawieniach."
+skip = "Pomiń"
+back = "Wstecz"
+next = "Dalej"
+finish = "Zaczynajmy"
+
 [local.nav]
 home = "Start"
 kanji = "Kanji"

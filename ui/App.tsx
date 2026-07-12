@@ -6,6 +6,7 @@ import "./styles/tabbar.css";
 import Sidebar from "./components/Sidebar";
 import TabBar from "./components/TabBar";
 import ContextMenuProvider from "./components/ContextMenu";
+import OnboardingTour from "./components/OnboardingTour";
 import Home from "./views/Home";
 import KanjiList from "./views/KanjiList";
 import KanaChart from "./views/KanaChart";
@@ -166,6 +167,16 @@ export default function App() {
 
   const updateConfig = (patch: Partial<Config>) =>
     setConfig(c => (c ? { ...c, ...patch } : c));
+
+  // Persists immediately (unlike updateConfig, which is in-memory-only until
+  // the user hits Save in Settings) so dismissing the tour sticks even if
+  // they never open the Settings view.
+  const finishOnboarding = () => {
+    if (!config || config.onboarding_seen) return;
+    const updated = { ...config, onboarding_seen: true };
+    setConfig(updated);
+    invoke("save_settings", { config: updated }).catch(() => {});
+  };
 
   const toggleTheme = () => setTheme(t => t === "dark" ? "light" : "dark");
 
@@ -343,6 +354,7 @@ export default function App() {
           </div>
         </main>
       </div>
+      {config && !config.onboarding_seen && <OnboardingTour onFinish={finishOnboarding} />}
     </ContextMenuProvider>
     </KanjiDataContext.Provider>
     </LocalizationContext.Provider>

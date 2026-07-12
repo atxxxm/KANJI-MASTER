@@ -63,4 +63,5 @@ export interface Config {
   focus_on_search: boolean;
   dark_mode: boolean;
   interface_language: string;
+  onboarding_seen: boolean;
 }

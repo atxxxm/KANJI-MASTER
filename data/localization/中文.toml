@@ -3,6 +3,24 @@ lang = "zh-CN"
 [local.common]
 loading = "加载中…"
 
+[local.onboarding]
+step1_title = "欢迎使用 Kanji Master"
+step1_body = "快速导览——共五步，随时可以跳过。"
+step2_title = "浏览汉字词典"
+step2_body = "按 JLPT 等级筛选，将汉字拆解为部首，观看每个字的动态笔顺演示。"
+step3_title = "查找真实词汇"
+step3_body = "内置词典可按汉字、读音或释义搜索——支持英语或俄语。"
+step4_title = "使用间隔重复法复习"
+step4_body = "为每张卡片的掌握程度打分，应用会自动安排下一次复习。"
+step5_title = "更多查找方式"
+step5_body = "手写汉字进行搜索，或即时将罗马字转换为假名。"
+step6_title = "个性化设置"
+step6_body = "在设置中调整字体大小、主题、界面语言，并备份你的复习进度。"
+skip = "跳过"
+back = "上一步"
+next = "下一步"
+finish = "开始使用"
+
 [local.nav]
 home = "首页"
 kanji = "汉字"

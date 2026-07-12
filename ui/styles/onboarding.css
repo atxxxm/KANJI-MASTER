@@ -1,0 +1,117 @@
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+  animation: onboarding-fade-in 0.25s var(--spring-soft);
+}
+
+@keyframes onboarding-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.onboarding-card {
+  position: relative;
+  width: 380px;
+  max-width: calc(100vw - 48px);
+  padding: 36px 32px 28px;
+  border-radius: var(--radius-lg);
+  background: var(--surface-solid);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  animation: rise-in 0.3s var(--spring-soft) backwards;
+  outline: none;
+}
+
+.onboarding-skip {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-muted);
+  font-family: var(--font);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+.onboarding-skip:hover { background: var(--surface-2); color: var(--text); }
+.onboarding-skip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+.onboarding-icon {
+  font-size: 44px;
+  font-weight: 500;
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+.onboarding-title {
+  margin: 0 0 10px;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.onboarding-body {
+  margin: 0 0 22px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.onboarding-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 22px;
+}
+.onboarding-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border-hover);
+  transition: background var(--transition), transform 0.2s var(--spring);
+}
+.onboarding-dot.active {
+  background: var(--accent);
+  transform: scale(1.3);
+}
+
+.onboarding-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.onboarding-btn {
+  padding: 9px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), transform 0.15s var(--spring), border-color var(--transition);
+}
+.onboarding-btn:active { transform: scale(0.96); }
+.onboarding-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.onboarding-btn.primary {
+  background: var(--accent);
+  color: #fff;
+}
+.onboarding-btn.primary:hover { background: var(--accent-hover); }
+
+.onboarding-btn.secondary {
+  background: none;
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+.onboarding-btn.secondary:hover { color: var(--text); border-color: var(--border-hover); }
