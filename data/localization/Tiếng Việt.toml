@@ -149,6 +149,7 @@ unit_year = "năm"
 search_hint = "Tìm từ theo kanji, cách đọc hoặc ý nghĩa…"
 start_typing = "Gõ để tìm trong từ điển"
 no_results = "Không tìm thấy từ nào"
+truncated_hint = "Đang hiển thị 100 kết quả đầu tiên — hãy tinh chỉnh tìm kiếm để có kết quả chính xác hơn"
 
 [local.settings]
 title = "Cài đặt"

@@ -147,6 +147,7 @@ unit_year = "y"
 search_hint = "Search words by kanji, reading, or meaning…"
 start_typing = "Type to search the word dictionary"
 no_results = "No words found"
+truncated_hint = "Showing the first 100 matches — refine your search for more precise results"
 
 [local.settings]
 title = "Settings"

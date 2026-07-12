@@ -149,6 +149,7 @@ unit_year = "J"
 search_hint = "Wörter nach Kanji, Lesung oder Bedeutung suchen…"
 start_typing = "Tippen, um im Wörterbuch zu suchen"
 no_results = "Keine Wörter gefunden"
+truncated_hint = "Zeigt die ersten 100 Treffer — grenzen Sie Ihre Suche für genauere Ergebnisse ein"
 
 [local.settings]
 title = "Einstellungen"

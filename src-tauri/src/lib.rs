@@ -244,11 +244,29 @@ fn get_localization(app: AppHandle, lang: String) -> HashMap<String, String> {
 
 // ── Word dictionary commands ─────────────────────────────────────────────────
 
+const WORD_SEARCH_LIMIT: u32 = 100;
+
+#[derive(Serialize)]
+struct WordSearchResult {
+    words: Vec<Word>,
+    truncated: bool,
+}
+
 /// Searches the bundled JMdict common-words table by word, reading, or gloss.
+/// Requests one extra row beyond the display limit so the frontend can tell
+/// whether results were actually truncated, without needing a separate
+/// COUNT(*) query.
 #[tauri::command]
-fn search_words(state: State<AppStateHandle>, query: String) -> Vec<Word> {
+fn search_words(state: State<AppStateHandle>, query: String) -> WordSearchResult {
     let st = state.lock().unwrap();
-    back::words::search_words(&st.config.path_to_db_core, query.trim(), 100)
+    let mut words = back::words::search_words(
+        &st.config.path_to_db_core,
+        query.trim(),
+        WORD_SEARCH_LIMIT + 1,
+    );
+    let truncated = words.len() > WORD_SEARCH_LIMIT as usize;
+    words.truncate(WORD_SEARCH_LIMIT as usize);
+    WordSearchResult { words, truncated }
 }
 
 /// Common words containing the given kanji, for the Kanji Detail view.

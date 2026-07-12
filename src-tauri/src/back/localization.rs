@@ -66,3 +66,61 @@ fn flatten(value: &toml::Value, prefix: &str, out: &mut HashMap<String, String>)
         _ => {}
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn flattens_nested_tables_into_dot_paths() {
+        let toml_str = r#"
+            [local.settings]
+            title = "Settings"
+
+            [local.settings.nested]
+            deep = "value"
+        "#;
+        let value: toml::Value = toml::from_str(toml_str).unwrap();
+        let mut out = HashMap::new();
+        flatten(value.get("local").unwrap(), "", &mut out);
+
+        assert_eq!(out.get("settings.title"), Some(&"Settings".to_string()));
+        assert_eq!(out.get("settings.nested.deep"), Some(&"value".to_string()));
+        assert_eq!(out.len(), 2);
+    }
+
+    #[test]
+    fn ignores_non_string_values_like_the_top_level_lang_code() {
+        // Every locale file has a bare `lang = "en"` at the document root
+        // (outside `[local]`) plus nested tables inside `[local]` — flatten()
+        // is only ever called on the `local` subtree, but should still be
+        // robust to non-table/non-string values (numbers, bools, arrays).
+        let toml_str = r#"
+            [local]
+            count = 5
+            enabled = true
+            list = ["a", "b"]
+            text = "kept"
+        "#;
+        let value: toml::Value = toml::from_str(toml_str).unwrap();
+        let mut out = HashMap::new();
+        flatten(value.get("local").unwrap(), "", &mut out);
+
+        assert_eq!(out.len(), 1);
+        assert_eq!(out.get("text"), Some(&"kept".to_string()));
+    }
+
+    #[test]
+    fn real_localization_file_parses_and_flattens() {
+        // Guards the actual bundled resource format end-to-end (parse + flatten),
+        // without needing a Tauri AppHandle to exercise load_language() directly.
+        let content = fs::read_to_string("../data/localization/English.toml")
+            .expect("English.toml should exist relative to src-tauri/");
+        let value: toml::Value = toml::from_str(&content).unwrap();
+        let mut out = HashMap::new();
+        flatten(value.get("local").unwrap(), "", &mut out);
+
+        assert_eq!(out.get("settings.title"), Some(&"Settings".to_string()));
+        assert!(out.len() > 100, "expected 100+ flattened keys, got {}", out.len());
+    }
+}

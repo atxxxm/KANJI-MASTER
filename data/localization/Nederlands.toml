@@ -149,6 +149,7 @@ unit_year = "j"
 search_hint = "Zoek woorden op kanji, lezing of betekenis…"
 start_typing = "Typ om in het woordenboek te zoeken"
 no_results = "Geen woorden gevonden"
+truncated_hint = "De eerste 100 resultaten worden getoond — verfijn uw zoekopdracht voor nauwkeurigere resultaten"
 
 [local.settings]
 title = "Instellingen"

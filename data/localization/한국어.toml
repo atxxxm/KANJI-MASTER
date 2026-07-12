@@ -149,6 +149,7 @@ unit_year = "년"
 search_hint = "한자, 독음 또는 의미로 단어 검색…"
 start_typing = "입력하여 단어 사전 검색"
 no_results = "단어를 찾을 수 없습니다"
+truncated_hint = "처음 100개의 결과를 표시하고 있습니다 — 더 정확한 결과를 위해 검색어를 좁혀 보세요"
 
 [local.settings]
 title = "설정"

@@ -119,3 +119,38 @@ pub(crate) fn parse_svg_content(raw_text: &str) -> Option<Vec<Stroke>> {
     
     if strokes.is_empty() { None } else { Some(strokes) }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn parses_stroke_count_matching_the_svg_path_elements() {
+        // 木 (06728.svg) has exactly 4 <path> elements/strokes.
+        let content = fs::read_to_string("../data/kanji-svg/06728.svg").unwrap();
+        let strokes = parse_svg_content(&content).expect("木 should parse to some strokes");
+        assert_eq!(strokes.len(), 4);
+
+        // 語 (08a9e.svg), a compound kanji, has 14.
+        let content = fs::read_to_string("../data/kanji-svg/08a9e.svg").unwrap();
+        let strokes = parse_svg_content(&content).expect("語 should parse to some strokes");
+        assert_eq!(strokes.len(), 14);
+    }
+
+    #[test]
+    fn every_stroke_has_at_least_two_points_to_draw_a_line() {
+        let content = fs::read_to_string("../data/kanji-svg/06728.svg").unwrap();
+        let strokes = parse_svg_content(&content).unwrap();
+        for stroke in &strokes {
+            assert!(stroke.points.len() >= 2, "a single-point stroke can't be animated as a line");
+        }
+    }
+
+    #[test]
+    fn malformed_or_pathless_svg_returns_none() {
+        assert!(parse_svg_content("").is_none());
+        assert!(parse_svg_content("<svg></svg>").is_none());
+        assert!(parse_svg_content("not even xml").is_none());
+    }
+}

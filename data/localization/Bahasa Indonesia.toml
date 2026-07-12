@@ -149,6 +149,7 @@ unit_year = "th"
 search_hint = "Cari kata berdasarkan kanji, cara baca, atau arti…"
 start_typing = "Ketik untuk mencari di kamus kata"
 no_results = "Kata tidak ditemukan"
+truncated_hint = "Menampilkan 100 hasil pertama — persempit pencarian Anda untuk hasil yang lebih akurat"
 
 [local.settings]
 title = "Pengaturan"

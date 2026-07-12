@@ -221,6 +221,84 @@ fn get_kana(romaji: &str, is_katakana: bool) -> Option<&'static str> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn basic_vowels_and_rows() {
+        assert_eq!(to_kana("aiueo", false, false), "あいうえお");
+        assert_eq!(to_kana("kakikukeko", false, false), "かきくけこ");
+    }
+
+    #[test]
+    fn longest_match_wins_over_shorter_prefixes() {
+        // "sha" (3 chars) must not be read as "shi" + stray "a".
+        assert_eq!(to_kana("sha", false, false), "しゃ");
+        // "xtsu" (4 chars) must not fall back to "xtu"-less parsing.
+        assert_eq!(to_kana("xtsu", false, false), "っ");
+    }
+
+    #[test]
+    fn sokuon_doubles_consonant_into_small_tsu() {
+        assert_eq!(to_kana("kitte", false, false), "きって");
+        assert_eq!(to_kana("gakkou", false, false), "がっこう");
+        // A doubled vowel is not sokuon — "aa" is just two あ.
+        assert_eq!(to_kana("aa", false, false), "ああ");
+    }
+
+    #[test]
+    fn n_apostrophe_forces_syllabic_n_before_a_vowel() {
+        assert_eq!(to_kana("kon'ya", false, false), "こんや");
+        // Without the apostrophe, "nya" reads as the compound にゃ instead.
+        assert_eq!(to_kana("konya", false, false), "こにゃ");
+    }
+
+    #[test]
+    fn n_before_consonant_or_end_of_word_becomes_syllabic_n() {
+        assert_eq!(to_kana("kanji", false, false), "かんじ");
+        assert_eq!(to_kana("hon", false, false), "ほん");
+        // n before a vowel (not end, no apostrophe) attaches to the row instead.
+        assert_eq!(to_kana("na", false, false), "な");
+    }
+
+    #[test]
+    fn trailing_n_stays_literal_while_live_typing() {
+        // live_input=true: a trailing "n" might still become "na"/"nya"/etc. on
+        // the next keystroke, so it's held back instead of committing to ん.
+        assert_eq!(to_kana("ka n", false, true), "か n");
+        // Once a following character arrives, it resolves normally.
+        assert_eq!(to_kana("kani", false, true), "かに");
+    }
+
+    #[test]
+    fn long_vowel_and_punctuation_marks() {
+        assert_eq!(to_kana("ka-", false, false), "かー");
+        assert_eq!(to_kana("ohayou.", false, false), "おはよう。");
+        assert_eq!(to_kana("hai,", false, false), "はい、");
+    }
+
+    #[test]
+    fn katakana_mode_converts_and_supports_foreign_syllables() {
+        assert_eq!(to_kana("kohi", true, false), "コヒ");
+        // "fa"/"va" only exist as katakana foreign-sound combos.
+        assert_eq!(to_kana("fa", true, false), "ファ");
+        assert_eq!(to_kana("va", true, false), "ヴァ");
+    }
+
+    #[test]
+    fn unrecognized_characters_pass_through_unchanged() {
+        // Lets kanji/kana/punctuation already in the input survive untouched.
+        assert_eq!(to_kana("漢字ka", false, false), "漢字か");
+    }
+
+    #[test]
+    fn uppercase_romaji_is_case_insensitive() {
+        assert_eq!(to_kana("KA", false, false), "か");
+        assert_eq!(to_kana("SHA", true, false), "シャ");
+    }
+}
+
 // Convert hiragana to katakana
 fn hiragana_to_katakana(h: &'static str) -> &'static str {
     match h {

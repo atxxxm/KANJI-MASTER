@@ -149,6 +149,7 @@ unit_year = "年"
 search_hint = "按汉字、读音或含义搜索词汇…"
 start_typing = "输入以搜索词典"
 no_results = "未找到词汇"
+truncated_hint = "显示前 100 条匹配结果 — 请优化搜索以获得更精确的结果"
 
 [local.settings]
 title = "设置"

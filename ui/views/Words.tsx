@@ -68,6 +68,7 @@ export default function Words({ onOpenKanji, onOpenKanjiNewTab, active }: Props)
 
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<WordDto[]>([]);
+  const [truncated, setTruncated] = useState(false);
   const [searched, setSearched] = useState(false);
 
   const preferRu = config?.interface_language === "Русский";
@@ -78,12 +79,14 @@ export default function Words({ onOpenKanji, onOpenKanjiNewTab, active }: Props)
     const q = search.trim();
     if (!q) {
       setResults([]);
+      setTruncated(false);
       setSearched(false);
       return;
     }
     const timer = setTimeout(async () => {
-      const words = await invoke<WordDto[]>("search_words", { query: q });
-      setResults(words);
+      const res = await invoke<{ words: WordDto[]; truncated: boolean }>("search_words", { query: q });
+      setResults(res.words);
+      setTruncated(res.truncated);
       setSearched(true);
     }, 200);
     return () => clearTimeout(timer);
@@ -109,8 +112,13 @@ export default function Words({ onOpenKanji, onOpenKanjiNewTab, active }: Props)
           onChange={e => setSearch(e.target.value)}
           autoFocus
         />
-        {searched && <span className="result-count">{results.length}</span>}
+        {searched && (
+          <span className="result-count" title={truncated ? t("words.truncated_hint") : undefined}>
+            {truncated ? `${results.length}+` : results.length}
+          </span>
+        )}
       </div>
+      {truncated && <div className="words-truncated-hint">{t("words.truncated_hint")}</div>}
 
       {!searched ? (
         <div className="view-placeholder">

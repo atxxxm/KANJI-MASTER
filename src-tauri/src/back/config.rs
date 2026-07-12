@@ -136,6 +136,92 @@ fn seed_dir_if_missing(src: &Path, dst: &Path) {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    /// A fresh, empty pair of (src, dst) temp directories, scoped under the
+    /// OS temp dir with a name unique to the calling test so parallel test
+    /// threads never collide. Cleaned up on drop.
+    struct TempDirs {
+        src: PathBuf,
+        dst: PathBuf,
+    }
+
+    impl TempDirs {
+        fn new(tag: &str) -> Self {
+            let nonce = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+            let base = std::env::temp_dir().join(format!("kanji_master_test_{tag}_{nonce}"));
+            let src = base.join("src");
+            let dst = base.join("dst");
+            fs::create_dir_all(&src).unwrap();
+            Self { src, dst }
+        }
+    }
+
+    impl Drop for TempDirs {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(self.src.parent().unwrap());
+        }
+    }
+
+    #[test]
+    fn seed_dir_if_missing_copies_files_into_a_new_destination() {
+        let dirs = TempDirs::new("seed_new");
+        fs::write(dirs.src.join("en.json"), "{}").unwrap();
+        fs::write(dirs.src.join("ru.json"), "{}").unwrap();
+
+        seed_dir_if_missing(&dirs.src, &dirs.dst);
+
+        assert!(dirs.dst.join("en.json").exists());
+        assert!(dirs.dst.join("ru.json").exists());
+    }
+
+    #[test]
+    fn seed_dir_if_missing_never_overwrites_an_existing_file() {
+        // This is the whole point of the function: a user's edited
+        // kanji-localization files must survive app updates that re-bundle
+        // the default en.json.
+        let dirs = TempDirs::new("seed_preserve");
+        fs::write(dirs.src.join("en.json"), r#"{"entries":"bundled default"}"#).unwrap();
+        fs::create_dir_all(&dirs.dst).unwrap();
+        fs::write(dirs.dst.join("en.json"), r#"{"entries":"user edited this"}"#).unwrap();
+
+        seed_dir_if_missing(&dirs.src, &dirs.dst);
+
+        let content = fs::read_to_string(dirs.dst.join("en.json")).unwrap();
+        assert_eq!(content, r#"{"entries":"user edited this"}"#);
+    }
+
+    #[test]
+    fn seed_dir_if_missing_adds_new_files_alongside_preserved_ones() {
+        // A partially-seeded dst (e.g. only en.json from an older version)
+        // should still pick up newly bundled files (e.g. ru.json) without
+        // touching what's already there.
+        let dirs = TempDirs::new("seed_partial");
+        fs::write(dirs.src.join("en.json"), "bundled").unwrap();
+        fs::write(dirs.src.join("ru.json"), "bundled").unwrap();
+        fs::create_dir_all(&dirs.dst).unwrap();
+        fs::write(dirs.dst.join("en.json"), "user edited").unwrap();
+
+        seed_dir_if_missing(&dirs.src, &dirs.dst);
+
+        assert_eq!(fs::read_to_string(dirs.dst.join("en.json")).unwrap(), "user edited");
+        assert_eq!(fs::read_to_string(dirs.dst.join("ru.json")).unwrap(), "bundled");
+    }
+
+    #[test]
+    fn seed_dir_if_missing_is_a_noop_when_source_does_not_exist() {
+        let dirs = TempDirs::new("seed_missing_src");
+        let missing_src = dirs.src.join("does-not-exist");
+
+        // Must not panic even though the source directory was never created.
+        seed_dir_if_missing(&missing_src, &dirs.dst);
+        assert!(!dirs.dst.exists());
+    }
+}
+
 // Load config (creates default if file doesn't exist)
 pub fn load_config() -> Result<Config> {
     let path = get_config_path()

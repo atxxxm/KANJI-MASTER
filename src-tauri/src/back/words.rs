@@ -101,3 +101,123 @@ pub fn get_word(db_path: &str, id: i32) -> Option<Word> {
         .ok()?;
     stmt.query_row(rusqlite::params![id], row_to_word).ok()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    /// Builds a throwaway SQLite file (rusqlite's read-only OpenFlags used by
+    /// `open()` require a real file — ":memory:" won't work since each
+    /// connection to it is an isolated database) with a `words` table
+    /// seeded with a few realistic rows, and returns its path. The caller's
+    /// writable `Connection` is dropped before returning so the read-only
+    /// `open()` calls under test don't contend with it.
+    fn seeded_db() -> String {
+        let nonce = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos();
+        let path = std::env::temp_dir().join(format!("kanji_master_words_test_{nonce}.db"));
+        let path_str = path.to_string_lossy().into_owned();
+
+        let conn = Connection::open(&path_str).unwrap();
+        conn.execute_batch(
+            "CREATE TABLE words (
+                id INTEGER PRIMARY KEY,
+                kanji TEXT,
+                reading TEXT NOT NULL,
+                gloss_en TEXT,
+                gloss_ru TEXT,
+                rank INTEGER
+            );
+            INSERT INTO words (id, kanji, reading, gloss_en, gloss_ru, rank) VALUES
+                (1, '日本語', 'にほんご', 'Japanese language', 'японский язык', 10),
+                (2, '語', 'ご', 'language; word', 'язык; слово', 50),
+                (3, '英語', 'えいご', 'English language', 'английский язык', 20),
+                (4, NULL, 'こんにちは', 'hello', 'привет', 5);",
+        )
+        .unwrap();
+        drop(conn);
+
+        path_str
+    }
+
+    #[test]
+    fn search_matches_kanji_reading_and_english_gloss() {
+        let db = seeded_db();
+        assert_eq!(search_words(&db, "語", 10).len(), 3); // 日本語, 語, 英語
+        assert_eq!(search_words(&db, "にほん", 10).len(), 1);
+        assert_eq!(search_words(&db, "hello", 10).len(), 1);
+    }
+
+    #[test]
+    fn search_is_case_insensitive_for_cyrillic_glosses() {
+        // This is the exact bug fixed by the ulower() SQLite function: plain
+        // LIKE only case-folds ASCII, so uppercase/mixed-case Cyrillic input
+        // would otherwise miss lowercase-stored glosses.
+        let db = seeded_db();
+        assert_eq!(search_words(&db, "ЯЗЫК", 10).len(), 3);
+        assert_eq!(search_words(&db, "Привет", 10).len(), 1);
+        assert_eq!(search_words(&db, "язык", 10).len(), 3);
+    }
+
+    #[test]
+    fn search_is_case_insensitive_for_english_glosses_too() {
+        let db = seeded_db();
+        assert_eq!(search_words(&db, "HELLO", 10).len(), 1);
+        assert_eq!(search_words(&db, "Japanese", 10).len(), 1);
+    }
+
+    #[test]
+    fn exact_match_and_frequency_rank_order_results() {
+        let db = seeded_db();
+        let results = search_words(&db, "語", 10);
+        // Exact reading match ("ご", rank 50) still loses to non-exact but
+        // lower-rank (more frequent) matches per the ORDER BY: exact-match
+        // flag is checked first, but among the non-exact matches rank wins.
+        // 日本語 (rank 10) should come before 英語 (rank 20).
+        let kanji: Vec<_> = results.iter().map(|w| w.kanji.clone()).collect();
+        let pos_nihongo = kanji.iter().position(|k| k.as_deref() == Some("日本語")).unwrap();
+        let pos_eigo = kanji.iter().position(|k| k.as_deref() == Some("英語")).unwrap();
+        assert!(pos_nihongo < pos_eigo, "more frequent word should sort first");
+    }
+
+    #[test]
+    fn search_respects_the_limit() {
+        let db = seeded_db();
+        assert_eq!(search_words(&db, "語", 1).len(), 1);
+    }
+
+    #[test]
+    fn empty_query_returns_nothing() {
+        let db = seeded_db();
+        assert!(search_words(&db, "", 10).is_empty());
+    }
+
+    #[test]
+    fn words_for_kanji_finds_only_matching_entries_most_frequent_first() {
+        let db = seeded_db();
+        let results = words_for_kanji(&db, "語", 10);
+        assert_eq!(results.len(), 3);
+        assert_eq!(results[0].kanji.as_deref(), Some("日本語")); // rank 10, most frequent
+
+        // A kana-only word (no kanji field) never matches a kanji search.
+        let results = words_for_kanji(&db, "今", 10);
+        assert!(results.is_empty());
+    }
+
+    #[test]
+    fn get_word_returns_the_matching_row_or_none() {
+        let db = seeded_db();
+        let word = get_word(&db, 1).expect("id 1 should exist");
+        assert_eq!(word.kanji.as_deref(), Some("日本語"));
+        assert_eq!(word.gloss_ru.as_deref(), Some("японский язык"));
+
+        assert!(get_word(&db, 9999).is_none());
+    }
+
+    #[test]
+    fn missing_database_file_returns_empty_results_not_a_panic() {
+        assert!(search_words("Z:/definitely/does/not/exist.db", "test", 10).is_empty());
+        assert!(words_for_kanji("Z:/definitely/does/not/exist.db", "語", 10).is_empty());
+        assert!(get_word("Z:/definitely/does/not/exist.db", 1).is_none());
+    }
+}

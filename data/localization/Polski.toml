@@ -149,6 +149,7 @@ unit_year = "rok"
 search_hint = "Szukaj słów po kanji, odczycie lub znaczeniu…"
 start_typing = "Wpisz, aby wyszukać w słowniku słów"
 no_results = "Nie znaleziono słów"
+truncated_hint = "Wyświetlono pierwsze 100 wyników — zawęź wyszukiwanie, aby uzyskać dokładniejsze wyniki"
 
 [local.settings]
 title = "Ustawienia"

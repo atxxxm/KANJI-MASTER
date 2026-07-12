@@ -129,3 +129,38 @@ fn split_romaji(text: &str) -> String {
     }
     text.split_whitespace().collect::<Vec<_>>().join(", ")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn split_on_or_kun_joins_with_japanese_comma() {
+        assert_eq!(split_on_or_kun("カン ケン"), "カン、ケン");
+        assert_eq!(split_on_or_kun("ヒト"), "ヒト");
+    }
+
+    #[test]
+    fn split_on_or_kun_collapses_irregular_whitespace() {
+        // KANJIDIC source fields are whitespace-separated with inconsistent
+        // spacing/newlines — split_whitespace() must normalize that away.
+        assert_eq!(split_on_or_kun("  カン   ケン  "), "カン、ケン");
+    }
+
+    #[test]
+    fn split_on_or_kun_empty_or_blank_becomes_empty_string() {
+        assert_eq!(split_on_or_kun(""), "");
+        assert_eq!(split_on_or_kun("   "), "");
+    }
+
+    #[test]
+    fn split_romaji_joins_with_comma_space() {
+        assert_eq!(split_romaji("kan ken"), "kan, ken");
+    }
+
+    #[test]
+    fn split_romaji_empty_or_blank_becomes_empty_string() {
+        assert_eq!(split_romaji(""), "");
+        assert_eq!(split_romaji("  "), "");
+    }
+}

@@ -149,6 +149,7 @@ unit_year = "y"
 search_hint = "Kanji, okunuş veya anlama göre kelime ara…"
 start_typing = "Kelime sözlüğünde aramak için yazın"
 no_results = "Kelime bulunamadı"
+truncated_hint = "İlk 100 sonuç gösteriliyor — daha kesin sonuçlar için aramanızı daraltın"
 
 [local.settings]
 title = "Ayarlar"

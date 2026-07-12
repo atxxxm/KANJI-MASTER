@@ -149,6 +149,7 @@ unit_year = "a"
 search_hint = "Buscar palavras por kanji, leitura ou significado…"
 start_typing = "Digite para buscar no dicionário de palavras"
 no_results = "Nenhuma palavra encontrada"
+truncated_hint = "Mostrando os primeiros 100 resultados — refine sua pesquisa para resultados mais precisos"
 
 [local.settings]
 title = "Configurações"

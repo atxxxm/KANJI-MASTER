@@ -5,6 +5,12 @@
   overflow: hidden;
 }
 
+.words-truncated-hint {
+  padding: 2px 16px 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 .words-list {
   flex: 1;
   overflow-y: auto;
