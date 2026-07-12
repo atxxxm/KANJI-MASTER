@@ -392,9 +392,48 @@
   contain: paint;
 }
 
-.anim-kanji-wrapper canvas {
-  border-radius: var(--radius-sm);
+.anim-kanji-svg {
+  width: 200px;
+  height: 200px;
   display: block;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+/* Dashed centering guides, like a grid practice sheet. non-scaling-stroke
+   keeps them a crisp fixed pixel width regardless of the viewBox scaling. */
+.anim-guide {
+  stroke: var(--border);
+  stroke-width: 0.5;
+  stroke-dasharray: 3 5;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Default (non-animated) state is the fully-drawn stroke, so if the reveal
+   animation never runs the kanji is still shown correctly. The component sets
+   each stroke's --len (its measured path length), stroke-dasharray, and the
+   `animation` shorthand imperatively; the keyframe below uses --len to slide
+   the dash in.
+
+   Do NOT add vector-effect: non-scaling-stroke here. It makes stroke-dasharray
+   / stroke-dashoffset resolve in screen pixels, while getTotalLength() (which
+   the component uses to set them) returns length in viewBox units — at the
+   200px render size those differ ~1.8x, so the dash would only ever cover part
+   of the path and the reveal would visibly slide instead of drawing. Keeping
+   the stroke in user units makes the dash and the measured length match.
+   stroke-width is in the 0-109 viewBox space (~3.7px on screen at 200px). */
+.anim-stroke {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes kanji-draw {
+  from { stroke-dashoffset: var(--len, 1000); stroke: var(--accent); }
+  to   { stroke-dashoffset: 0; stroke: var(--text); }
 }
 
 .replay-btn {

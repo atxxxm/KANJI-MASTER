@@ -17,7 +17,11 @@ pub struct Stroke {
 }
 
 pub struct SvgCache {
-    data: HashMap<i32, Vec<Stroke>>,
+    // Each kanji's stroke paths as their raw SVG `d` attribute strings, in
+    // drawing order. The frontend renders these directly as <path> elements
+    // and animates them with stroke-dashoffset, so no flattening to points is
+    // needed here (unlike `parse_svg_content`, which recognition still uses).
+    data: HashMap<i32, Vec<String>>,
     svg_path: String,
     unicode_map: HashMap<i32, String>,
 }
@@ -40,20 +44,42 @@ impl SvgCache {
         }
     }
 
-    /// Returns strokes for a kanji, parsing its SVG file on first access.
-    pub fn get_or_load(&mut self, kanji_id: i32) -> Option<&Vec<Stroke>> {
+    /// Returns each stroke's SVG path data for a kanji, parsing its SVG file
+    /// on first access and caching the result.
+    pub fn get_or_load(&mut self, kanji_id: i32) -> Option<&Vec<String>> {
         if !self.data.contains_key(&kanji_id) {
             if let Some(unicode) = self.unicode_map.get(&kanji_id).cloned() {
                 let file_path = format!("{}/0{}.svg", self.svg_path, unicode.to_lowercase());
                 if let Ok(content) = fs::read_to_string(&file_path) {
-                    if let Some(strokes) = parse_svg_content(&content) {
-                        self.data.insert(kanji_id, strokes);
+                    if let Some(paths) = parse_svg_paths(&content) {
+                        self.data.insert(kanji_id, paths);
                     }
                 }
             }
         }
         self.data.get(&kanji_id)
     }
+}
+
+/// Extracts each stroke's raw `d` path string in document (drawing) order.
+/// KanjiVG puts stroke-number labels in `<text>` elements, so filtering to
+/// `<path>` yields exactly the strokes — the same filter `parse_svg_content`
+/// relies on.
+pub(crate) fn parse_svg_paths(raw_text: &str) -> Option<Vec<String>> {
+    let text = raw_text.replace("kvg:", "kvg_");
+    let opt = ParsingOptions {
+        allow_dtd: true,
+        ..ParsingOptions::default()
+    };
+    let doc = Document::parse_with_options(&text, opt).ok()?;
+
+    let paths: Vec<String> = doc
+        .descendants()
+        .filter(|n| n.has_tag_name("path"))
+        .filter_map(|n| n.attribute("d").map(String::from))
+        .collect();
+
+    if paths.is_empty() { None } else { Some(paths) }
 }
 
 pub(crate) fn parse_svg_content(raw_text: &str) -> Option<Vec<Stroke>> {
@@ -152,5 +178,24 @@ mod tests {
         assert!(parse_svg_content("").is_none());
         assert!(parse_svg_content("<svg></svg>").is_none());
         assert!(parse_svg_content("not even xml").is_none());
+    }
+
+    #[test]
+    fn parse_svg_paths_returns_one_d_string_per_stroke_in_order() {
+        // Same stroke counts as parse_svg_content, but the raw `d` strings the
+        // frontend animates directly instead of flattened points.
+        let content = fs::read_to_string("../data/kanji-svg/06728.svg").unwrap();
+        let paths = parse_svg_paths(&content).expect("木 should have stroke paths");
+        assert_eq!(paths.len(), 4);
+        assert!(paths.iter().all(|d| !d.trim().is_empty()));
+
+        let content = fs::read_to_string("../data/kanji-svg/08a9e.svg").unwrap();
+        assert_eq!(parse_svg_paths(&content).unwrap().len(), 14);
+    }
+
+    #[test]
+    fn parse_svg_paths_on_pathless_input_returns_none() {
+        assert!(parse_svg_paths("").is_none());
+        assert!(parse_svg_paths("<svg></svg>").is_none());
     }
 }

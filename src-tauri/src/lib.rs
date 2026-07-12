@@ -105,24 +105,14 @@ fn convert_romaji(input: String, is_katakana: bool, live_input: bool) -> String 
     to_kana(&input, is_katakana, live_input)
 }
 
-/// Returns stroke point arrays for canvas animation, parsing the kanji's SVG
-/// file on first request and caching the result for subsequent calls.
-/// Each stroke is a flat sequence of [x, y] in KanjiVG 0-109 coordinates.
+/// Returns each stroke's SVG path data (its `d` attribute) in drawing order,
+/// parsing the kanji's SVG file on first request and caching the result. The
+/// frontend renders these as <path> elements in a 0-109 viewBox and animates
+/// them with stroke-dashoffset.
 #[tauri::command]
-fn get_svg_strokes(state: State<AppStateHandle>, kanji_id: i32) -> Option<Vec<Vec<[f32; 2]>>> {
+fn get_svg_strokes(state: State<AppStateHandle>, kanji_id: i32) -> Option<Vec<String>> {
     let mut st = state.lock().unwrap();
-    st.svg_cache.get_or_load(kanji_id).map(|strokes| {
-        strokes
-            .iter()
-            .map(|stroke| {
-                stroke
-                    .points
-                    .iter()
-                    .map(|sp| [sp.pos.x as f32, sp.pos.y as f32])
-                    .collect()
-            })
-            .collect()
-    })
+    st.svg_cache.get_or_load(kanji_id).cloned()
 }
 
 /// Returns the kanji's top-level components (e.g. 語 -> ["言", "吾"]), parsed
